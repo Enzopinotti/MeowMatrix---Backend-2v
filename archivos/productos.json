@@ -1,0 +1,29 @@
+[
+  {
+    "id": 1,
+    "nombre": "telefono",
+    "descripcion": "Sirve para llamar y ocio",
+    "precio": 120000,
+    "foto": "telefono.jpg",
+    "codigo": "ABC123",
+    "stock": 10
+  },
+  {
+    "id": 2,
+    "nombre": "computadora",
+    "descripcion": "Sirve para ocio",
+    "precio": 320000,
+    "foto": "computadora.jpg",
+    "codigo": "ABC124",
+    "stock": 20
+  },
+  {
+    "id": 3,
+    "nombre": "Television",
+    "descripcion": "Sirve para ocio",
+    "precio": 220000,
+    "foto": "Television.jpg",
+    "codigo": "ABC125",
+    "stock": 50
+  }
+]

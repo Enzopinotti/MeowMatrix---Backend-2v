@@ -2,21 +2,21 @@ import fs from 'fs'
 
 
 
-class ProductManager{
+export class ProductManager{
 
     constructor(filePath){
         this.filePath = filePath;
-        this.productos = []; // Cargar productos al inicializar
+        this.productos = []; // Inicializar Vacío
         this.init(); // Inicializar la carga de productos
     }
 
     async init() {
         try {
             const productosData = await this.CargarProductos();
-            console.log("Producto asignado: ", productosData);
+            //console.log("Producto asignado: ", productosData);
             this.productos = productosData || [];
         } catch (error) {
-            console.error('Error al cargar los productos:', error);
+            //console.error('Error al cargar los productos:', error);
         }
     }
     //Clase estatica que contiene metodos para validar los datos cuando se agrega un producto
@@ -76,10 +76,10 @@ class ProductManager{
 
         try {
 
-            const data = await fs.promises.readFile(this.filePath);
+            const data = await fs.promises.readFile(this.filePath, 'utf-8');
 
             const productos = JSON.parse(data);// Asignar a this.productos
-            console.log("producto al momento de cargar: ", productos)
+            //console.log("producto al momento de cargar: ", productos)
             return  productos;  // Retornar los productos cargados
 
         } catch (error) {
@@ -97,9 +97,9 @@ class ProductManager{
         try {
 
             const jsonProductos = JSON.stringify(this.productos, null, 2);
-            console.log('Productos antes de sobreescribir', jsonProductos)
+            //console.log('Productos antes de sobreescribir', jsonProductos)
             await fs.promises.writeFile(this.filePath, jsonProductos);
-            console.log('Producto guardado correctamente.');
+            //console.log('Producto guardado correctamente.');
         } 
         catch (error) {
 
@@ -110,17 +110,15 @@ class ProductManager{
     }
 
 
-    async addProduct(nombre, descripcion, precio, foto, codigo, stock) {
-
+    async addProduct(producto) {
         await this.init();
-        
-
+    
         // Validar que todos los campos sean obligatorios
+        const { nombre, descripcion, precio, foto, codigo, stock } = producto;
+        
         if (!nombre || !descripcion || !precio || !foto || !codigo || !stock) {
-
             throw new Error('Todos los campos son obligatorios.');
-
-        }else{
+        } else {
             // Validar tipos de datos
             ProductManager.Validations.validarTipoDeDato(nombre, 'string', 'nombre');
             ProductManager.Validations.validarTipoDeDato(descripcion, 'string', 'descripcion');
@@ -128,72 +126,50 @@ class ProductManager{
             ProductManager.Validations.validarTipoDeDato(foto, 'string', 'foto');
             ProductManager.Validations.validarTipoDeDato(codigo, 'string', 'codigo');
             ProductManager.Validations.validarTipoDeDato(stock, 'number', 'stock');
-
-            //Validar longitud de campos
-
+    
+            // Validar longitud de campos
             ProductManager.Validations.validarLongitudCampo(nombre, 50, 'nombre');
             ProductManager.Validations.validarLongitudCampo(descripcion, 200, 'descripcion');
-
-            //Validar Numeros NO Negativos
-
+    
+            // Validar números NO Negativos
             ProductManager.Validations.validarNoNegativo(precio, 'precio');
             ProductManager.Validations.validarNoNegativo(stock, 'stock');
-
-            //Validar Formato de la imagen
-
+    
+            // Validar Formato de la imagen
             ProductManager.Validations.validarFormatoImagen(foto);
-
-
         }
-
-
+    
         // Validar que el código (code) no se repita
-
-        
-        const codeExists = this.productos.some(producto => producto.codigo === codigo);
-
-
+        const codeExists = this.productos.some((p) => p.codigo === codigo);
         if (codeExists) {
-
             throw new Error('El código del producto ya existe.');
-
-        };
-
-
+        }
+    
         let maxId = 0;
-
+    
         // Obtener el ID más alto del último producto
         if (this.productos.length > 0) {
-
             maxId = this.productos[this.productos.length - 1].id;
-
         }
-
+    
         // Asignar el nuevo ID al producto
         const nuevoId = ++maxId;
-
+    
         // Crear el producto
-        const producto = {
+        const nuevoProducto = {
             id: nuevoId,
-            nombre,
-            descripcion,
-            precio,
-            foto,
-            codigo,
-            stock
+            ...producto,
         };
-
-       
-        
+    
         // Agregar el producto al arreglo de productos
-        this.productos.push(producto);
-
-        console.log('Productos Despues de pushear:', this.productos);
+        this.productos.push(nuevoProducto);
+    
+        //console.log('Productos Después de pushear:', this.productos);
+    
         // Guardar los productos en el archivo
         await this.guardarProductos();
-
-        return producto; // Devolver el producto agregado
-
+    
+        return nuevoProducto; // Devolver el producto agregado
     }
 
 
@@ -255,7 +231,7 @@ class ProductManager{
         }
 
         this.productos.splice(index, 1);
-        console.log('productos despues de eliminar: ', this.productos)
+        //console.log('productos despues de eliminar: ', this.productos)
         await this.guardarProductos();
         return { message: 'Producto eliminado correctamente.' };
         
@@ -312,52 +288,33 @@ class ProductManager{
 
 //Prueba de la clase//
 
-const filePath = 'archivos/productos.json'; //Obtengo la ruta
+ //Obtengo la ruta
 
 
-
+/*
 (async () => {
     const manejador = new ProductManager(filePath);
 
     try {
+
+        const producto = {
+            nombre: 'Television',
+            descripcion: 'Sirve para ocio',
+            precio: 220000,
+            foto: 'Television.jpg',
+            codigo: 'ABC125',
+            stock: 50,
+        }
         
-        // Agregar tres productos
-        const producto1 = await manejador.addProduct('Producto 1', 'Descripción producto 1', 100, 'imagen1.jpg', 'ABC123', 10);
+        
+        const producto1 = await manejador.addProduct(producto);
         console.log('Producto agregado:', producto1);
 
-        const producto2 = await manejador.addProduct('Producto 2', 'Descripción producto 2', 200, 'imagen2.jpg', 'DEF456', 20);
-        console.log('Producto agregado:', producto2);
-        
-        const producto3 = await manejador.addProduct('Producto 3', 'Descripción producto 3', 150, 'imagen3.jpg', 'GHI789', 15);
-        console.log('Producto agregado:', producto3);
-
-        const producto4 = await manejador.addProduct('Producto 4', 'Descripción producto 4', 1500, 'imagen4.jpg', 'GH6589', 15);
-        console.log('Producto agregado:', producto4);
-
         
         
-        // Obtener todos los productos 
-        const productos = await manejador.getProducts();
-        console.log('Productos:', productos);
-
-        // Obtener la cantidad de productos
-        const cantidadProductos = await manejador.getCantidadProductos();
-        console.log('Cantidad de productos:', cantidadProductos);
-
-        // Obtener un producto por ID
-        const productoPorId = await manejador.getProductById(1);
-        console.log('Producto por ID:', productoPorId);
-
-        // Eliminar un producto por ID
-        await manejador.deleteProductById(1);
-        console.log('Producto eliminado'); 
-        
-        // Actualizar un producto por ID
-        const productoActualizado = await manejador.updateProduct(2, { nombre: 'Producto 2', descripcion: "Descripción producto 2", precio: 200, foto: "imagen1.jpg", codigo: "ABC123", stock: 2323234 });
-        console.log('Producto actualizado:', productoActualizado);
-        
+     
         
     } catch (error) {
         console.error('Error:', error.message);
     }
-})();
+})();*/

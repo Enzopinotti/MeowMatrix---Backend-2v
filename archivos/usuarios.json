@@ -1,22 +1,8 @@
 [
-    {
-        "id": 1,
-        "nombre": "Enzo",
-        "edad": 24
-    },
-    {
-        "id": 2,
-        "nombre": "Martin",
-        "edad": 23
-    },
-    {
-        "id": 3,
-        "nombre": "Andre",
-        "edad": 26
-    },
-    {
-        "id": 4,
-        "nombre": "Florencia",
-        "edad": 18
-    }
+  {
+    "nombre": "Enzo",
+    "apellido": "Pinotti",
+    "username": "enzopino21",
+    "password": "b2abab5e9e42c7ddf092feb20f392ecab9f95902086cf10e13dc793a40685a709202d35e7d10872863ae8df93b1c93770ab94e0e0331141d8c8e9d5d9a2abc2d"
+  }
 ]

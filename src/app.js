@@ -1,75 +1,63 @@
 import express from 'express';
 import fs from 'fs'
-const app = express();
+import { ProductManager } from './ProductManager.js';
 
+
+const filePath = 'archivos/productos.json';
+
+const app = express();
+const manejador = new ProductManager(filePath);
 const port = 8080;
 
 app.use(express.urlencoded({extended:true}));
 
 
 
-app.get('/saludo', (req, res)=>{
+app.get('/products', async (req, res) => {
 
-    res.send(`Hola, estoy trabajando con express en node.js`);
-
-});
-
-app.get('/bienvenida', (req, res)=>{
-    const htmlResponse = `
-    <html>
-    <body style="color: blue;">
-    <h1>Bienvenidos a mi aplicación Express con módulos ES6!</h1>
-    </body>
-    </html>`;
-    res.send(htmlResponse);
-
-});
-
-app.get('', (req, res)=>{
-
-    fs.readFile('archivos/usuarios_genero.json', 'utf-8',(error, data)=>{
-
-        if(error){
-            console.log(error);
-            res.status(500).send('Error al leer el archivo');
-            return;
-        }
-        const usuarios = JSON.parse(data);
-        const generoQuery = req.query.genero;
-
-        if(generoQuery){
-            const usuariosFiltrados = usuarios.filter(user =>{user.genero === generoQuery});
-            res.json(usuariosFiltrados);
-        }else{
-            res.json(usuarios)
-        }
-    })
-
-});
-
-app.get('/usuarios/:userId', (req, res)=>{
-    const userId = parseInt(req.params.userId, 10);
-
-    fs.readFile('archivos/usuarios.json', 'utf-8',(error, data)=>{
-
-        if(error){
-            console.log(error);
-            res.status(500).send('Error al leer el archivo');
-            return;
-        }
-        const usuarios = JSON.parse(data);
-        console.log(usuarios);
-        const usuario = usuarios.find(user =>{return user.id === userId});
-        console.log(userId);
-        if(usuario){
-            res.json(usuario);
-        }else{
-            res.status(400).send('Usuario No Encontrado')
-        }
+    const limit = req.query.limit; // Obtén el límite de productos desde los parámetros de consulta
+  
+    try {
         
-    })
+        const productos = await manejador.getProducts();
+  
+      if (limit) {
 
+        const productosLimitados = productos.slice(0, parseInt(limit));
+
+        res.json(productosLimitados);
+
+      } else {
+
+        res.json(productos);
+
+      }
+
+    } catch (error) {
+
+      res.status(500).json({ error: error.message });
+
+    }
 });
+
+app.get('/products/:pid', async (req, res) => {
+
+    const pid = req.params.pid;
+  
+    try {
+
+      const producto = await manejador.getProductById(parseInt(pid));
+
+      res.json(producto);
+
+    } catch (error) {
+
+      res.status(500).json({ error: error.message });
+      
+    }
+  });
+
+
 
 app.listen(port, ()=>{
     console.log(`El servidor esta escuchando en el puerto ${port}`)
