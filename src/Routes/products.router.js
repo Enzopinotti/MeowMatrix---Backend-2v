@@ -89,37 +89,35 @@ productRouter.get('/:productId', async (req, res) => {
 
 productRouter.post('/', uploader.single('image') , async (req, res) => {
 
-    console.log(req.body);
-    const { name, description, price, image, code, stock, category } = req.body;
+  console.log(req.body);
+  const { name, description, price, code, stock, category, image} = req.body;
 
-    // Convierte el precio y el stock de cadena a número
-    const numericPrice = parseFloat(price);
-    const numericStock = parseInt(stock);
+  // Convierte el precio y el stock de cadena a número
+  const numericPrice = parseFloat(price);
+  const numericStock = parseInt(stock);
 
-    // Verifica si la conversión es válida
-    if (isNaN(numericPrice) || isNaN(numericStock)) {
-        return res.status(400).json({ error: 'El precio y el stock deben ser números válidos.' });
-    }
-    
-    const newProduct = {
-        name: name,
-        description: description,
-        price: numericPrice,
-        code: code,
-        stock: numericStock,
-        category: category,
-        thumbnails: image,
-    };
+  // Verifica si la conversión es válida
+  if (isNaN(numericPrice) || isNaN(numericStock)) {
+      return res.status(400).json({ error: 'El precio y el stock deben ser números válidos.' });
+  }
+  
+  const newProduct = {
+      name: name,
+      description: description,
+      price: numericPrice,
+      code: code,
+      stock: numericStock,
+      category: category,
+      thumbnails: image,
+  };
 
-    try {
-        console.log(newProduct);
-        const addedProduct = await manager.addProduct(newProduct);
-        res.status(201).json(addedProduct);
-    }
-    catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-
+  try {
+      const addedProduct = await manager.addProduct(newProduct);
+      res.status(201).json(addedProduct);
+  }
+  catch (error) {
+      res.status(500).json({ error: error.message });
+  }
 });
 
 

@@ -8,8 +8,8 @@ const manager = new CartManager(filePath);
 
 cartRouter.get('/:cid', async (req, res) => {
 
-    const cartId = req.params.cartId;
-  
+    const cartId = req.params.cid;
+    
    
     try {
 
