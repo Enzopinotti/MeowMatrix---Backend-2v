@@ -1,29 +1,44 @@
 [
   {
     "id": 1,
-    "nombre": "telefono",
-    "descripcion": "Sirve para llamar y ocio",
-    "precio": 120000,
-    "foto": "telefono.jpg",
-    "codigo": "ABC123",
-    "stock": 10
+    "name": "Computadora",
+    "description": "Para jugar",
+    "price": 230000,
+    "code": "ABC1010",
+    "stock": 10,
+    "category": "Electronica",
+    "thumbnails": "enzo_del_lofi.png",
+    "status": true
   },
   {
     "id": 2,
-    "nombre": "computadora",
-    "descripcion": "Sirve para ocio",
-    "precio": 320000,
-    "foto": "computadora.jpg",
-    "codigo": "ABC124",
-    "stock": 20
+    "name": "Telefono",
+    "description": "Para hacer Llamadas",
+    "price": 230000,
+    "code": "ABC1011",
+    "stock": 21,
+    "category": "Electronica",
+    "thumbnails": "desastre.jpg",
+    "status": true
   },
   {
     "id": 3,
-    "nombre": "Television",
-    "descripcion": "Sirve para ocio",
-    "precio": 220000,
-    "foto": "Television.jpg",
-    "codigo": "ABC125",
-    "stock": 50
+    "name": "Tablet",
+    "description": "Sirve para Ocio",
+    "price": 120000,
+    "code": "ABC01112",
+    "stock": 40,
+    "category": "Electronica",
+    "status": true
+  },
+  {
+    "id": 4,
+    "name": "Mouse",
+    "description": "Para las computadoras",
+    "price": 5400,
+    "code": "ABC1111",
+    "stock": 1000,
+    "category": "Electronica",
+    "status": true
   }
 ]
