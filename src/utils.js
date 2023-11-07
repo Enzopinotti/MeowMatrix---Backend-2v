@@ -1,5 +1,8 @@
-import multer from "multer";
+import multer from "multer"; 
+import { fileURLToPath } from "url";
+import { dirname } from "path";
 
+//uso multer para subir archivos al servidor y guardarlos en la carpeta public/img
 const storage = multer.diskStorage({
 
     //Destination es para indicar donde se va a guardar el archivo
@@ -18,3 +21,13 @@ const storage = multer.diskStorage({
 });
 
 export const uploader = multer({ storage });
+
+//Ahora uso fileURLToPath para obtener la ruta absoluta del archivo y dirname para obtener la ruta relativa
+const __filename = fileURLToPath(import.meta.url);
+
+
+
+export const __dirname = dirname(__filename);
+
+
+

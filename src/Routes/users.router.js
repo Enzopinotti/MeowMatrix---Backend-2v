@@ -56,11 +56,13 @@ userRouter.post('/', async (req, res)=>{
     const newUser = req.body;
     console.log(newUser);
     try {
-        const addedUser = await manager.addUser(newUser);
-        res.status(201).json(addedUser);
+      const addedUser = await manager.addUser(newUser);
+      res.status(201).json(addedUser);
+      res.redirect('/');
     }
     catch (error) {
-        res.status(500).json({ error: error.message });
+      res.status(500).json({ error: error.message });
+      res.redirect('/');
     }
 })
 

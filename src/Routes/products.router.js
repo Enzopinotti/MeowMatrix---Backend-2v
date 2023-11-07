@@ -38,29 +38,30 @@ productRouter.delete('/:pid', async (req, res) => {
 
 productRouter.get('/', async (req, res) => {
 
-    const limit = req.query.limit; // Obtén el límite de productos desde los parámetros de consulta
-  
-    try {
-        
-        const products = await manager.getProducts();
-  
-      if (limit) {
+  const limit = req.query.limit; // Obtén el límite de productos desde los parámetros de consulta
 
-        const limitedProducts = products.slice(0, parseInt(limit));
+  try {
+      
+      const products = await manager.getProducts();
 
-        res.json(limitedProducts);
+    if (limit) {
 
-      } else {
+      const limitedProducts = products.slice(0, parseInt(limit));
 
-        res.status(200).json(products);
+      res.json(limitedProducts);
+      
 
-      }
+    } else {
 
-    } catch (error) {
-
-      res.status(500).json({ error: error.message });
+      res.status(200).json(products);
 
     }
+
+  } catch (error) {
+
+    res.status(500).json({ error: error.message });
+
+  }
 });
 
 productRouter.get('/:productId', async (req, res) => {
@@ -111,8 +112,11 @@ productRouter.post('/', uploader.single('image') , async (req, res) => {
       thumbnails: image,
   };
 
+  
+
   try {
       const addedProduct = await manager.addProduct(newProduct);
+      io.emit('producto-agregado', { producto: addedProduct });
       res.status(201).json(addedProduct);
   }
   catch (error) {

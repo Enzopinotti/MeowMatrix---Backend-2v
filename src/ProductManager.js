@@ -164,7 +164,7 @@ export class ProductManager{
     async deleteProductById(id) {
         
         await this.init();
-
+        
         if (!Number.isInteger(id) || id <= 0) {
             throw new Error('El ID debe ser un número entero mayor a cero.');
         }

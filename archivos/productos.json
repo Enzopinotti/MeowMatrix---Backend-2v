@@ -9,46 +9,5 @@
     "category": "Electronica",
     "thumbnails": "enzo_del_lofi.png",
     "status": true
-  },
-  {
-    "id": 2,
-    "name": "Ejemplo",
-    "description": "Para hacer Llamadas",
-    "price": 8000,
-    "code": "ABC0000",
-    "stock": 21,
-    "category": "Electronica",
-    "thumbnails": "desastre.jpg",
-    "status": true
-  },
-  {
-    "id": 3,
-    "name": "Tablet",
-    "description": "Sirve para Ocio",
-    "price": 120000,
-    "code": "ABC01112",
-    "stock": 40,
-    "category": "Electronica",
-    "status": true
-  },
-  {
-    "id": 5,
-    "name": "Mouse",
-    "description": "Para las computadoras",
-    "price": 5400,
-    "code": "ABC1111",
-    "stock": 1000,
-    "category": "Electronica",
-    "status": true
-  },
-  {
-    "id": 6,
-    "name": "Mouse",
-    "description": "Para las computadoras",
-    "price": 5400,
-    "code": "ABC112",
-    "stock": 1000,
-    "category": "Electronica",
-    "status": true
   }
 ]
