@@ -1,6 +1,7 @@
 import express from 'express';
-import { ProductManager } from '../ProductManager.js';
+import { ProductManager } from '../config/filesystem/ProductManager.js';
 import { uploader } from '../utils.js';
+import productModel from '../config/models/product.model.js';
 
 
 const productRouter = express.Router();
@@ -10,12 +11,49 @@ const filePath = 'archivos/productos.json';
 const manager = new ProductManager(filePath);
 
 
+productRouter.get('/', async (req, res) => {
+
+  const limit = req.query.limit; // Obtén el límite de productos desde los parámetros de consulta
+
+  try {
+    const products = await productModel.find( { isVisible:true } );
+    if (limit) {
+      const limitedProducts = products.slice(0, parseInt(limit));
+      res.status(200).json(limitedProducts);
+    } else {
+      res.status(200).json(products);
+    }
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+productRouter.get('/:productId', async (req, res) => {
+
+  const productId = req.params.productId;
+  
+  try {
+    const product = await productModel.findById(productId);
+    if (!product) {
+      return res.status(404).json({ error: 'Producto no encontrado' });
+    }
+    res.status(200).json(product);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+    
+  }
+});
+
 productRouter.put('/:pid', async (req, res) => {
-    const productId = req.params.pid;
-    const numericProductId = parseInt(productId);
-    const updatedFields = req.body;
+
     try {
-        const updatedProduct = await manager.updateProduct(numericProductId, updatedFields);
+      const updatedProduct = await productModel.findByIdAndUpdate(
+        req.params.pid, req.body, { new: true, }  
+      );
+      if(!updatedProduct){
+        return res.status(404).json({message: 'Product not found'});
+      }
         res.status(200).json(updatedProduct);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -23,100 +61,33 @@ productRouter.put('/:pid', async (req, res) => {
 });
 
 
+
 productRouter.delete('/:pid', async (req, res) => {
 
-    const productId = req.params.pid;
-    const numericProductId = parseInt(productId);
-
-    try {
-        const result = await manager.deleteProductById(numericProductId);
-        res.status(200).json(result);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
-
-productRouter.get('/', async (req, res) => {
-
-  const limit = req.query.limit; // Obtén el límite de productos desde los parámetros de consulta
+  const productId = req.params.pid;
+  
 
   try {
-      
-      const products = await manager.getProducts();
-
-    if (limit) {
-
-      const limitedProducts = products.slice(0, parseInt(limit));
-
-      res.json(limitedProducts);
-      
-
-    } else {
-
-      res.status(200).json(products);
-
-    }
-
+      const result = await productModel.findById(productId);
+      const productEliminated = await productModel.deleteOne(result);
+      res.status(200).json(productEliminated);
   } catch (error) {
-
-    res.status(500).json({ error: error.message });
-
+      res.status(500).json({ error: error.message });
   }
 });
 
-productRouter.get('/:productId', async (req, res) => {
 
-    const productId = req.params.productId;
-    
-  
-    try {
 
-      const product = await manager.getProductById(parseInt(productId));
 
-      console.log(product);
-      if (!product) {
-        return res.status(404).json({ error: 'Producto no encontrado' });
-      }
-
-      res.status(200).json(product);
-
-    } catch (error) {
-
-      res.status(500).json({ error: error.message });
-      
-    }
-  });
 
 
 productRouter.post('/', uploader.single('image') , async (req, res) => {
 
-  console.log(req.body);
-  const { name, description, price, code, stock, category, image} = req.body;
-
-  // Convierte el precio y el stock de cadena a número
-  const numericPrice = parseFloat(price);
-  const numericStock = parseInt(stock);
-
-  // Verifica si la conversión es válida
-  if (isNaN(numericPrice) || isNaN(numericStock)) {
-      return res.status(400).json({ error: 'El precio y el stock deben ser números válidos.' });
-  }
-  
-  const newProduct = {
-      name: name,
-      description: description,
-      price: numericPrice,
-      code: code,
-      stock: numericStock,
-      category: category,
-      thumbnails: image,
-  };
-
-  
+  const product = new productModel(req.body)
 
   try {
-      const addedProduct = await manager.addProduct(newProduct);
-      io.emit('producto-agregado', { producto: addedProduct });
+      const addedProduct = await product.save();
+      //io.emit('producto-agregado', { producto: addedProduct });
       res.status(201).json(addedProduct);
   }
   catch (error) {

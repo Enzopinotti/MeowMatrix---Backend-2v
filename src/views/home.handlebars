@@ -9,16 +9,16 @@
 <body >
     <h1 class="tituloHome">Listado de productos</h1>
     <ul class="listaProductos">
-    {{#each products}}
-        <li>
-            <h2>{{name}}</h2>
-            <p>{{description}}</p>
-            <p> <strong>Precio: </strong> ${{price}}</p>
-            <p><strong>Stock: </strong>  {{stock}} unidades</p>
-            <p><strong>Categoría: </strong>  {{category}}</p>
-            <img src="img/{{thumbnails}}" alt="{{name}}">
-        </li>
-    {{/each}}
-</ul>
+        {{#each products}}
+            <li>
+                <h2>{{name}}</h2>
+                <p>{{description}}</p>
+                <p> <strong>Precio: </strong> ${{price}}</p>
+                <p><strong>Stock: </strong>  {{stock}} unidades</p>
+                <p><strong>Categoría: </strong>  {{category}}</p>
+                <img src="img/{{thumbnails}}" alt="{{name}}">
+            </li>
+        {{/each}}
+    </ul>
 </body>
 </html>

@@ -38,8 +38,8 @@ body{
     flex-direction: column;
     align-items: center;
     text-align: center;
-    width: 20rem;
-    height: 25rem;
+    width: 25rem;
+    height: 30rem;
     padding: 2rem;
     -webkit-border-radius: 20px;
     -moz-border-radius: 20px;
@@ -68,10 +68,7 @@ body{
     margin: 5px 0;
 }
 
-.realTimeProducts li img {
-    max-width: 100%;
-    height: auto;
-}
+
 
 /* Estilos para el formulario en realTimeProducts.handlebars */
 .formulario {
@@ -117,4 +114,34 @@ body{
 .formulario label {
     font-size: 1rem;
     margin: 5px 0;
+}
+
+.imgProduct{
+   max-height: 200px;
+   min-height: 200px;
+}
+
+.contenedorArchivos{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 1rem;
+    margin-top: 0.5rem;
+    background-color: rgb(255, 255, 255);
+    width: 50%;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+    padding: 1rem;
+}
+
+.contenedorArchivos input {
+    background-color: #5baf4c67;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+
 }
