@@ -1,0 +1,129 @@
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    
+}
+
+body{
+    background-color: rgb(86, 89, 87);
+    display: flex;
+    flex-direction: column;
+}
+
+.products-title{
+    display: flex;
+    justify-content: center;
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+    background-color: rgba(222, 222, 222, 0.479);
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+
+}
+
+.products-list {
+    list-style: none;
+    margin-left: 4rem;
+    margin-right: 4rem;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(300px, 1fr)); /* Define columnas automáticas con tamaño mínimo de 250px */
+    gap: 20px; /* Espacio entre elementos */
+}
+
+.products-list li {
+    background-color: rgba(222, 222, 222, 0.479);
+    border: 3px solid #ddd;
+    border-radius: 20px;
+    padding: 10px;
+    margin: 10px 0;
+    text-align: center;
+    height: 30rem;
+}
+
+.product-img{
+    width: 100%;
+    aspect-ratio: 3/2;
+    object-fit: contain;
+    margin-bottom: 2rem;
+}
+
+.products-list li h2 {
+    font-size: 1.5rem;
+    margin: 10px 0;
+}
+
+.products-list li p {
+    font-size: 1rem;
+    margin: 5px 0;
+}
+
+.add-to-cart-btn{
+    margin-top: 0.5rem;
+    background-color: rgb(16, 185, 69);
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    margin-top: 1.5rem;
+}
+
+.products-list li a{
+    margin-top: 0.5rem;
+    background-color: rgb(145, 185, 16);
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    text-decoration: none;
+    
+}
+
+
+.pagination {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    background-color: rgba(222, 222, 222, 0.479);
+    width: 50%;
+    align-self: center;
+    padding: 1rem;
+    border: none;
+    border-radius:10px;
+    -webkit-border-radius:10px;
+    -moz-border-radius:10px;
+    -ms-border-radius:10px;
+    -o-border-radius:10px;
+}
+
+.pagination a,
+.pagination span {
+    display: inline-block;
+    padding: 8px 16px;
+    margin: 0 4px;
+    text-decoration: none;
+    color: #fff;
+    background-color: #007bff;
+    border: 1px solid #007bff;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.pagination a:hover {
+    background-color: #0056b3;
+    border-color: #0056b3;
+}
+
+.pagination .no-prev-page,
+.pagination .no-next-page {
+    background-color: #ccc;
+    border-color: #ccc;
+    cursor: not-allowed;
+}

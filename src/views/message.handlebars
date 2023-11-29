@@ -1,51 +1,31 @@
-<!DOCTYPE html>
-<html lang="es">
 
-    <head>
-        <meta charset="UTF-8">
+<section class="chat-container">
 
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <article class="message-container">
 
-        <title>Chat</title>
+        <div id="chat-messages">
 
-        <link rel="stylesheet" href="./css/chat.css">
+        {{#each messages}}
 
-    </head>
+            <p class="message"> <strong>{{user}} :</strong> {{message}}  </p>
+            <hr>
+        {{/each}}
 
-    <body>
+        </div>
 
-        <section class="chat-container">
+        <!-- Agrega un formulario para enviar nuevos mensajes -->
+        <form id="message-form" action="/message" method="post">
 
-            <article class="message-container">
+            <input type="text" id="user" placeholder="Tu nombre de usuario..." name="user">
 
-                <div id="chat-messages">
+            <input type="text" id="message" placeholder="Escribe tu mensaje" name="message">
 
-                {{#each messages}}
-
-                    <p class="message"> <strong>{{user}} :</strong> {{message}}  </p>
-                    <hr>
-                {{/each}}
-
-                </div>
-
-                <!-- Agrega un formulario para enviar nuevos mensajes -->
-                <form id="message-form" action="/message" method="post">
-
-                    <input type="text" id="user" placeholder="Tu nombre de usuario..." name="user">
-
-                    <input type="text" id="message" placeholder="Escribe tu mensaje" name="message">
-
-                    <button type="submit"> Enviar </button>
-                    
-                </form>
-
-            </article>
-
+            <button type="submit"> Enviar </button>
             
+        </form>
 
-        </section>
+    </article>
 
-        
-    </body>
+    
 
-</html>
+</section>

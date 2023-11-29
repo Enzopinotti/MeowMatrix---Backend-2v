@@ -1,0 +1,18 @@
+<h1 class="product-title">{{product.name}}</h1>
+<a href="/products" class="back-btn">Volver</a>
+<div class="product-details">
+   
+    <img src="/img/{{product.thumbnails.[0]}}" alt="{{product.name}}" class="product-img">
+    
+    <div class="product-info">
+        <p class="product-description">{{product.description}}</p>
+        <p class="product-price"> <strong>Precio: </strong> ${{product.price}}</p>
+        <p class="product-stock"><strong>Stock: </strong>  {{product.stock}} unidades</p>
+        <p class="product-category"><strong>Categoría: </strong>  {{product.category.nameCategory}}</p>
+        
+        <!-- Formulario para agregar al carrito -->
+        <form action="/api/carts/:cid/product/{{product._id}}" method="POST" class="add-to-cart-form">
+            <button type="submit" class="add-to-cart-btn">Agregar al carrito</button>
+        </form>
+    </div>
+</div>

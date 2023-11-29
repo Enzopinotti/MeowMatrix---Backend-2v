@@ -1,46 +1,34 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Productos en tiempo real</title>
-    <link rel="stylesheet" href="./css/realTimeProducts.css">
-</head>
-<body>
-    <h1 class="tituloHome">Lista de productos en tiempo real</h1>
 
-    <!-- Aquí puedes agregar un formulario para agregar nuevos productos -->
-   <form class="formulario" id="addProductForm" action="/realTimeProducts" method="post" enctype="multipart/form-data">
-        <input type="text" id="productName" name="productName" placeholder="Nombre del producto">
-        <input type="text" id="productDescription" name="productDescription" placeholder="Descripción del producto">
-        <input type="number" id="productPrice" name="productPrice" placeholder="Precio">
-        <input type="text" id="productCode" name="productCode" placeholder="Código del producto">
-        <input type="number" id="productStock" name="productStock" placeholder="Stock">
-        <input type="text" id="productCategory" name="productCategory" placeholder="Categoría">
-        <!-- Campo de entrada para cargar la imagen -->
-        <div class="contenedorArchivos">
-            <label for="productImage">Cargar Imagen del Producto</label>
-            <input type="file" id="productImage" name="productImage">
-        </div>
-        <button type="submit" id="addProductButton">Agregar Producto</button>
-    </form>
+<h1 class="tituloHome">Lista de productos en tiempo real</h1>
 
-    <ul class="realTimeProducts" id="productList">
-        {{#each products}}
-        <li data-product-id="{{_id}}">
-            <h2>{{name}}</h2>
-            <p>{{description}}</p>
-            <p><strong>Precio:</strong> ${{price}}</p>
-            <p><strong>Stock:</strong> {{stock}} unidades</p>
-            <p><strong>Categoría:</strong> {{category}}</p>
-            <img src="img/{{thumbnails}}" alt="{{name}}" class="imgProduct">
-            
-            <!-- Agrega un botón para eliminar el producto -->
-            <button class="botonDelete" data-product-id="{{_id}}">Eliminar</button>
-        </li>
-        {{/each}}
-    </ul>
+<!-- Aquí puedes agregar un formulario para agregar nuevos productos -->
+<form class="formulario" id="addProductForm" action="/realTimeProducts" method="post" enctype="multipart/form-data">
+    <input type="text" id="productName" name="productName" placeholder="Nombre del producto">
+    <input type="text" id="productDescription" name="productDescription" placeholder="Descripción del producto">
+    <input type="number" id="productPrice" name="productPrice" placeholder="Precio">
+    <input type="text" id="productCode" name="productCode" placeholder="Código del producto">
+    <input type="number" id="productStock" name="productStock" placeholder="Stock">
+    <input type="text" id="productCategory" name="productCategory" placeholder="Categoría">
+    <!-- Campo de entrada para cargar la imagen -->
+    <div class="contenedorArchivos">
+        <label for="productImage">Cargar Imagen del Producto</label>
+        <input type="file" id="productImage" name="productImage">
+    </div>
+    <button type="submit" id="addProductButton">Agregar Producto</button>
+</form>
 
-    
-</body>
-</html>
+<ul class="realTimeProducts" id="productList">
+    {{#each products}}
+    <li data-product-id="{{_id}}">
+        <h2>{{name}}</h2>
+        <p>{{description}}</p>
+        <p><strong>Precio:</strong> ${{price}}</p>
+        <p><strong>Stock:</strong> {{stock}} unidades</p>
+        <p><strong>Categoría:</strong> {{category}}</p>
+        <img src="img/{{thumbnails}}" alt="{{name}}" class="imgProduct">
+        
+        <!-- Agrega un botón para eliminar el producto -->
+        <button class="botonDelete" data-product-id="{{_id}}">Eliminar</button>
+    </li>
+    {{/each}}
+</ul>

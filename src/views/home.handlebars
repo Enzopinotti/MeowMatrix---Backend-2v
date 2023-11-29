@@ -1,24 +1,14 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home</title>
-    <link rel="stylesheet" href="css/index.css">
-</head>
-<body >
-    <h1 class="tituloHome">Listado de productos</h1>
-    <ul class="listaProductos">
-        {{#each products}}
-            <li>
-                <h2>{{name}}</h2>
-                <p>{{description}}</p>
-                <p> <strong>Precio: </strong> ${{price}}</p>
-                <p><strong>Stock: </strong>  {{stock}} unidades</p>
-                <p><strong>Categoría: </strong>  {{category}}</p>
-                <img src="img/{{thumbnails}}" alt="{{name}}">
-            </li>
-        {{/each}}
-    </ul>
-</body>
-</html>
+
+<h1 class="tituloHome">Listado de productos</h1>
+<ul class="products-list">
+    {{#each products}}
+        <li class="product-item">
+            <h2 class="product-name">{{this.name}}</h2>
+            <p class="product-description">{{this.description}}</p>
+            <p class="product-price"> <strong>Precio: </strong> ${{this.price}}</p>
+            <p class="product-stock"><strong>Stock: </strong>  {{this.stock}} unidades</p>
+            <p class="product-category"><strong>Categoría: </strong>  {{this.category}}</p>
+            <img src="img/{{thumbnails}}" alt="{{name}}" class="product-img">
+        </li>
+    {{/each}}
+</ul>

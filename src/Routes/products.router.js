@@ -13,17 +13,61 @@ const manager = new ProductManager(filePath);
 
 productRouter.get('/', async (req, res) => {
 
-  const limit = req.query.limit; // Obtén el límite de productos desde los parámetros de consulta
+  const { page = 1, limit = 5, sort, query } = req.query;
 
   try {
-    const products = await productModel.find( { isVisible:true } );
-    if (limit) {
-      const limitedProducts = products.slice(0, parseInt(limit));
-      res.status(200).json(limitedProducts);
-    } else {
-      res.status(200).json(products);
+
+    let queryOptions = {}; //Acá guardo las Querys que haga 
+    let sortOptions = {}; //Acá guardo el tipo de ordenamiento que haga
+    
+    // Filtros basados en la query
+    if (query && query.name) {
+      queryOptions.name = { $regex: new RegExp(query.name, 'i') };
     }
 
+    if (query && query.categoryId) {
+      queryOptions.category = mongoose.Types.ObjectId(query.categoryId);
+    }
+
+    if (query && query.priceMin && query.priceMax) {
+      queryOptions.price = { $gte: parseInt(query.priceMin), $lte: parseInt(query.priceMax) };
+    }
+
+    // Obtener el número total de documentos
+    const totalDocs = await productModel.countDocuments(queryOptions);
+
+    // Lógica de ordenamiento
+    if (sort === 'date') {
+      sortOptions = { createdAt: sort === 'asc' ? 1 : -1 };
+    } else if (sort === 'price') {
+      sortOptions = { price: sort === 'asc' ? 1 : -1 };
+    }
+    
+    const options = {
+      page: parseInt(page),
+      limit: parseInt(limit),
+      sort: sortOptions,
+    };
+
+    productModel.paginate(queryOptions, options, lean = true , (err, result) => {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+      res.status(200).json({
+        status: 'success',
+        totalDocs: totalDocs,
+        payload: result.docs,
+        totalPages: result.totalPages,
+        prevPage: result.prevPage,
+        nextPage: result.nextPage,
+        page: result.page,
+        hasPrevPage: result.hasPrevPage,
+        hasNextPage: result.hasNextPage,
+        prevLink: result.prevPage ? `/products?page=${result.prevPage}&limit=${limit}` : null,
+        nextLink: result.nextPage ? `/products?page=${result.nextPage}&limit=${limit}` : null,
+      });
+    });
+    
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

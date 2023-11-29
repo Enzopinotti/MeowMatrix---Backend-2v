@@ -118,6 +118,38 @@ socket.on("message-received", (message) => {
 });
 
 
+document.getElementById('modifyQuantityForm').addEventListener('submit', async function(event) {
+    event.preventDefault();
+
+    const formData = new FormData(this);
+    const url = this.getAttribute('action');
+    const options = {
+      method: 'PUT',
+      body: formData
+    };
+
+    try {
+      const response = await fetch(url, options);
+      if (response.ok) {
+        // La solicitud se realizó con éxito (código de respuesta 200-299)
+        // Aquí puedes redirigir a una nueva página o realizar acciones adicionales si es necesario
+      } else {
+        // Error en la solicitud (código de respuesta fuera del rango 200-299)
+        // Puedes mostrar un mensaje de error o manejarlo de otra manera
+        const errorData = await response.json(); // Obtener información detallada del error si está disponible
+        console.error('Error:', errorData);
+        // Aquí puedes mostrar un mensaje de error al usuario o manejar el error de acuerdo a tu lógica
+      }
+    } catch (error) {
+      // Error de red u otros errores durante la solicitud
+      console.error('Network Error:', error);
+      // Aquí puedes mostrar un mensaje de error al usuario o manejar el error de acuerdo a tu lógica
+    }
+  });
+
+
+
+
 /*
 
 socket.on('userConnected', (userName) =>{

@@ -6,7 +6,7 @@
 }
 
 body{
-    background-color: rgb(143, 232, 165)
+    background-color: rgb(86, 89, 87);
 }
 
 
@@ -21,11 +21,14 @@ body{
 
 }
 .realTimeProducts {
+    margin-top: 1rem;
     list-style: none;
+    margin-left: 4rem;
+    margin-right: 4rem;
     padding: 0;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-around;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(300px, 1fr)); /* Define columnas automáticas con tamaño mínimo de 250px */
+    gap: 20px; /* Espacio entre elementos */
 }
 
 .realTimeProducts li {
@@ -117,8 +120,9 @@ body{
 }
 
 .imgProduct{
-   max-height: 200px;
-   min-height: 200px;
+    width: 100%;
+    aspect-ratio: 3/2;
+    object-fit: contain;
 }
 
 .contenedorArchivos{
@@ -136,7 +140,7 @@ body{
 }
 
 .contenedorArchivos input {
-    background-color: #5baf4c67;
+    background-color: rgba(86, 89, 87, 0.449);;
     color: white;
     padding: 10px 20px;
     border: none;
