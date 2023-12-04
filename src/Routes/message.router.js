@@ -1,5 +1,5 @@
 import { Router } from "express";
-import messageModel from "../config/models/message.model.js"
+import messageModel from "../daos/models/message.model.js"
 const messageRouter = Router();
 
 messageRouter.get('/', async (req, res) => {

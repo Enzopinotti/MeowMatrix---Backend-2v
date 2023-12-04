@@ -1,6 +1,6 @@
 import express from 'express';
-import { CartManager } from '../config/filesystem/CartManager.js'
-import cartModel from '../config/models/cart.model.js';
+import { CartManager } from '../daos/filesystem/CartManager.js'
+import cartModel from '../daos/models/cart.model.js';
 
 const cartRouter = express.Router();
 

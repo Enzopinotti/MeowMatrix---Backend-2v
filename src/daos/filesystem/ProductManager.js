@@ -264,7 +264,7 @@ export class ProductManager{
         
         
         const producto1 = await manejador.addProduct(producto);
-        console.log('Producto agregado:', producto1);
+        //console.log('Producto agregado:', producto1);
         
 
         

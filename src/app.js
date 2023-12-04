@@ -8,11 +8,11 @@ import { productRouter } from './routes/products.router.js';
 import { categoryRouter } from './routes/category.router.js';
 import { cartRouter } from './routes/carts.router.js';
 import { viewsRouter } from './routes/views.router.js';
-import { ProductManager } from './config/filesystem/ProductManager.js';
+import { ProductManager } from './daos/filesystem/ProductManager.js';
 import { messageRouter } from './routes/message.router.js';
-import { db } from './config/database.js';
+import { db } from './daos/database.js';
 import mongoose from 'mongoose';
-import productModel from './config/models/product.model.js';
+import productModel from './daos/models/product.model.js';
 
 
 const filePath = 'archivos/productos.json';
@@ -64,7 +64,7 @@ io.on("connection", (socket) => {
     try {
       
       const product = await productModel.findById(productId);
-      console.log(product);
+      
       // Cambia el estado de la visibilidad del producto
       product.isVisible = false; // Cambia esto según tu campo de visibilidad
 

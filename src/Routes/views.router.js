@@ -1,15 +1,15 @@
 import express from 'express';
 import { __dirname } from '../utils.js';
 export const viewsRouter = express.Router();
-import { ProductManager } from '../config/filesystem/ProductManager.js';
-import productModel from '../config/models/product.model.js';
-import  categoryModel from '../config/models/category.model.js';
-import cartModel from '../config/models/cart.model.js';
+import { ProductManager } from '../daos/filesystem/ProductManager.js';
+import productModel from '../daos/models/product.model.js';
+import  categoryModel from '../daos/models/category.model.js';
+import cartModel from '../daos/models/cart.model.js';
 const filePath = 'archivos/productos.json';
 const manager = new ProductManager(filePath);
 import { uploader } from '../utils.js';
 import { io } from '../app.js'; // Importa la instancia de Socket.IO
-import messageModel from '../config/models/message.model.js';
+import messageModel from '../daos/models/message.model.js';
 
 
 viewsRouter.get('/', async (req, res) => {
@@ -64,7 +64,7 @@ viewsRouter.post('/realTimeProducts', uploader.array('productImage', 1), async (
         const savedProduct = await newProduct.save();
 
         const addedProduct = await productModel.findById(savedProduct._id).populate('category', 'nameCategory').lean();
-        console.log(addedProduct);
+        
         io.emit( 'product-added', addedProduct );
         
     } catch (error) {
@@ -127,7 +127,7 @@ viewsRouter.post('/message', async (req, res) => {
   
 // Ruta para mostrar la vista de productos
 viewsRouter.get('/products', async (req, res) => {
-    const { page = 1, limit = 5, sort, query } = req.query;
+    const { page = 1, limit = 4, sort, query } = req.query;
 
     try {
         let queryOptions = { isVisible: true }; // Acá guardo las Queries que haga 
@@ -138,7 +138,6 @@ viewsRouter.get('/products', async (req, res) => {
             queryOptions.name = { $regex: new RegExp(query.name, 'i') };
         }
 
-        // Agrega más filtros si es necesario...
 
         // Obtener el número total de documentos
         const totalDocs = await productModel.countDocuments(queryOptions);
@@ -172,7 +171,7 @@ viewsRouter.get('/products', async (req, res) => {
                 category: categoryMap[product.category.toString()]
             };
         });
-        console.log(productsWithCategoryNames);
+        
         res.render('products', {
             products: productsWithCategoryNames,
             totalPages: products.totalPages,
@@ -197,7 +196,7 @@ viewsRouter.get('/products/:productId', async (req, res) => {
         const productId = req.params.productId;
        
         const product = await productModel.findById(productId).populate('category', 'nameCategory').lean(); // Asumiendo que 'category' es una referencia al modelo de categorías
-        console.log(product);
+        console.log('Producto detallado: ',product);
         
         if (!product) {
             return res.status(404).json({ error: 'Producto no encontrado' });
@@ -223,7 +222,7 @@ viewsRouter.get('/carts/:cid', async (req, res) => {
 
         // Encuentra el carrito específico por su ID
         const cart = await cartModel.findOne({ _id: cartId });
-        console.log(cart);
+        
         if (!cart) {
             return res.status(404).json({ error: 'Carrito no encontrado' });
         }
@@ -233,7 +232,7 @@ viewsRouter.get('/carts/:cid', async (req, res) => {
 
         // Obtiene los productos asociados a esos IDs
         const productsInCart = await productModel.find({ _id: { $in: productIdsInCart } });
-        console.log(productsInCart);
+        
 
 
         // Renderiza la vista de carrito y pasa la información

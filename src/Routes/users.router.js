@@ -1,6 +1,6 @@
 import express from 'express';
-import { UserManager } from '../config/filesystem/UserManager.js';
-import  userModel  from '../config/models/user.model.js';
+import { UserManager } from '../daos/filesystem/UserManager.js';
+import  userModel  from '../daos/models/user.model.js';
 
 
 

@@ -51,6 +51,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Itera sobre los botones y agrega un escuchador de eventos a cada uno
     deleteButtons.forEach((button) => {
+
         button.addEventListener("click", (event) => {
             // Obtiene el ID del producto
             const productId = event.target.getAttribute("data-product-id");
@@ -62,17 +63,14 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 socket.on('visibility-toggled', (productId) => {
-    console.log('Producto invisibilizado:', productId);
-    console.log(productId);
+   
     // Encuentra el elemento li con el atributo data-product-id que coincide con el ID eliminado
-    const productElement = document.querySelector(`li[data-product-id="${deletedProductId}"]`);
-    console.log(productElement);
+    const productElement = document.querySelector(`li[data-product-id="${productId}"]`);
+    console.log('Producto ocultado: ', productElement);
     if (productElement) {
         // Si se encuentra el elemento, oculta este elemento en la interfaz de usuario cambiando su estilo a 'display: none;'
         productElement.style.display = 'none';
-    } else {
-        console.log(`Elemento con ID ${updatedProduct._id} no encontrado en la vista.`);
-    }
+    } 
 });
 
 

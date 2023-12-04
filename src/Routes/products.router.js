@@ -1,7 +1,7 @@
 import express from 'express';
-import { ProductManager } from '../config/filesystem/ProductManager.js';
+import { ProductManager } from '../daos/filesystem/ProductManager.js';
 import { uploader } from '../utils.js';
-import productModel from '../config/models/product.model.js';
+import productModel from '../daos/models/product.model.js';
 
 
 const productRouter = express.Router();

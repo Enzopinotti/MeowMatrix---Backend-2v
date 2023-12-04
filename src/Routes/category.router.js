@@ -1,5 +1,5 @@
 import { Router } from "express";
-import categoryModel from "../config/models/category.model.js"
+import categoryModel from "../daos/models/category.model.js"
 const categoryRouter = Router();
 
 
