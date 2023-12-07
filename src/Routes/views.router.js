@@ -10,6 +10,9 @@ const manager = new ProductManager(filePath);
 import { uploader } from '../utils.js';
 import { io } from '../app.js'; // Importa la instancia de Socket.IO
 import messageModel from '../daos/models/message.model.js';
+import userModel from '../daos/models/user.model.js';
+import { registerUser, loginUser, isAuthenticated, logoutUser } from '../controllers/auth.controller.js';
+import { showProfile, uploadAvatar } from '../controllers/user.controller.js';
 
 
 viewsRouter.get('/', async (req, res) => {
@@ -126,7 +129,7 @@ viewsRouter.post('/message', async (req, res) => {
 });
   
 // Ruta para mostrar la vista de productos
-viewsRouter.get('/products', async (req, res) => {
+viewsRouter.get('/products', isAuthenticated , async (req, res) => {
     const { page = 1, limit = 4, sort, query } = req.query;
 
     try {
@@ -171,7 +174,10 @@ viewsRouter.get('/products', async (req, res) => {
                 category: categoryMap[product.category.toString()]
             };
         });
-        
+
+        const user = req.session.user;
+
+
         res.render('products', {
             products: productsWithCategoryNames,
             totalPages: products.totalPages,
@@ -183,6 +189,7 @@ viewsRouter.get('/products', async (req, res) => {
             totalDocs: totalDocs,
             style: 'products.css',
             title: 'Productos',
+            user: user
         });
 
     } catch (error) {
@@ -248,5 +255,38 @@ viewsRouter.get('/carts/:cid', async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
+
+
+viewsRouter.get('/cookie', async (req, res)=>{
+    
+    res.render('cookie',{
+    });
+})
+
+viewsRouter.get('/login', async (req, res)=>{
+    res.render('login',{
+
+        title: 'Login',
+        style: 'login.css',
+    });
+
+});
+
+viewsRouter.get('/register', async (req, res)=>{
+    res.render('register',{
+
+        title: 'Register',
+        style: 'register.css',
+    });
+
+});
+
+viewsRouter.post('/register', registerUser);
   
-  
+viewsRouter.post('/login', loginUser);  
+
+viewsRouter.get('/logout', logoutUser);
+
+viewsRouter.get('/profile', showProfile);
+
+viewsRouter.post('/upload-avatar', uploader.single('avatar'), uploadAvatar);

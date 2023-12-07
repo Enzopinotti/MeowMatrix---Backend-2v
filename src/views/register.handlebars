@@ -1,0 +1,70 @@
+<!-- partial:index.partial.html -->
+<div class="contenedorRegister">
+    
+    <h1>Bienvenido/a, Ingrese sus datos para registrarse 👽</h1>
+    <section class="inputs">
+        <form id="registerForm" action="/register" method="post">
+        
+            <div class="name">
+            <label for="name">Nombre/s</label>
+            <div class="sec-2">
+                <ion-icon name="person-outline"></ion-icon>
+                <input type="text" name="name" placeholder="Daniel"/>
+            </div>
+            </div>
+            <div class="name">
+                <label for="lastName">Apellido/s</label>
+                <div class="sec-2">
+                    <ion-icon name="person-outline"></ion-icon>
+                    <input type="text" name="lastName" placeholder="Rodriguez"/>
+                </div>
+            </div>
+
+            <div class="email">
+                <label for="email">Correo Electronico</label>
+                <div class="sec-2">
+                    <ion-icon name="mail-outline"></ion-icon>
+                    <input type="email" name="email" placeholder="Username@gmail.com"/>
+                </div>
+            </div>
+            <div class="password">
+
+                <label for="password">Password</label>
+
+                <div class="sec-2">
+                    <ion-icon name="lock-closed-outline"></ion-icon>
+                    <input class="pas" type="password" name="password" placeholder="············"/>
+                </div>
+
+            </div>
+
+            <div class="birthdate">
+                <label for="birthDate">Fecha de Nacimiento</label>
+                
+                <div class="sec-2">
+                    <ion-icon name="calendar-outline"></ion-icon>
+                    <input class="birthdate-input" type="date" name="birthDate" placeholder="Fecha de Nacimiento"/>
+                </div>
+            </div>
+            <button class="register" type="submit">Register </button>
+        </form>
+        
+    </section>
+    
+
+    
+
+    <a href="/login"><button>Sign In</button></a>
+</div>
+
+
+<script>
+    // Agrega un evento de escucha para el envío del formulario
+    document.getElementById('registerForm').addEventListener('submit', function(event) {
+        // Evita que el formulario se envíe automáticamente
+        event.preventDefault();
+
+        // Envía el formulario manualmente
+        this.submit();
+    });
+</script>

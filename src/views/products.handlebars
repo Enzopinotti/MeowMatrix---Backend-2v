@@ -1,5 +1,18 @@
 
-<h1 class="products-title">Lista de Productos</h1>
+<div class="header">
+
+    <a href="/profile" class="profile-btn">
+  <ion-icon name="person-circle-outline"></ion-icon> Perfil</a>
+    {{#if user}}
+    <div class="user-info">
+        <h1 class="products-title">Bienvenido {{user.name}}, rol: {{user.rol}}, Lista de Productos:</h1>   
+    </div>
+    {{/if}}
+
+    <a href="/logout" class="logout-btn"> <ion-icon name="log-out-outline"></ion-icon> Cerrar sesión </a>
+
+</div>
+
 
 <ul class="products-list">
 

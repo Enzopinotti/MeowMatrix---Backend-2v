@@ -1,22 +1,34 @@
+//Importaciones generales
 import express from 'express';
 import handlebars from 'express-handlebars';
 import http from 'http';
 import { Server }  from 'socket.io';
 import { __dirname }  from './utils.js';
+import cookieParser from 'cookie-parser';
+import session from 'express-session';
+import MongoStore from 'connect-mongo';
+
+
+//Importaciones de routers 
 import { userRouter } from './routes/users.router.js';
 import { productRouter } from './routes/products.router.js';
 import { categoryRouter } from './routes/category.router.js';
 import { cartRouter } from './routes/carts.router.js';
 import { viewsRouter } from './routes/views.router.js';
-import { ProductManager } from './daos/filesystem/ProductManager.js';
 import { messageRouter } from './routes/message.router.js';
+import { sessionRouter } from './routes/api/session.router.js';
+import { loginRouter } from './routes/views/login.js';
+import { registerRouter } from './routes/views/register.js';
+
 import { db } from './daos/database.js';
-import mongoose from 'mongoose';
 import productModel from './daos/models/product.model.js';
 
 
+
+
+
+
 const filePath = 'archivos/productos.json';
-const manager = new ProductManager(filePath);
 
 const app = express();
 const server = http.Server(app);
@@ -47,19 +59,71 @@ app.use(express.urlencoded({extended:true}))
 app.use(express.json());
 
 
+//middleware para utilizar cookies 
+app.use(
+  cookieParser( "1ad1f78ab931039683574d95dce673abae20e29f4e6cac1ab02dea191695082948c82f6e890cca8636a9fde1e4a1e1baa21710353a9f278fb62db53e922961c6"
+));
+
+//middleware para utilizar sesiones
+app.use(
+  session({
+      secret: "1ad1f78ab931039683574d95dce673abae20e29f4e6cac1ab02dea191695082948c82f6e890cca8636a9fde1e4a1e"
+      ,resave: false
+      ,saveUninitialized: true
+      ,cookie: {
+        maxAge: 60000
+      }
+      ,store: MongoStore.create({
+        mongoUrl: "mongodb+srv://enzopinottii:wZXavXvgSpGRoHGO@cluster0.unxoxuh.mongodb.net/Ecommerce?retryWrites=true&w=majority",
+        mongoOptions: { useNewUrlParser: true, useUnifiedTopology: true },
+        ttl: 2 * 60, //Cambio el el primer numero por la cantidad de minutos
+        
+
+      })
+    }
+  )
+);
+
+
 app.use('/', viewsRouter);
 app.use('/api/users', userRouter);
 app.use('/api/products', productRouter);
 app.use('/api/carts', cartRouter);
 app.use('/api/categories', categoryRouter);
+app.use('/api/sessions', sessionRouter);
 app.use('/api/messages', messageRouter);
+app.use('/login' , loginRouter);
+app.use('/register', registerRouter);
 
 
 
+
+
+//middleware para manejo de errores
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send('Something broke!');
+  next();// El next() es opcional, pero se recomienda utilizarlo para que el middleware siga ejecutándose sin problemas.
+  //res.render('error', { error: err }); // Renderiza la vista de error con el error proporcionado
+
+});
+
+const isAuthenticated = (req, res, next) => {
+  if (req.session.user) {
+    // Si el usuario está autenticado, continúa con la solicitud
+    next();
+  } else {
+    // Si el usuario no está autenticado, redirige a la página de inicio de sesión o muestra un mensaje de error
+    res.status(401).send('Acceso no autorizado');
+  }
+};
+
+//el io.on es para escuchar eventos de conexión y desconexión de clientes.
 io.on("connection", (socket) => {
   
   console.log("Un cliente se ha conectado");
 
+  //Socket para ocultar un producto en tiempo real /realTimeProducts
   socket.on('toggle-visibility', async (productId) => {
     try {
       
@@ -75,9 +139,11 @@ io.on("connection", (socket) => {
       io.emit("visibility-toggled", productId);
     } catch (error) {
       // Maneja cualquier error que pueda ocurrir durante la eliminación
-      console.error(`Error al eliminar el producto: ${error.message}`);
+      console.error(`Error al ocultar el producto: ${error.message}`);
     }
   });
+
+
 });
 
 
@@ -85,3 +151,5 @@ server.listen(port, ()=>{
     console.log(`El servidor esta escuchando en el puerto ${port}`)
    
 });
+
+
