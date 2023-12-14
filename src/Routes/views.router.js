@@ -9,10 +9,8 @@ const filePath = 'archivos/productos.json';
 const manager = new ProductManager(filePath);
 import { uploader } from '../utils.js';
 import { io } from '../app.js'; // Importa la instancia de Socket.IO
-import messageModel from '../daos/models/message.model.js';
-import userModel from '../daos/models/user.model.js';
-import { registerUser, loginUser, logoutUser, recoveryPassword } from '../controllers/auth.controller.js';
-import { showProfile, uploadAvatar } from '../controllers/user.controller.js';
+import messageModel from '../daos/models/message.model.js'
+import {  uploadAvatar } from '../controllers/user.controller.js';
 
 
 
@@ -43,7 +41,8 @@ viewsRouter.post('/realTimeProducts', uploader.array('productImage', 1), async (
     try {
         const { productName, productDescription, productPrice, productCode, productStock, productCategory } = req.body;
         let thumbnails = [];
-
+        
+        const category = await categoryModel.findOne({ _id: productCategory });
         // Verifica si se enviaron archivos
         if (req.files && req.files.length > 0) {
             // Si hay archivos adjuntos, asigna sus nombres
@@ -60,7 +59,7 @@ viewsRouter.post('/realTimeProducts', uploader.array('productImage', 1), async (
             price: productPrice,
             code: productCode,
             stock: productStock,
-            category: productCategory,
+            category: category ? category._id : null,
             thumbnails: thumbnails
         });
 
@@ -76,25 +75,21 @@ viewsRouter.post('/realTimeProducts', uploader.array('productImage', 1), async (
     }
 });
 
-
-
 viewsRouter.get('/realTimeProducts', async (req, res) => {
     try {
         const products = await productModel
-            .find( { isVisible:true } )
-            .populate('category', 'nameCategory') // Poblar el campo 'category' y proyectar solo 'nameCategory'
+            .find({ isVisible: true }) 
             .lean()
             .exec();
 
-        products.forEach(product => {
-            product.category = product.category.nameCategory;
-        });
-        //console.log(JSON.stringify(products));  //Luego poner en https://jsoneditoronline.org/
+        const categories = await categoryModel.find().lean().exec();
+
         res.render('realTimeProducts', { 
             products,
+            categories, // Enviar las categorías al renderizar la vista
             style: 'realTimeProducts.css',
             title: 'Productos en tiempo real',
-         });
+        });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

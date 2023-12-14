@@ -8,7 +8,12 @@
     <input type="number" id="productPrice" name="productPrice" placeholder="Precio">
     <input type="text" id="productCode" name="productCode" placeholder="Código del producto">
     <input type="number" id="productStock" name="productStock" placeholder="Stock">
-    <input type="text" id="productCategory" name="productCategory" placeholder="Categoría">
+    <select id="productCategory" name="productCategory">
+        <!-- A continuación, generas las opciones basadas en tus categorías existentes -->
+        {{#each categories}}
+            <option value="{{_id}}">{{nameCategory}}</option>
+        {{/each}}
+    </select>
     <!-- Campo de entrada para cargar la imagen -->
     <div class="contenedorArchivos">
         <label for="productImage">Cargar Imagen del Producto</label>

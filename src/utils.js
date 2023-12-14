@@ -15,10 +15,15 @@ const __filename = fileURLToPath(import.meta.url);
 
 export const __dirname = dirname(__filename);
 
-// Configuración de multer para el almacenamiento de archivos
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, path.join(__dirname, 'public', 'img', 'avatars')); // Ruta donde se guardarán las imágenes
+        if (file.fieldname === 'avatar') {
+            cb(null, path.join(__dirname, 'public', 'img', 'avatars')); // Ruta para las imágenes de usuarios
+        } else if (file.fieldname === 'productImage') {
+            cb(null, path.join(__dirname, 'public', 'img')); // Ruta para las imágenes de productos
+        } else {
+            cb(new Error('Invalid field name'), null);
+        }
     },
     filename: function (req, file, cb) {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
