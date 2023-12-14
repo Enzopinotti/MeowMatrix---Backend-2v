@@ -11,8 +11,9 @@ import { uploader } from '../utils.js';
 import { io } from '../app.js'; // Importa la instancia de Socket.IO
 import messageModel from '../daos/models/message.model.js';
 import userModel from '../daos/models/user.model.js';
-import { registerUser, loginUser, isAuthenticated, logoutUser } from '../controllers/auth.controller.js';
+import { registerUser, loginUser, logoutUser, recoveryPassword } from '../controllers/auth.controller.js';
 import { showProfile, uploadAvatar } from '../controllers/user.controller.js';
+
 
 
 viewsRouter.get('/', async (req, res) => {
@@ -114,9 +115,6 @@ viewsRouter.get('/message', async (req, res) => {
 });
   
 viewsRouter.post('/message', async (req, res) => {
-    console.log(req.body);
-    
-
     try {
         const newMessage = new messageModel(req.body)
     
@@ -129,7 +127,7 @@ viewsRouter.post('/message', async (req, res) => {
 });
   
 // Ruta para mostrar la vista de productos
-viewsRouter.get('/products', isAuthenticated , async (req, res) => {
+viewsRouter.get('/products', async (req, res) => {
     const { page = 1, limit = 4, sort, query } = req.query;
 
     try {
@@ -202,9 +200,7 @@ viewsRouter.get('/products/:productId', async (req, res) => {
     try {
         const productId = req.params.productId;
        
-        const product = await productModel.findById(productId).populate('category', 'nameCategory').lean(); // Asumiendo que 'category' es una referencia al modelo de categorías
-        console.log('Producto detallado: ',product);
-        
+        const product = await productModel.findById(productId).populate('category', 'nameCategory').lean(); // Asumiendo que 'category' es una referencia al modelo de categorías     
         if (!product) {
             return res.status(404).json({ error: 'Producto no encontrado' });
         }
@@ -257,36 +253,5 @@ viewsRouter.get('/carts/:cid', async (req, res) => {
 });
 
 
-viewsRouter.get('/cookie', async (req, res)=>{
-    
-    res.render('cookie',{
-    });
-})
-
-viewsRouter.get('/login', async (req, res)=>{
-    res.render('login',{
-
-        title: 'Login',
-        style: 'login.css',
-    });
-
-});
-
-viewsRouter.get('/register', async (req, res)=>{
-    res.render('register',{
-
-        title: 'Register',
-        style: 'register.css',
-    });
-
-});
-
-viewsRouter.post('/register', registerUser);
-  
-viewsRouter.post('/login', loginUser);  
-
-viewsRouter.get('/logout', logoutUser);
-
-viewsRouter.get('/profile', showProfile);
 
 viewsRouter.post('/upload-avatar', uploader.single('avatar'), uploadAvatar);

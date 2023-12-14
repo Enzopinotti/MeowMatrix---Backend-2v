@@ -2,12 +2,15 @@
 import express from 'express';
 import handlebars from 'express-handlebars';
 import http from 'http';
+import { db } from './daos/database.js';
+import dotenv from 'dotenv';
 import { Server }  from 'socket.io';
 import { __dirname }  from './utils.js';
 import cookieParser from 'cookie-parser';
 import session from 'express-session';
 import MongoStore from 'connect-mongo';
-
+import passport from 'passport';
+import  initializePassport  from './config/passport.config.js';
 
 //Importaciones de routers 
 import { userRouter } from './routes/users.router.js';
@@ -16,17 +19,18 @@ import { categoryRouter } from './routes/category.router.js';
 import { cartRouter } from './routes/carts.router.js';
 import { viewsRouter } from './routes/views.router.js';
 import { messageRouter } from './routes/message.router.js';
-import { sessionRouter } from './routes/api/session.router.js';
+import { sessionRouter } from './routes/api/session.js';
+
+
+import productModel from './daos/models/product.model.js';
 import { loginRouter } from './routes/views/login.js';
 import { registerRouter } from './routes/views/register.js';
-
-import { db } from './daos/database.js';
-import productModel from './daos/models/product.model.js';
-
+import { profileRouter } from './routes/views/profile.js';
+import { recoveryRouter } from './routes/views/recoveryPass.js';
 
 
 
-
+dotenv.config();
 
 const filePath = 'archivos/productos.json';
 
@@ -67,15 +71,14 @@ app.use(
 //middleware para utilizar sesiones
 app.use(
   session({
-      secret: "1ad1f78ab931039683574d95dce673abae20e29f4e6cac1ab02dea191695082948c82f6e890cca8636a9fde1e4a1e"
+      secret: process.env.hash
       ,resave: false
       ,saveUninitialized: true
       ,cookie: {
         maxAge: 60000
       }
       ,store: MongoStore.create({
-        mongoUrl: "mongodb+srv://enzopinottii:wZXavXvgSpGRoHGO@cluster0.unxoxuh.mongodb.net/Ecommerce?retryWrites=true&w=majority",
-        mongoOptions: { useNewUrlParser: true, useUnifiedTopology: true },
+        mongoUrl: process.env.mongo,
         ttl: 2 * 60, //Cambio el el primer numero por la cantidad de minutos
         
 
@@ -83,6 +86,12 @@ app.use(
     }
   )
 );
+
+initializePassport();
+
+app.use(passport.initialize());
+
+app.use(passport.session());
 
 
 app.use('/', viewsRouter);
@@ -92,8 +101,11 @@ app.use('/api/carts', cartRouter);
 app.use('/api/categories', categoryRouter);
 app.use('/api/sessions', sessionRouter);
 app.use('/api/messages', messageRouter);
-app.use('/login' , loginRouter);
+app.use('/login', loginRouter);
 app.use('/register', registerRouter);
+app.use('/profile', profileRouter);
+app.use('/recovery', recoveryRouter);
+
 
 
 
@@ -108,15 +120,6 @@ app.use((err, req, res, next) => {
 
 });
 
-const isAuthenticated = (req, res, next) => {
-  if (req.session.user) {
-    // Si el usuario está autenticado, continúa con la solicitud
-    next();
-  } else {
-    // Si el usuario no está autenticado, redirige a la página de inicio de sesión o muestra un mensaje de error
-    res.status(401).send('Acceso no autorizado');
-  }
-};
 
 //el io.on es para escuchar eventos de conexión y desconexión de clientes.
 io.on("connection", (socket) => {
@@ -134,7 +137,7 @@ io.on("connection", (socket) => {
 
       // Guarda el producto actualizado
       await product.save();
-      console.log(`Producto con ID ${productId} actualizado con éxito.`);
+      
       // Emite un evento para actualizar la vista
       io.emit("visibility-toggled", productId);
     } catch (error) {

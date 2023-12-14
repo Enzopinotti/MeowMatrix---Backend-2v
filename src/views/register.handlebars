@@ -3,7 +3,7 @@
     
     <h1>Bienvenido/a, Ingrese sus datos para registrarse 👽</h1>
     <section class="inputs">
-        <form id="registerForm" action="/register" method="post">
+        <form id="registerForm" action="/api/sessions/register" method="post">
         
             <div class="name">
             <label for="name">Nombre/s</label>
@@ -45,8 +45,17 @@
                     <ion-icon name="calendar-outline"></ion-icon>
                     <input class="birthdate-input" type="date" name="birthDate" placeholder="Fecha de Nacimiento"/>
                 </div>
+
             </div>
-            <button class="register" type="submit">Register </button>
+
+            <div class="phone">
+                <label for="phone">Teléfono</label>
+                <div class="sec-2">
+                    <ion-icon name="call-outline"></ion-icon>
+                    <input type="tel" name="phone" placeholder="Número de teléfono"/>
+                </div>
+            </div>
+            <button class="register" type="submit">Registrarse </button>
         </form>
         
     </section>
@@ -54,7 +63,7 @@
 
     
 
-    <a href="/login"><button>Sign In</button></a>
+    <a href="/login"><button>Iniciar Sesión</button></a>
 </div>
 
 

@@ -8,10 +8,9 @@
   
 body {
     -webkit-user-select: none;
-       -moz-user-select: none;
-        -ms-user-select: none;
-            user-select: none;
-    
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -27,7 +26,6 @@ body {
     background: #f1f7fe;
     height: 100%;
     justify-content: space-around;
-    
     padding: 2em;
     border-radius: 1.9rem;
     -webkit-border-radius: 1.9rem;
@@ -52,7 +50,6 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: space-around;
-
 }
 
  
@@ -178,4 +175,11 @@ margin-right: -5em;
   
   button {
     cursor: pointer;
+  }
+
+  .githubContainer{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 0.5rem;
   }

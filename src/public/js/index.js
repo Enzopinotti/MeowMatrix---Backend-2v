@@ -55,8 +55,6 @@ document.addEventListener("DOMContentLoaded", () => {
         button.addEventListener("click", (event) => {
             // Obtiene el ID del producto
             const productId = event.target.getAttribute("data-product-id");
-            console.log(productId);
-            
             socket.emit("toggle-visibility", productId);
         });
     });
@@ -66,7 +64,7 @@ socket.on('visibility-toggled', (productId) => {
    
     // Encuentra el elemento li con el atributo data-product-id que coincide con el ID eliminado
     const productElement = document.querySelector(`li[data-product-id="${productId}"]`);
-    console.log('Producto ocultado: ', productElement);
+    
     if (productElement) {
         // Si se encuentra el elemento, oculta este elemento en la interfaz de usuario cambiando su estilo a 'display: none;'
         productElement.style.display = 'none';

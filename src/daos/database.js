@@ -1,11 +1,10 @@
 import mongoose from "mongoose";
+import dotenv from 'dotenv';
+dotenv.config();
 
 
 
-const URL = "mongodb+srv://enzopinottii:wZXavXvgSpGRoHGO@cluster0.unxoxuh.mongodb.net/Ecommerce?retryWrites=true&w=majority";
-
-mongoose.connect(URL)
-
+mongoose.connect(process.env.mongo, {});
 const db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', function () {

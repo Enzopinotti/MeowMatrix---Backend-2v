@@ -1,14 +1,32 @@
 import userModel from "../daos/models/user.model.js";
-import { hashPassword } from "../utils.js";
+import { hashPassword, isValidPassword } from "../utils.js";
 import MongoStore from 'connect-mongo';
 import session from 'express-session';
+import Swal from "sweetalert2";
+
+export const showLogin = (req, res) => {
+    res.render('login',{
+        title: 'Iniciar Sesión',
+        style: 'login.css',
+    });
+};
+
+export const showRegister = (req, res) => {
+    res.render('register',{
+        title: 'Registro',
+        style: 'register.css',
+    });
+}
+
 export const registerUser = async (req, res) => {
     try {
         const { name, lastName, email, password, birthDate } = req.body;
-
+        if(!name || !lastName || !email || !password || !birthDate) return res.status(401).send({status: "Error", error: "Incomplete Values"}).redirect('/register');
+        
         // Hashear la contraseña antes de guardarla
+        
         const hashedPassword = hashPassword(password);
-
+        
         const newUser = new userModel({
             name,
             lastName,
@@ -22,52 +40,40 @@ export const registerUser = async (req, res) => {
 
     } catch (error) {
         console.log('Error al registrar el usuario. Error:',error);
-        res.status(500).redirect('/');
+        
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Error al registrar el usuario',
+            confirmButtonText: 'Aceptar'
+        });
+        res.status(500).redirect('/register');
     }
 
+};
+
+export const showRecovery = (req, res) => {
+    res.render('recoveryPass',{
+        title: 'Recuperar Contraseña',
+        style: 'recoveryPass.css',
+    });
 }
 
 export const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
-        const user = await userModel.findOne({ email });
+        const user = await userModel.findOne({ email }, { email: 1, name: 1, password:1 });
 
-        if (user) {
-            const hashedPassword = hashPassword(password); // Hashea la contraseña ingresada
+        if(!user) return res.status(401).send({status: "Error", error: "User not found"}).redirect('/login');
 
-            if (hashedPassword === user.password) {
-                // Las contraseñas coinciden
-                // Verificar si el usuario es administrador o usuario regular
-                const isAdmin = (email === 'admin@example.com' && password === 'admin123'); // Cambia esto por tu lógica real de verificación de administrador
-
-                // Asignar el rol correspondiente
-                const rol = isAdmin ? 'admin' : 'usuario';
-
-                // Actualizar el rol del usuario en la base de datos
-                await userModel.findOneAndUpdate({ email }, { $set: { rol: rol } });
-                
-                 // Establecer la sesión del usuario
-                req.session.user = {
-                    id: user._id,
-                    name: user.name,
-                    lastName: user.lastName,
-                    email: user.email,
-                    rol: user.rol,
-                    avatar: user.avatar,
-                    birthDate: user.birthDate,
-                    phone: user.phone,
-
-                };
-                console.log (req.session.user)
-                res.status(200).redirect('/products');
-            } else {
-                // Las contraseñas no coinciden
-                res.status(401).send('Contraseña incorrecta');
-            }
-        } else {
-            // Usuario no encontrado
-            res.status(404).send('Usuario no encontrado');
+        if(!isValidPassword(password, user)){
+           return res.status(401).send({status: "Error", error: "Invalid Credentials"}).redirect('/login');
+            
         }
+        delete user.password;
+        req.session.user = user;
+        res.status(200).redirect('/products');
+
     } catch (error) {
         console.log('Error al iniciar sesión. Error:', error);
         res.status(500).redirect('/');
@@ -77,21 +83,21 @@ export const loginUser = async (req, res) => {
 
 export const logoutUser = async (req, res) => {
     try {
-        console.log('Llegó al controlador de logout');
+        
         if (req.session.user) {
-            console.log('Usuario encontrado en la sesión');
+           
             delete req.session.user;
             req.session.destroy(error => {
                 if (error) {
-                    console.log('Error al destruir la sesión:', error);
+                    
                     res.status(500).send("Error al cerrar sesión");
                 } else {
-                    console.log('Sesión destruida exitosamente');
+                    
                     res.status(200).redirect('/login');
                 }
             });
         } else {
-            console.log('No se encontró ningún usuario en la sesión');
+           
             res.redirect('/login'); // Si no hay sesión, redirecciona a /login
         }
     } catch (error) {
@@ -108,4 +114,18 @@ export const isAuthenticated = (req, res, next) => {
       // Si el usuario no está autenticado, redirige a la página de inicio de sesión o muestra un mensaje de error
       res.status(401).send('Acceso no autorizado');
     }
-  };
+};
+
+export const recoveryPassword = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        await userModel.updateOne({ email }, { $set: { password: hashPassword(password) } });
+        res.redirect('/login');
+    } catch (error) {
+        console.log('Error al recuperar la contraseña. Error:', error);
+        res.status(500).send('Error al recuperar la contraseña');
+    }
+}
+
+
+

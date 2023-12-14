@@ -1,11 +1,7 @@
 import express from 'express';
+import { showRegister } from '../../controllers/auth.controller.js';
 
 export const registerRouter = express.Router();
 
-registerRouter.get('/', (req, res) => {
-    let data = {
-        layout: 'register',
-    }
-    res.render('index', data);
-});
+registerRouter.get('/', showRegister);
 

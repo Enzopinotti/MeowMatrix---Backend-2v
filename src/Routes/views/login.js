@@ -1,11 +1,7 @@
 import express from 'express';
+import { showLogin } from '../../controllers/auth.controller.js';
 
 export const loginRouter = express.Router();
 
-loginRouter.get('/', (req, res) => {
-    let data = {
-        layout: 'main',
-    }
-    res.render('index', data);
-});
+loginRouter.get('/', showLogin);
 

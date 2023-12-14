@@ -21,7 +21,7 @@
         </g>
     </svg>
 
-    <form id="loginForm" action="/login" method="post">
+    <form id="loginForm" action="/api/sessions/login" method="post">
         <section class="inputs">
             <div class="email">
                 <label for="email">Email Address</label>
@@ -39,11 +39,19 @@
                 </div>
             </div>
         </section>
-        <button class="login">Login </button>
+        <button class="login">Iniciar Sesión </button>
     </form>
 
- 
-   <a href="/register"><button>Sign Up</button></a>
+    <!-- Botón de inicio de sesión con GitHub -->
+    <a href="/api/sessions/github" class="githubContainer">
+        <img src="https://github.com/fluidicon.png" alt="Iniciar sesión con GitHub" width="50px">
+        <p>Ingresar con Github</p>
+    </a>
+    
+
+    <a href="/register"><button>Registrarse</button></a>
+    <br>
+    <a href="/recovery">¿Olvidaste tu Contraseña?</a>
 </div>
 <!-- partial -->
 
