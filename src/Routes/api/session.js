@@ -1,7 +1,8 @@
 import express from 'express';
-import { logoutUser, recoveryPassword, showLogin, showRegister, showRecovery } from '../../controllers/auth.controller.js' 
+import { logoutUser, recoveryPassword } from '../../controllers/auth.controller.js' 
 import { showProfile } from '../../controllers/user.controller.js';
 import passport from 'passport';
+import { generateToken } from '../../utils.js';
 
 export const sessionRouter = express.Router();
 
@@ -27,10 +28,10 @@ sessionRouter.post('/register',
     passport.authenticate('register', { failureRedirect: '/failRegister' }),
     async (req, res) => {
         let user = req.user;
+        console.log(user);
         delete user.password;
         req.session.user = user;
-        //const accessToken = generateToken(user); Todavía no lo uso
-        res.send({status: "success"}).redirect('/login');
+        res.json({ status: 'success', message: 'Registration successful' });
     }   
 );
 
@@ -38,15 +39,17 @@ sessionRouter.post('/login',
     passport.authenticate('login', { failureRedirect: '/failLogin' }),
     async (req, res) => {
         let user = req.user;
+        console.log(user.phone)
         if (!user)
             return res.status(400).send({ status: 'error', error: 'User not found' });
         delete user.password;
         req.session.user = user;
         //console.log(req.session.user);
-        //const accessToken = generateToken(user); Todavía no lo uso
-        res.redirect('/products');
+        const token = generateToken(user);
+        res.cookie('access_token', token, { maxAge: 600000, httpOnly: true });
+        res.send({ status: 'success', message: 'Login successful'});
     }
-);   
+);    
 
 sessionRouter.get('/logout', logoutUser);
 

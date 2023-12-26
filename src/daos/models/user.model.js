@@ -16,6 +16,7 @@ const userSchema = new mongoose.Schema({
     birthDate: {type: Date, require:true},
     phone: {type: String},
     avatar: {type: String},
+    cart:{ type: mongoose.Schema.Types.ObjectId, ref: 'carts' },
     rol: {type: String, require:true, default:'usuario'},
 });
 

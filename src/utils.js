@@ -5,6 +5,7 @@ import path from 'path';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import "dotenv/config"
+import * as passport from 'passport';
 
 
 
@@ -58,22 +59,27 @@ export function isValidPassword(password, user) {
     //compareSync compara la contraseña ingresada con la contraseña encriptada del usuario
 }
 
-
+export function validatePassword(password) {
+    // Verifica si la contraseña tiene al menos una mayúscula y un número
+    const uppercaseRegex = /[A-Z]/;
+    const numberRegex = /[0-9]/;
+    const hasUppercase = uppercaseRegex.test(password);
+    const hasNumber = numberRegex.test(password);
+  
+    return hasUppercase && hasNumber;
+}
 
 const PRIVATE_KEY = process.env.tokenkey;
 
 export function generateToken(user) {
     const token = jwt.sign({ user }, PRIVATE_KEY, { expiresIn: '1h' });
-    console.log(token);
     return token;
 }
-/*
+
 export function authToken(token) {
     const authHeader =req.headers.authorization;
     if (!authHeader) return res.status(401).send({status: "error", error:"Unauthorized"});
-    console.log(authHeader);
     token = authHeader.split(" ")[1];
-    console.log(token);
     jwt.verify(token, PRIVATE_KEY, (error, credentials) => {
         console.log(error)
         if (error) return res.status(403).send({status: "error", error:"Forbidden"});
@@ -83,4 +89,26 @@ export function authToken(token) {
 
 };
 
-*/
+//!Manejo de errores de passport
+
+export const passportCall = (strategy) => {
+    return async (req, res, next) => {
+        passport.authenticate(strategy, function (err, user, info) {
+            if (err) return next(err);
+            if (!user) return res.status(401).send({error: info.messages? info.messages: info.toString()});
+            req.user = user;
+            next();
+        })(req, res, next);
+    }
+}
+
+//! Autorización según roles
+
+export const authorization = (role) => {
+    return async (req, res, next) => {
+        if (!req.user) return res.status(401).send({error: 'Unauthorized'});
+        if (req.user.role !== role) return res.status(403).send({error: 'No Permissions'});
+        next();
+    }
+}
+

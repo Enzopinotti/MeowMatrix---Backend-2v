@@ -1,12 +1,22 @@
 import passport from "passport";
 import local from "passport-local";
-import { hashPassword, isValidPassword } from "../utils.js";
+import { hashPassword, isValidPassword, validatePassword } from "../utils.js";
 import userModel from "../daos/models/user.model.js";
 import GitHubStrategy from "passport-github2";
 import "dotenv/config.js";
+import jwt from "passport-jwt";
 
-
+const JWTStrategy = jwt.Strategy;
+const ExtractJWT = jwt.ExtractJwt;
 const LocalStrategy = local.Strategy;
+
+const cookieExtractor = (req) => {
+  let token = null;
+  if (req && req.cookies) {
+    token = req.cookies["access_token"];
+  }
+  return token;
+}
 
 const initializePassport = () => {
   passport.use( "register",
@@ -20,6 +30,10 @@ const initializePassport = () => {
             console.log("El usuario ya existe");
             return done(null, false);
           }
+          if (!validatePassword(password)) {
+            console.log('La contraseña no cumple con los criterios de seguridad');
+            return done(null, false);
+          }
           const newUser = {
             name,
             lastName,
@@ -28,7 +42,6 @@ const initializePassport = () => {
             birthDate,
             phone,
           };
-          console.log(newUser);
           const result = await userModel.create(newUser);
           return done(null, result);
         } catch (error) {
@@ -57,7 +70,6 @@ const initializePassport = () => {
       }
     )
   );
-  
   passport.use(
     "github",
     new GitHubStrategy(
@@ -68,7 +80,7 @@ const initializePassport = () => {
     },
     async ( accessToken, refreshToken, profile, done ) => {
       try {
-        console.log(profile);
+        //console.log(profile);
         let user = await userModel.findOne({ email: profile._json.email });
         if (!user) {
           let newUser = {
@@ -91,6 +103,17 @@ const initializePassport = () => {
     }
   ));
 
+  passport.use( 'jwt', new JWTStrategy({
+    jwtFromRequest: ExtractJWT.fromExtractors([cookieExtractor]),
+    secretOrKey: process.env.jwtsecret,
+  }, async (jwt_payload, done)=>{
+    try {
+      return done(null, jwt_payload);
+    } catch (error) {
+      return done(error);
+    }
+  }));
+
   passport.serializeUser((user, done) => {
 
     done(null, user._id);
@@ -103,7 +126,5 @@ const initializePassport = () => {
   });
 
 };
-
-
 
 export default initializePassport;

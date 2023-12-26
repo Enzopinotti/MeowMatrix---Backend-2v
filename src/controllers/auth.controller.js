@@ -68,7 +68,6 @@ export const loginUser = async (req, res) => {
 
         if(!isValidPassword(password, user)){
            return res.status(401).send({status: "Error", error: "Invalid Credentials"}).redirect('/login');
-            
         }
         delete user.password;
         req.session.user = user;

@@ -11,29 +11,27 @@ import { uploader } from '../utils.js';
 import { io } from '../app.js'; // Importa la instancia de Socket.IO
 import messageModel from '../daos/models/message.model.js'
 import {  uploadAvatar } from '../controllers/user.controller.js';
+import BaseRouter from './router.js';
+import { showLogin } from '../controllers/auth.controller.js';
 
 
-
-viewsRouter.get('/', async (req, res) => {
-    try {
-        const products = await productModel
-            .find( {isVisible:true} )
-            .populate('category', 'nameCategory') // Poblar el campo 'category' y proyectar solo 'nameCategory'
-            .lean()
-            .exec();
-
-        products.forEach(product => {
-            product.category = product.category.nameCategory;
-        });
-        res.render('home', { 
-            products,
-            style: 'index.css',
-            title: 'Home',
-         });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
+export default class extends BaseRouter{
+    init(){
+        this.get("/", async (req, res)=>{
+            res.sendSuccess("hello Student of Coderhouse");
+        })
     }
-});
+}
+
+/*
+viewsRouter.get('*', async (req, res) =>{
+    res.status(404).send('Not found');
+
+});*/
+
+//! Expresión regular para a-z A-Z y los espacios (\s): /^[a-zA-Z\s]+$/.test(variable);
+
+viewsRouter.get('/', showLogin);
 
 
 viewsRouter.post('/realTimeProducts', uploader.array('productImage', 1), async (req, res) => {
@@ -79,11 +77,12 @@ viewsRouter.get('/realTimeProducts', async (req, res) => {
     try {
         const products = await productModel
             .find({ isVisible: true }) 
+            .populate('category', 'nameCategory')
             .lean()
             .exec();
 
         const categories = await categoryModel.find().lean().exec();
-
+        console.log(products)
         res.render('realTimeProducts', { 
             products,
             categories, // Enviar las categorías al renderizar la vista
@@ -112,8 +111,6 @@ viewsRouter.get('/message', async (req, res) => {
 viewsRouter.post('/message', async (req, res) => {
     try {
         const newMessage = new messageModel(req.body)
-    
-        
         await newMessage.save();
         io.emit('message-received', newMessage);
     } catch (error) {

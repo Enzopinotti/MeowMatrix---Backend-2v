@@ -22,9 +22,8 @@ export const uploadAvatar = async (req, res) => {
         if (!req.file) {
             return res.status(400).send('No se ha seleccionado ningún archivo.');
         }
-
         // Obtener el ID del usuario desde la sesión
-        const userId = req.session.user.id;
+        const userId = req.session.user._id;
 
 
         // Guardar la ruta del archivo en la base de datos

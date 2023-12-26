@@ -35,6 +35,7 @@
                     <ion-icon name="lock-closed-outline"></ion-icon>
                     <input class="pas" type="password" name="password" placeholder="············"/>
                 </div>
+                <h5 style="color: rgb(209, 99, 99);">La contraseña debe incluir una mayuscula y un numero</h5>
 
             </div>
 
@@ -66,14 +67,5 @@
     <a href="/login"><button>Iniciar Sesión</button></a>
 </div>
 
+<script src="/js/register.js"></script>
 
-<script>
-    // Agrega un evento de escucha para el envío del formulario
-    document.getElementById('registerForm').addEventListener('submit', function(event) {
-        // Evita que el formulario se envíe automáticamente
-        event.preventDefault();
-
-        // Envía el formulario manualmente
-        this.submit();
-    });
-</script>

@@ -72,38 +72,9 @@ socket.on('visibility-toggled', (productId) => {
 });
 
 
-
-
-
-
-
-//! Mensajes en tiempo
-
-
-/*
-
-chatInput.addEventListener('keyup', (event)=>{
-    if(event.key === 'Enter'){
-        if(chatInput.value.trim().length > 0){
-            socket.emit('message', {
-                user: user, 
-                message: chatInput.value
-            });
-            chatInput.value = '';
-        }else{
-
-            Swal.fire({
-                icon: 'error',
-                title: 'Oops...',
-                text: 'No se puede enviar un mensaje vacio'
-            });
-        
-        };
-    };
-});
-*/
 // Escucha la llegada de nuevos mensajes y agrega al DOM
 socket.on("message-received", (message) => {
+    console.log(message);
     const chatMessages = document.getElementById("chat-messages");
     const messageElement = document.createElement("p");
     messageElement.classList.add("message");
@@ -112,68 +83,3 @@ socket.on("message-received", (message) => {
     chatMessages.appendChild(hr);
     chatMessages.appendChild(messageElement);
 });
-
-
-document.getElementById('modifyQuantityForm').addEventListener('submit', async function(event) {
-    event.preventDefault();
-
-    const formData = new FormData(this);
-    const url = this.getAttribute('action');
-    const options = {
-      method: 'PUT',
-      body: formData
-    };
-
-    try {
-      const response = await fetch(url, options);
-      if (response.ok) {
-        // La solicitud se realizó con éxito (código de respuesta 200-299)
-        // Aquí puedes redirigir a una nueva página o realizar acciones adicionales si es necesario
-      } else {
-        // Error en la solicitud (código de respuesta fuera del rango 200-299)
-        // Puedes mostrar un mensaje de error o manejarlo de otra manera
-        const errorData = await response.json(); // Obtener información detallada del error si está disponible
-        console.error('Error:', errorData);
-        // Aquí puedes mostrar un mensaje de error al usuario o manejar el error de acuerdo a tu lógica
-      }
-    } catch (error) {
-      // Error de red u otros errores durante la solicitud
-      console.error('Network Error:', error);
-      // Aquí puedes mostrar un mensaje de error al usuario o manejar el error de acuerdo a tu lógica
-    }
-  });
-
-
-
-
-/*
-
-socket.on('userConnected', (userName) =>{
-    Swal.fire({
-        title: `${userName} se ha unido al chat`,
-        toast: true,
-        position: 'top-right'
-
-    });
-})
-
-
-/*
-//?Notificación para logearse
-Swal.fire({
-
-    title: 'Identificate',
-    input: 'text',
-    text: 'Ingresa tu nombre de usuario',
-    inputValidator: (value) => {
-        if (!value) {
-            return 'Necesitas ingresar un nombre de usuario para continuar'
-        }
-    },
-    allowOutsideClick: false, //Para que la alerta no se cierre cuando apriete afuera del alerta
-}).then((result)=>{
-    user = result.value;
-    socket.emit('auth', user);
-});
-
-*/
