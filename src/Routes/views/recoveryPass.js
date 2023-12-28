@@ -1,5 +1,5 @@
 import express from 'express';
-import { showRecovery } from '../../controllers/auth.controller.js';
+import { showRecovery } from '../../controllers/session.controller.js';
 
 export const recoveryRouter = express.Router();
 

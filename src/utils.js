@@ -74,8 +74,7 @@ const PRIVATE_KEY = process.env.tokenkey;
 export function generateToken(user) {
     const token = jwt.sign({ user }, PRIVATE_KEY, { expiresIn: '1h' });
     return token;
-}
-
+};
 export function authToken(token) {
     const authHeader =req.headers.authorization;
     if (!authHeader) return res.status(401).send({status: "error", error:"Unauthorized"});
@@ -88,9 +87,7 @@ export function authToken(token) {
     });
 
 };
-
 //!Manejo de errores de passport
-
 export const passportCall = (strategy) => {
     return async (req, res, next) => {
         passport.authenticate(strategy, function (err, user, info) {
@@ -100,15 +97,12 @@ export const passportCall = (strategy) => {
             next();
         })(req, res, next);
     }
-}
-
+};
 //! Autorización según roles
-
 export const authorization = (role) => {
     return async (req, res, next) => {
         if (!req.user) return res.status(401).send({error: 'Unauthorized'});
         if (req.user.role !== role) return res.status(403).send({error: 'No Permissions'});
         next();
     }
-}
-
+};

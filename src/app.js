@@ -1,25 +1,25 @@
-//Importaciones generales
+//?Importaciones generales
 import express from 'express';
 import handlebars from 'express-handlebars';
 import http from 'http';
 import { db } from './daos/database.js';
 import dotenv from 'dotenv';
 import { Server }  from 'socket.io';
-import { __dirname, authToken, generateToken }  from './utils.js';
+import { __dirname }  from './utils.js';
 import cookieParser from 'cookie-parser';
 import session from 'express-session';
 import MongoStore from 'connect-mongo';
 import passport from 'passport';
 import  initializePassport  from './config/passport.config.js';
 
-//Importaciones de routers 
-import { userRouter } from './routes/users.router.js';
-import { productRouter } from './routes/products.router.js';
-import { categoryRouter } from './routes/category.router.js';
-import { cartRouter } from './routes/carts.router.js';
-import { viewsRouter } from './routes/views.router.js';
-import { messageRouter } from './routes/message.router.js';
-import { sessionRouter } from './routes/api/session.js';
+//? Importaciones de clases de routers 
+import UserRouter from './routes/users.router.js';
+import CartRouter from './routes/carts.router.js';
+import CategoryRouter from './routes/category.router.js';
+import MessageRouter from './routes/message.router.js';
+import ProductRouter from './routes/products.router.js';
+import ViewsRouter from './routes/views.router.js';
+import SessionRouter from './routes/api/session.js';
 
 
 import productModel from './daos/models/product.model.js';
@@ -28,16 +28,32 @@ import { registerRouter } from './routes/views/register.js';
 import { profileRouter } from './routes/views/profile.js';
 import { recoveryRouter } from './routes/views/recoveryPass.js';
 
+//?Instancias de las clases de los routers
+const userRouterInstance = new UserRouter();
+const cartRouterInstance = new CartRouter();
+const messageRouterInstance = new MessageRouter();
+const productRouterInstance = new ProductRouter();
+const categoryRouterInstance = new CategoryRouter();
+const sessionRouterInstance = new SessionRouter();
+const viewsRouterInstance = new ViewsRouter();
 
+
+
+//? Routers extraidos
+const userRouter = userRouterInstance.getRouter();
+const cartRouter = cartRouterInstance.getRouter();
+const messageRouter = messageRouterInstance.getRouter();
+const productRouter = productRouterInstance.getRouter();
+const categoryRouter = categoryRouterInstance.getRouter();
+const sessionRouter = sessionRouterInstance.getRouter();
+const viewsRouter = viewsRouterInstance.getRouter();
 
 dotenv.config();
 
-const filePath = 'archivos/productos.json';
 
 const app = express();
 const server = http.Server(app);
 export const io = new Server(server);    
-
 const hbs = handlebars.create({
   runtimeOptions: {
     allowProtoPropertiesByDefault: true,

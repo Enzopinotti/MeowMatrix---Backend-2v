@@ -1,9 +1,6 @@
 import userModel from "../daos/models/user.model.js";
-import { hashPassword, isValidPassword } from "../utils.js";
-import MongoStore from 'connect-mongo';
-import session from 'express-session';
-import Swal from "sweetalert2";
-
+import { hashPassword } from "../utils.js";
+import { generateToken } from "../utils.js";
 export const showLogin = (req, res) => {
     res.render('login',{
         title: 'Iniciar Sesión',
@@ -20,33 +17,12 @@ export const showRegister = (req, res) => {
 
 export const registerUser = async (req, res) => {
     try {
-        const { name, lastName, email, password, birthDate } = req.body;
-        if(!name || !lastName || !email || !password || !birthDate) return res.status(401).send({status: "Error", error: "Incomplete Values"}).redirect('/register');
-        
-        // Hashear la contraseña antes de guardarla
-        
-        const hashedPassword = hashPassword(password);
-        
-        const newUser = new userModel({
-            name,
-            lastName,
-            email,
-            password: hashedPassword,
-            birthDate,
-        });
-        
-        await newUser.save();
-        res.redirect('/login');
-
+        let user = req.user;
+        console.log(user);
+        delete user.password;
+        req.session.user = user;
+        res.json({ status: 'success', message: 'Registration successful' });
     } catch (error) {
-        console.log('Error al registrar el usuario. Error:',error);
-        
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'Error al registrar el usuario',
-            confirmButtonText: 'Aceptar'
-        });
         res.status(500).redirect('/register');
     }
 
@@ -61,18 +37,16 @@ export const showRecovery = (req, res) => {
 
 export const loginUser = async (req, res) => {
     try {
-        const { email, password } = req.body;
-        const user = await userModel.findOne({ email }, { email: 1, name: 1, password:1 });
-
-        if(!user) return res.status(401).send({status: "Error", error: "User not found"}).redirect('/login');
-
-        if(!isValidPassword(password, user)){
-           return res.status(401).send({status: "Error", error: "Invalid Credentials"}).redirect('/login');
-        }
+        let user = req.user;
+        console.log(user.phone)
+        if (!user)
+            return res.status(400).send({ status: 'error', error: 'User not found' });
         delete user.password;
         req.session.user = user;
-        res.status(200).redirect('/products');
-
+        //console.log(req.session.user);
+        const token = generateToken(user);
+        res.cookie('access_token', token, { maxAge: 600000, httpOnly: true });
+        res.send({ status: 'success', message: 'Login successful'});
     } catch (error) {
         console.log('Error al iniciar sesión. Error:', error);
         res.status(500).redirect('/');
@@ -125,6 +99,8 @@ export const recoveryPassword = async (req, res) => {
         res.status(500).send('Error al recuperar la contraseña');
     }
 }
+
+
 
 
 
