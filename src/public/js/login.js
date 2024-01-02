@@ -18,7 +18,7 @@ document.getElementById('loginForm').addEventListener('submit', function(event) 
     .then(json => {
         console.log(json);
         // Redirigir a la página de productos si el inicio de sesión es exitoso
-        if (json.message === 'Login successful') {
+        if (json.payload.message === 'Login successful') {
             window.location.href = '/products';
         }
     })

@@ -11,15 +11,17 @@ import session from 'express-session';
 import MongoStore from 'connect-mongo';
 import passport from 'passport';
 import  initializePassport  from './config/passport.config.js';
+import config from './config/server.config.js';
 
 //? Importaciones de clases de routers 
-import UserRouter from './routes/users.router.js';
-import CartRouter from './routes/carts.router.js';
-import CategoryRouter from './routes/category.router.js';
-import MessageRouter from './routes/message.router.js';
-import ProductRouter from './routes/products.router.js';
-import ViewsRouter from './routes/views.router.js';
-import SessionRouter from './routes/api/session.js';
+  import BaseRouter from './routes/router.js';
+  import UserRouter from './routes/users.router.js';
+  import CartRouter from './routes/carts.router.js';
+  import CategoryRouter from './routes/category.router.js';
+  import MessageRouter from './routes/message.router.js';
+  import ProductRouter from './routes/products.router.js';
+  import ViewsRouter from './routes/views.router.js';
+  import SessionRouter from './routes/api/session.js';
 
 
 import productModel from './daos/models/product.model.js';
@@ -28,7 +30,14 @@ import { registerRouter } from './routes/views/register.js';
 import { profileRouter } from './routes/views/profile.js';
 import { recoveryRouter } from './routes/views/recoveryPass.js';
 
+
+const port = config.port;
+const mode = config.mode;
+
+
+
 //?Instancias de las clases de los routers
+const baseRouterInstance = new BaseRouter();
 const userRouterInstance = new UserRouter();
 const cartRouterInstance = new CartRouter();
 const messageRouterInstance = new MessageRouter();
@@ -38,8 +47,8 @@ const sessionRouterInstance = new SessionRouter();
 const viewsRouterInstance = new ViewsRouter();
 
 
-
 //? Routers extraidos
+const baseRouter = baseRouterInstance.getRouter();
 const userRouter = userRouterInstance.getRouter();
 const cartRouter = cartRouterInstance.getRouter();
 const messageRouter = messageRouterInstance.getRouter();
@@ -73,8 +82,6 @@ app.set('view engine', 'handlebars');
 //Además seteo donde será mi carpeta public
 app.use(express.static(__dirname+'/public'));
 
-const port = 8080;
-
 app.use(express.urlencoded({extended:true}))
 app.use(express.json());
 
@@ -87,14 +94,14 @@ app.use(
 //middleware para utilizar sesiones
 app.use(
   session({
-      secret: process.env.hash
+      secret: config.hashKey
       ,resave: false
       ,saveUninitialized: true
       ,cookie: {
         maxAge: 60000
       }
       ,store: MongoStore.create({
-        mongoUrl: process.env.mongo,
+        mongoUrl: config.mongoUrl,
         ttl: 2 * 60, //Cambio el el primer numero por la cantidad de minutos
         
 
@@ -102,6 +109,9 @@ app.use(
     }
   )
 );
+
+//? Utilizar la función generateCustomResponses
+app.use(baseRouterInstance.generateCustomResponses);
 
 initializePassport();
 
@@ -121,8 +131,6 @@ app.use('/login', loginRouter);
 app.use('/register', registerRouter);
 app.use('/profile', profileRouter);
 app.use('/recovery', recoveryRouter);
-
-
 
 
 
@@ -166,9 +174,13 @@ io.on("connection", (socket) => {
 });
 
 
-server.listen(port, ()=>{
-    console.log(`El servidor esta escuchando en el puerto ${port}`)
-   
-});
+if(port){
+  server.listen(port, ()=>{
+    console.log(`El servidor esta escuchando en el puerto ${port} en modo ${mode}`)
+  });
+}else{
+  console.log("No hay variables de entorno configuradas")
+}
+
 
 

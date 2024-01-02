@@ -65,7 +65,7 @@ export const getProducts = async (req, res) => {
         });
 
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.sendServerError(error);
     }
 };
 
@@ -75,7 +75,7 @@ export const getProductById  = async (req, res) => {
        
         const product = await productModel.findById(productId).populate('category', 'nameCategory').lean(); // Asumiendo que 'category' es una referencia al modelo de categorías     
         if (!product) {
-            return res.status(404).json({ error: 'Producto no encontrado' });
+            return res.sendNotFound({ error: 'Producto no encontrado' });
         }
 
         // Renderizar la vista de detalles del producto y pasar la información
@@ -87,7 +87,7 @@ export const getProductById  = async (req, res) => {
         });
         
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.sendServerError(error);
     }
 };
 
@@ -97,34 +97,35 @@ export const updateProduct = async (req, res) => {
           req.params.pid, req.body, { new: true, }  
         );
         if(!updatedProduct){
-          return res.status(404).json({message: 'Product not found'});
+            return res.sendNotFound({ message: 'Producto no encontrado' });
         }
-          res.status(200).json(updatedProduct);
+        res.sendSuccess(updatedProduct);
     } catch (error) {
-          res.status(500).json({ error: error.message });
+        res.sendServerError(error);
     }
 };
 
 export const deleteProduct = async (req, res) => {
     const productId = req.params.pid;
-  
     try {
         const result = await productModel.findById(productId);
+        if (!result) {
+            return res.sendNotFound({ message: 'Producto no encontrado' });
+        }
         const productEliminated = await productModel.deleteOne(result);
-        res.status(200).json(productEliminated);
+        res.sendSuccess(productEliminated);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.sendServerError(error);
     }
 };
 
 export const createProduct = async (req, res) => {
-    const product = new productModel(req.body)
+    const product = new productModel(req.body);
 
-  try {
-    const addedProduct = await product.save();
-    res.status(201).json(addedProduct);
-  }
-  catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-}
+    try {
+        const addedProduct = await product.save();
+        res.sendSuccess(addedProduct);
+    } catch (error) {
+        res.sendServerError(error);
+    }
+};

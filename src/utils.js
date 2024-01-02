@@ -4,7 +4,7 @@ import { dirname } from "path";
 import path from 'path';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import "dotenv/config"
+import config from './config/server.config.js'
 import * as passport from 'passport';
 
 
@@ -69,7 +69,7 @@ export function validatePassword(password) {
     return hasUppercase && hasNumber;
 }
 
-const PRIVATE_KEY = process.env.tokenkey;
+const PRIVATE_KEY = config.tokenKey;
 
 export function generateToken(user) {
     const token = jwt.sign({ user }, PRIVATE_KEY, { expiresIn: '1h' });
@@ -102,7 +102,7 @@ export const passportCall = (strategy) => {
 export const authorization = (role) => {
     return async (req, res, next) => {
         if (!req.user) return res.status(401).send({error: 'Unauthorized'});
-        if (req.user.role !== role) return res.status(403).send({error: 'No Permissions'});
+        if (req.user.rol !== role) return res.status(403).send({error: 'No Permissions'});
         next();
     }
 };

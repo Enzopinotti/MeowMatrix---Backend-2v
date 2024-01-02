@@ -33,9 +33,10 @@ export const postRealTimeProducts = async (req, res) => {
         const addedProduct = await productModel.findById(savedProduct._id).populate('category', 'nameCategory').lean();
         
         io.emit( 'product-added', addedProduct );
-        
+        res.sendSuccess(addedProduct);
+
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.sendServerError(error);
     }
 };
 
@@ -55,8 +56,10 @@ export const getRealTimeProducts = async (req, res) => {
             style: 'realTimeProducts.css',
             title: 'Productos en tiempo real',
         });
+        
+        res.sendSuccess({ products, categories });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.sendServerError(error);
     }
 };
 

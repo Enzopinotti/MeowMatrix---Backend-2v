@@ -3,7 +3,7 @@ import local from "passport-local";
 import { hashPassword, isValidPassword, validatePassword } from "../utils.js";
 import userModel from "../daos/models/user.model.js";
 import GitHubStrategy from "passport-github2";
-import "dotenv/config.js";
+import config from '../config/server.config.js'
 import jwt from "passport-jwt";
 
 const JWTStrategy = jwt.Strategy;
@@ -74,9 +74,9 @@ const initializePassport = () => {
     "github",
     new GitHubStrategy(
     {
-      clientID: process.env.gitclientid,
-      clientSecret: process.env.gitclientsecret,
-      callbackURL: process.env.gitcallbackurl
+      clientID: config.gitClientId,
+      clientSecret: config.gitClientSecret,
+      callbackURL: config.gitCallbackUrl
     },
     async ( accessToken, refreshToken, profile, done ) => {
       try {
@@ -105,7 +105,7 @@ const initializePassport = () => {
 
   passport.use( 'jwt', new JWTStrategy({
     jwtFromRequest: ExtractJWT.fromExtractors([cookieExtractor]),
-    secretOrKey: process.env.jwtsecret,
+    secretOrKey: config.jwtSecret,
   }, async (jwt_payload, done)=>{
     try {
       return done(null, jwt_payload);

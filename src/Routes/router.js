@@ -5,7 +5,6 @@ export default class BaseRouter {
      this.router = Router();
      this.init();   
     }
-
     getRouter() {
         return this.router;
     }
