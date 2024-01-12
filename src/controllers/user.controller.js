@@ -3,15 +3,15 @@ import moment from 'moment';
 
 
 export const showProfile = (req, res) => {
-    const user = req.session.user;
 
+    const user = req.user;
     if (!user) {
       return res.sendUserError({ status: 'error', error: 'User not found' });   
     }
 
     let birthDateFormated = moment(user.birthDate).add(1, 'day').format('DD/MM/YYYY');
-
-    res.render('profile', { user: { ...user, birthDate: birthDateFormated }, style: 'profile.css' , title: 'Perfil del Usuario'});
+    
+    res.render('profile', { user, birthDateFormated , style: 'profile.css' , title: 'Perfil del Usuario'});
 };
 
 

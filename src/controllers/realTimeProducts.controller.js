@@ -49,7 +49,6 @@ export const getRealTimeProducts = async (req, res) => {
             .exec();
 
         const categories = await categoryModel.find().lean().exec();
-        console.log(products)
         res.render('realTimeProducts', { 
             products,
             categories, // Enviar las categorías al renderizar la vista

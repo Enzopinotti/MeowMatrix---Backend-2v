@@ -48,8 +48,9 @@ export const getProducts = async (req, res) => {
             };
         });
 
-        const user = req.session.user;
-
+        const user = req.user;
+        console.log(user);
+              
         res.render('products', {
             products: productsWithCategoryNames,
             totalPages: products.totalPages,

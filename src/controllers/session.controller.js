@@ -52,6 +52,7 @@ export const loginUser = async (req, res) => {
 
 export const logoutUser = async (req, res) => {
     try {
+        console.log(req.session.user);
         if (req.session.user) {
             delete req.session.user;
             req.session.destroy(error => {

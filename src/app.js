@@ -35,6 +35,23 @@ const port = config.port;
 const mode = config.mode;
 
 
+//? Escucha de eventos de proceso (process.on)
+process.on('exit', code => {
+  console.log('Este código se ejecutará justo antes de salir del proceso');
+  //* Acciones finales aquí antes de que el proceso termine
+});
+
+process.on('uncaughtException', exception => {
+  console.log('Este código atrapa todas las excepciones no controladas, como llamar a una función no declarada');
+  console.error(exception);
+  // Puedes realizar acciones, registrar el error o realizar una limpieza antes de finalizar el proceso
+});
+
+process.on('message', message => {
+  console.log('Este código se ejecutará cuando reciba un mensaje de otro proceso');
+  // Puedes manejar la lógica según el mensaje recibido desde otro proceso
+});
+
 
 //?Instancias de las clases de los routers
 const baseRouterInstance = new BaseRouter();
