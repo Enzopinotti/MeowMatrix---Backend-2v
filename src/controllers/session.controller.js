@@ -1,7 +1,7 @@
 import userModel from "../daos/models/user.model.js";
 import { hashPassword } from "../utils.js";
 import { generateToken } from "../utils.js";
-
+import * as sessiobServices from '../services/session.service.js';
 
 export const showLogin = (req, res) => {
     res.render('login',{
@@ -21,7 +21,7 @@ export const registerUser = async (req, res) => {
     try {
         let user = req.user;
         delete user.password;
-        req.session.user = user;
+        req.user = user;
         res.sendSuccess({ status: 'success', message: 'Registration successful' });
     } catch (error) {
         res.sendServerError(error);
@@ -71,7 +71,7 @@ export const logoutUser = async (req, res) => {
 };
 
 export const isAuthenticated = (req, res, next) => {
-    if (req.session.user) {
+    if (req.user) {
         next();
     } else {
         res.sendUnauthorized('Acceso no autorizado');
@@ -81,9 +81,10 @@ export const isAuthenticated = (req, res, next) => {
 export const recoveryPassword = async (req, res) => {
     try {
         const { email, password } = req.body;
-        await userModel.updateOne({ email }, { $set: { password: hashPassword(password) } });
+        const newPassword = hashPassword(password);
+        await sessiobServices.updatePassword(email, newPassword);
         res.redirect('/login');
-    } catch (error) {
+      } catch (error) {
         res.sendServerError('Error al recuperar la contraseña');
-    }
+      }
 }

@@ -1,11 +1,16 @@
 import messageModel from "../daos/models/message.model.js";
-
+import * as messageServices from '../services/message.service.js';
+import { io } from '../app.js';
 
 //! Vista de mensajes en tiempo real
 export const getRealTimeMessages = async (req, res) => {
     try {
-        const messages = await messageModel.find();
-        res.sendSuccess({ messages });
+        const messages = await messageServices.getRealTimeMessages();
+        res.render("message", { 
+            messages,
+            style: 'chat.css',
+            title: 'Mensajes en tiempo real',
+        });
     } catch (error) {
         res.sendServerError(error);
     }
@@ -13,10 +18,8 @@ export const getRealTimeMessages = async (req, res) => {
 
 export const postRealTimeMessages = async (req, res) => {
     try {
-        const newMessage = new messageModel(req.body);
-        await newMessage.save();
+        const newMessage = await messageServices.postRealTimeMessage(req.body);
         io.emit('message-received', newMessage);
-        res.sendSuccess(newMessage);
     } catch (error) {
         res.sendServerError(error);
     }
@@ -25,7 +28,7 @@ export const postRealTimeMessages = async (req, res) => {
 
 export const getMessages = async (req, res) => {
     try {
-        const messages = await messageModel.find({});
+        const messages = await messageServices.getMessages();
         res.sendSuccess(messages);
     } catch (error) {
         res.sendServerError(error);
@@ -33,10 +36,9 @@ export const getMessages = async (req, res) => {
 };
 
 export const postMessage = async (req, res) => {
-    const message = new messageModel(req.body);
     try {
-        const newMessage = await message.save();
-        res.status(201).json(newMessage);
+        const newMessage = await messageServices.postMessage(messageData);
+        res.sendSuccess(newMessage);
     } catch (error) {
         res.sendServerError(error);
     }

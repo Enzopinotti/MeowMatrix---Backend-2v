@@ -12,6 +12,7 @@ import MongoStore from 'connect-mongo';
 import passport from 'passport';
 import  initializePassport  from './config/passport.config.js';
 import config from './config/server.config.js';
+import cors from 'cors';
 
 //? Importaciones de clases de routers 
   import BaseRouter from './routes/router.js';
@@ -100,6 +101,7 @@ app.set('view engine', 'handlebars');
 app.use(express.static(__dirname+'/public'));
 
 app.use(express.urlencoded({extended:true}))
+app.use(cors());
 app.use(express.json());
 
 

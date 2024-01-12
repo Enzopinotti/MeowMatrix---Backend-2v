@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { 
     getCategories, postCategory, putCategory 
-} from "../controllers/category.constroller.js";
+} from "../controllers/category.controller.js";
 import BaseRouter from "./router.js";
 const categoryRouter = Router();
 

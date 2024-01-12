@@ -1,6 +1,6 @@
 import userModel from "../daos/models/user.model.js";
 import moment from 'moment';
-
+import * as userService from "../services/user.service.js";
 
 export const showProfile = (req, res) => {
 
@@ -21,12 +21,12 @@ export const uploadAvatar = async (req, res) => {
         return res.status(400).json({ error: 'No se ha seleccionado ningún archivo.' });
       }
 
-      const userId = req.session.user._id;
+      const userId = req.user._id;
       const imagePath = `/img/avatars/${req.file.filename}`;
 
-      await userModel.findByIdAndUpdate(userId, { avatar: imagePath });
+      await userService.updateAvatar(userId, imagePath);
 
-      req.session.user.avatar = imagePath;
+      req.user.avatar = imagePath;
 
       req.session.save((err) => {
         if (err) {
@@ -45,7 +45,7 @@ export const uploadAvatar = async (req, res) => {
 export const getUsers = async (req, res) => {
     const limit = req.query.limit; // Obtén el límite de usuarios desde los parámetros de consulta
     try {
-      const users = await userModel.find();  
+      const users = await userService.getUsers();  
       if (limit) {
         const limitedUsers = users.slice(0, limit);
         res.sendSuccess(limitedUsers);
@@ -61,7 +61,7 @@ export const getUserById = async (req, res) => {
     const userId = req.params.userId;
     try {
 
-      const user = await userModel.findById(userId);
+      const user = await userService.getUserById(userId);
       if (!user) {
         return res.status(404).json({ error: 'Usuario no encontrado' });
       }
@@ -85,11 +85,10 @@ export const postUser = async (req, res) => {
   }
 };
 export const deleteUser = async (req, res) => {
-  const userId = req.params.pid;
+  const userId = req.params.userId;
   try {
-      const result = await userModel.findById(userId);
-      const userEliminated = await userModel.deleteOne(result);
-      res.sendSuccess(userEliminated);
+      const result = await userService.deleteUser(userId);
+      res.sendSuccess(result);
   } catch (error) {
       res.sendServerError(error.message);
   }
@@ -97,7 +96,7 @@ export const deleteUser = async (req, res) => {
 
 export const updateUser = async (req, res) => {
   try {
-      const updatedUser = await userModel.findByIdAndUpdate(req.params.userId, req.body, { new: true });
+    const updatedUser = await userService.updateUser(req.params.userId, req.body);
       if (!updatedUser) {
           return res.sendNotFound('User not found');
       }

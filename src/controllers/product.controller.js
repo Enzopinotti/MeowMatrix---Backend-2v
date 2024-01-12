@@ -1,80 +1,49 @@
-import categoryModel from "../daos/models/category.model.js";
-import productModel from "../daos/models/product.model.js";
+import * as productServices from "../services/product.service.js";
+
 
 export const getProducts = async (req, res) => {
+    try {
+        const products = await productServices.getAllProducts();
+        res.json(products);
+      } catch (error) {
+        console.log(error);
+        res.sendServerError(error);
+    }
+}
+
+export const getProductsView = async (req, res) => {
 
     const { page = 1, limit = 4, sort, query } = req.query;
-
     try {
-        let queryOptions = { isVisible: true }; // Acá guardo las Queries que haga 
-        let sortOptions = { }; // Acá guardo el tipo de ordenamiento que haga
-
-        // Filtros basados en la query
-
-        if (query && query.name) {
-            queryOptions.name = { $regex: new RegExp(query.name, 'i') };
-        }
-
-        // Obtener el número total de documentos
-        const totalDocs = await productModel.countDocuments(queryOptions);
-
-        // Lógica de ordenamiento
-        if (sort === 'date') {
-            sortOptions = { createdAt: sort === 'asc' ? 1 : -1 };
-        } else if (sort === 'price') {
-            sortOptions = { price: sort === 'asc' ? 1 : -1 };
-        }
-
-        const options = {
-            page: parseInt(page),
-            limit: parseInt(limit),
-            sort: sortOptions,
-        };
-
-        const products = await productModel.paginate(queryOptions, options);
-        const categoryIds = products.docs.map(product => product.category);
-
-        // Elimina IDs duplicados
-        const uniqueCategoryIds = [ ...new Set( categoryIds  ) ];
-        const categories = await categoryModel.find({ _id: { $in: uniqueCategoryIds } }, 'nameCategory');
-        const categoryMap = {};
-        categories.forEach(category => {
-            categoryMap[category._id.toString()] = category.nameCategory;
-        });
-        const productsWithCategoryNames = products.docs.map(product => {
-            return {
-                ...product.toObject(),
-                category: categoryMap[product.category.toString()]
-            };
-        });
-
-        const user = req.user;
-        console.log(user);
-              
-        res.render('products', {
-            products: productsWithCategoryNames,
-            totalPages: products.totalPages,
-            currentPage: products.page,
-            hasNextPage: products.hasNextPage,
-            hasPrevPage: products.hasPrevPage,
-            prevLink: products.prevPage ? `/products?page=${products.prevPage}&limit=${limit}` : null,
-            nextLink: products.nextPage ? `/products?page=${products.nextPage}&limit=${limit}` : null,
-            totalDocs: totalDocs,
-            style: 'products.css',
-            title: 'Productos',
-            user: user
-        });
-
+      const { products, totalDocs } = await productServices.getProductsView(page, limit, sort, query);
+  
+      // Resto del código para manejar la respuesta y renderizar la vista
+      const user = req.user;
+  
+      res.render('products', {
+        products: products.docs,
+        totalPages: products.totalPages,
+        currentPage: products.page,
+        hasNextPage: products.hasNextPage,
+        hasPrevPage: products.hasPrevPage,
+        prevLink: products.prevPage ? `/products?page=${products.prevPage}&limit=${limit}` : null,
+        nextLink: products.nextPage ? `/products?page=${products.nextPage}&limit=${limit}` : null,
+        totalDocs: totalDocs,
+        style: 'products.css',
+        title: 'Productos',
+        user: user
+      });
+  
     } catch (error) {
-        res.sendServerError(error);
+      res.sendServerError(error);
     }
 };
 
-export const getProductById  = async (req, res) => {
+export const getProductByIdView  = async (req, res) => {
+    const productId = req.params.productId;
     try {
-        const productId = req.params.productId;
-       
-        const product = await productModel.findById(productId).populate('category', 'nameCategory').lean(); // Asumiendo que 'category' es una referencia al modelo de categorías     
+        const product = await productServices.getProductsByIds(productId);
+        
         if (!product) {
             return res.sendNotFound({ error: 'Producto no encontrado' });
         }
@@ -86,20 +55,36 @@ export const getProductById  = async (req, res) => {
             title: 'Detalles del producto',
             // Otros datos que quieras enviar a la vista
         });
-        
     } catch (error) {
         res.sendServerError(error);
     }
 };
 
-export const updateProduct = async (req, res) => {
+export const getProductById  = async (req, res) => {
+    const productId = req.params.productId;
     try {
-        const updatedProduct = await productModel.findByIdAndUpdate(
-          req.params.pid, req.body, { new: true, }  
-        );
-        if(!updatedProduct){
+        const product = await productServices.getProductsByIds(productId);
+        if (!product) {
+            return res.sendNotFound({ error: 'Producto no encontrado' });
+        }
+        res.sendSuccess(product);
+        
+    } catch (error) {
+        res.sendServerError(error);
+    }
+}
+
+export const updateProduct = async (req, res) => {
+    const productId = req.params.pid;
+    const newData = req.body;
+
+    try {
+        const updatedProduct = await productServices.updateProduct(productId, newData);
+
+        if (!updatedProduct) {
             return res.sendNotFound({ message: 'Producto no encontrado' });
         }
+
         res.sendSuccess(updatedProduct);
     } catch (error) {
         res.sendServerError(error);
@@ -109,11 +94,12 @@ export const updateProduct = async (req, res) => {
 export const deleteProduct = async (req, res) => {
     const productId = req.params.pid;
     try {
-        const result = await productModel.findById(productId);
-        if (!result) {
+        const productEliminated = await productServices.deleteProduct(productId);
+
+        if (!productEliminated) {
             return res.sendNotFound({ message: 'Producto no encontrado' });
         }
-        const productEliminated = await productModel.deleteOne(result);
+
         res.sendSuccess(productEliminated);
     } catch (error) {
         res.sendServerError(error);
@@ -121,10 +107,9 @@ export const deleteProduct = async (req, res) => {
 };
 
 export const createProduct = async (req, res) => {
-    const product = new productModel(req.body);
-
+    const productData = req.body;
     try {
-        const addedProduct = await product.save();
+        const addedProduct = await productServices.createProduct(productData);
         res.sendSuccess(addedProduct);
     } catch (error) {
         res.sendServerError(error);
