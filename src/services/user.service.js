@@ -1,8 +1,9 @@
-import * as userPersistence from "../persistence/user.persistence.js";
+import { UserDao } from "../daos/factory.js";
+import UserDTO from "../daos/DTOs/user.dto.js";
 
 export const getUsers = async () => {
     try {
-      return await userPersistence.getUsersFromDatabase();
+      return await UserDao.get();
     } catch (error) {
       throw error;
     }
@@ -10,23 +11,55 @@ export const getUsers = async () => {
   
 export const getUserById = async (userId) => {
     try {
-      return await userPersistence.getUserByIdFromDatabase(userId);
+      console.log('entro a getuserbid')
+      return await UserDao.getById(userId);
     } catch (error) {
       throw error;
     }
 };
 
-export const updateUser = async (userId, userData) => {
-    try {
-      return await userPersistence.updateUserInDatabase(userId, userData);
-    } catch (error) {
-      throw error;
-    }
+export const addUser = async (userData) => {
+  try {
+    const userDTO = new UserDTO(
+      userData.name,
+      userData.email,
+      userData.password,
+      userData.birthDate,
+      userData.phone
+    );
+
+    userDTO.validate(); // Realiza las validaciones definidas en UserDTO
+
+    const userObject = userDTO.toObject(); // Obtiene el objeto formateado
+
+    return await UserDao.add(userObject);
+  } catch (error) {
+    throw error;
+  }
 };
-  
+
+export const updateUser = async (userId, userData) => {
+  try {
+    const userDTO = new UserDTO(
+      userData.name,
+      userData.email,
+      userData.password,
+      userData.birthDate,
+      userData.phone
+    );
+
+    userDTO.validate(); // Realiza las validaciones definidas en UserDTO
+
+    const userObject = userDTO.toObject(); // Obtiene el objeto formateado
+
+    return await UserDao.update(userId, userObject);
+  } catch (error) {
+    throw error;
+  }
+};
 export const deleteUser = async (userId) => {
     try {
-      return await userPersistence.deleteUserFromDatabase(userId);
+      return await UserDao.delete(userId);
     } catch (error) {
       throw error;
     }
@@ -35,9 +68,11 @@ export const deleteUser = async (userId) => {
 
 export const updateAvatar = async (userId, imagePath) => {
   try {
-    await userPersistence.updateAvatarInDatabase(userId, imagePath);
+    await UserDao.updateAvatar(userId, imagePath);
   } catch (error) {
     throw error;
   }
 };
+
+
   

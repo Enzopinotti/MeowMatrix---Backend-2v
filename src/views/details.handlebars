@@ -16,7 +16,8 @@
         <p class="product-category"><strong>Categoría: </strong>  {{product.category.nameCategory}}</p>
         
         <!-- Formulario para agregar al carrito -->
-        <form action="/api/carts/:cid/product/{{product._id}}" method="POST" class="add-to-cart-form">
+        <form action="/api/carts/current/product/{{product._id}}" method="POST" class="add-to-cart-form">
+            <input type="hidden" name="productId" value="{{product._id}}">
             <button type="submit" class="add-to-cart-btn">Agregar al carrito</button>
         </form>
     </div>

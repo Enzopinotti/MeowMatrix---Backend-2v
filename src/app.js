@@ -2,7 +2,6 @@
 import express from 'express';
 import handlebars from 'express-handlebars';
 import http from 'http';
-import { db } from './daos/database.js';
 import dotenv from 'dotenv';
 import { Server }  from 'socket.io';
 import { __dirname }  from './utils.js';
@@ -13,6 +12,8 @@ import passport from 'passport';
 import  initializePassport  from './config/passport.config.js';
 import config from './config/server.config.js';
 import cors from 'cors';
+import "./daos/factory.js"
+
 
 //? Importaciones de clases de routers 
   import BaseRouter from './routes/router.js';
@@ -23,9 +24,11 @@ import cors from 'cors';
   import ProductRouter from './routes/products.router.js';
   import ViewsRouter from './routes/views.router.js';
   import SessionRouter from './routes/api/session.js';
+  import MailRouter from './routes/mail.router.js';
+  import SmsRouter from './routes/sms.router.js';
 
 
-import productModel from './daos/models/product.model.js';
+import productModel from './daos/mongo/models/product.model.js';
 import { loginRouter } from './routes/views/login.js';
 import { registerRouter } from './routes/views/register.js';
 import { profileRouter } from './routes/views/profile.js';
@@ -49,7 +52,7 @@ process.on('uncaughtException', exception => {
 });
 
 process.on('message', message => {
-  console.log('Este código se ejecutará cuando reciba un mensaje de otro proceso');
+  console.log('Este código se ejecutará cuando reciba un mensaje de otro proceso', m);
   // Puedes manejar la lógica según el mensaje recibido desde otro proceso
 });
 
@@ -63,6 +66,8 @@ const productRouterInstance = new ProductRouter();
 const categoryRouterInstance = new CategoryRouter();
 const sessionRouterInstance = new SessionRouter();
 const viewsRouterInstance = new ViewsRouter();
+const mailRouterInstance = new MailRouter();
+const smsRouterInstance = new SmsRouter();
 
 
 //? Routers extraidos
@@ -74,6 +79,8 @@ const productRouter = productRouterInstance.getRouter();
 const categoryRouter = categoryRouterInstance.getRouter();
 const sessionRouter = sessionRouterInstance.getRouter();
 const viewsRouter = viewsRouterInstance.getRouter();
+const mailRouter = mailRouterInstance.getRouter();
+const smsRouter = smsRouterInstance.getRouter();
 
 dotenv.config();
 
@@ -150,6 +157,8 @@ app.use('/login', loginRouter);
 app.use('/register', registerRouter);
 app.use('/profile', profileRouter);
 app.use('/recovery', recoveryRouter);
+app.use('/mail', mailRouter);
+app.use('/sms', smsRouter);
 
 
 
@@ -158,9 +167,7 @@ app.use('/recovery', recoveryRouter);
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).send('Something broke!');
-  next();// El next() es opcional, pero se recomienda utilizarlo para que el middleware siga ejecutándose sin problemas.
-  //res.render('error', { error: err }); // Renderiza la vista de error con el error proporcionado
-
+  next();
 });
 
 

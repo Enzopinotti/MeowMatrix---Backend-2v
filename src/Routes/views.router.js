@@ -10,7 +10,7 @@ import {
   getProductsView
 } from '../controllers/product.controller.js';
 import {
-  getCart
+   getCartView
 } from '../controllers/cart.controller.js';
 import {
   getRealTimeProducts,
@@ -26,6 +26,7 @@ import {
 import {
   authorization
 } from '../utils.js'
+import { getTicketView } from '../controllers/ticket.controller.js';
 
 export default class ViewsRouter extends BaseRouter {
   init() {
@@ -39,12 +40,15 @@ export default class ViewsRouter extends BaseRouter {
 
     this.router.post('/message', /*authorization('usuario'),*/ postRealTimeMessages);
 
-    this.router.get('/products', authorization('usuario') ,getProductsView);
+    this.router.get('/products', /*authorization('usuario'),*/ getProductsView);
 
     this.router.get('/products/:productId', authorization('usuario') ,getProductByIdView);
 
-    this.router.get('/carts/:cid', authorization('usuario') ,getCart);
+    this.router.get('/carts',/* authorization('usuario') ,*/getCartView);
 
     this.router.post('/upload-avatar', authorization('usuario') ,uploader.single('avatar'), uploadAvatar);
+
+    this.router.get('/ticket', getTicketView);
+
   }
 }

@@ -1,5 +1,4 @@
-import categoryModel from "../daos/models/category.model.js";
-import productModel from "../daos/models/product.model.js";
+import categoryModel from "../daos/mongo/models/category.model.js";
 import { io } from '../app.js';
 
 import * as realTimeProductsServices from '../services/realTimeProducts.service.js';
@@ -7,6 +6,8 @@ import * as realTimeProductsServices from '../services/realTimeProducts.service.
 export const postRealTimeProduct = async (req, res) => {
   try {
     const productData = req.body;
+    const thumbnails = req.files.map(file => file.filename);
+    productData.thumbnails = thumbnails;
     const addedProduct = await realTimeProductsServices.postRealTimeProduct(productData);
     io.emit('product-added', addedProduct);
   } catch (error) {

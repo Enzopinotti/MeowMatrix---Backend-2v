@@ -37,20 +37,16 @@ export class ProductManager{
             throw new Error('El archivo de productos no existe o no se pueden realizar operaciones de lectura/escritura en él.');
         }
     }
-    //Clase estatica que contiene metodos para validar los datos cuando se agrega un producto
-
 
     async loadProducts() {
         try {
             const data = await fs.promises.readFile(this.filePath, 'utf-8');
             const products = JSON.parse(data);
-            return  products;  
+            return products;  
         } catch (error) {
             return [];
         }
     }
-    
-    
 
     async saveProducts() {
         try {

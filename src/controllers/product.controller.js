@@ -13,13 +13,13 @@ export const getProducts = async (req, res) => {
 
 export const getProductsView = async (req, res) => {
 
-    const { page = 1, limit = 4, sort, query } = req.query;
+    const { page = 1, limit = 8, sort, query } = req.query;
     try {
       const { products, totalDocs } = await productServices.getProductsView(page, limit, sort, query);
   
       // Resto del código para manejar la respuesta y renderizar la vista
       const user = req.user;
-  
+        console.log(user);
       res.render('products', {
         products: products.docs,
         totalPages: products.totalPages,

@@ -9,6 +9,16 @@ export const getCategories = async (req, res) => {
   }
 };
 
+export const getCategory = async (req, res) => {
+  const categoryId = req.params.id;
+  try {
+    const category = await categoryServices.getCategory(categoryId);
+    res.sendSuccess(category);
+  } catch (error) {
+    res.sendServerError(error);
+  }
+}
+
 export const postCategory = async (req, res) => {
   const categoryData = req.body;
   try {

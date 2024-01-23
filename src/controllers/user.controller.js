@@ -1,17 +1,15 @@
-import userModel from "../daos/models/user.model.js";
 import moment from 'moment';
 import * as userService from "../services/user.service.js";
 
 export const showProfile = (req, res) => {
+  const user = req.user;
+  if (!user) {
+    return res.sendUserError({ status: 'error', error: 'User not found' });   
+  }
 
-    const user = req.user;
-    if (!user) {
-      return res.sendUserError({ status: 'error', error: 'User not found' });   
-    }
-
-    let birthDateFormated = moment(user.birthDate).add(1, 'day').format('DD/MM/YYYY');
-    
-    res.render('profile', { user, birthDateFormated , style: 'profile.css' , title: 'Perfil del Usuario'});
+  let birthDateFormated = moment(user.birthDate).add(1, 'day').format('DD/MM/YYYY');
+  
+  res.render('profile', { user, birthDateFormated , style: 'profile.css' , title: 'Perfil del Usuario'});
 };
 
 
@@ -43,42 +41,41 @@ export const uploadAvatar = async (req, res) => {
 };
 
 export const getUsers = async (req, res) => {
-    const limit = req.query.limit; // Obtén el límite de usuarios desde los parámetros de consulta
-    try {
-      const users = await userService.getUsers();  
-      if (limit) {
-        const limitedUsers = users.slice(0, limit);
-        res.sendSuccess(limitedUsers);
-      } else {
-        res.sendSuccess(users);
-      }
-    } catch (error) {
-      res.sendServerError(error.message);
+  const limit = req.query.limit; // Obtén el límite de usuarios desde los parámetros de consulta
+  try {
+    const users = await userService.getUsers();  
+    if (limit) {
+      const limitedUsers = users.slice(0, limit);
+      res.sendSuccess(limitedUsers);
+    } else {
+      res.sendSuccess(users);
     }
+  } catch (error) {
+    res.sendServerError(error.message);
+  }
 };
 
 export const getUserById = async (req, res) => {
-    const userId = req.params.userId;
-    try {
+  const userId = req.params.userId;
+  try {
 
-      const user = await userService.getUserById(userId);
-      if (!user) {
-        return res.status(404).json({ error: 'Usuario no encontrado' });
-      }
-
-      res.status(200).json(user);
-
-    } catch (error) {
-
-      res.status(500).json({ error: error.message });
-      
+    const user = await userService.getUserById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
     }
+
+    res.status(200).json(user);
+
+  } catch (error) {
+
+    res.status(500).json({ error: error.message });
+    
+  }
 }
 
 export const postUser = async (req, res) => {
-  const user = new userModel(req.body);
   try {
-      const addedUser = await user.save();
+      const addedUser = await userService.addUser(req.body);
       res.sendSuccess(addedUser);
   } catch (error) {
       res.sendServerError(error.message);

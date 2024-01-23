@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { ProductManager } from './ProductManager.js';
+import { ProductManager } from './product.filesystem.js';
 
 const filePath = 'archivos/productos.json';
 const manager = new ProductManager(filePath);

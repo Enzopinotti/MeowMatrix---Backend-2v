@@ -27,4 +27,5 @@ export default {
     gitClientId: process.env.GIT_CLIENT_ID,
     gitAppId: process.env.GIT_APP_ID,
     hashKey: process.env.HASH_KEY,
+    persistence: process.env.PERSISTENCE,
 }

@@ -25,13 +25,13 @@ export default class SessionRouter extends BaseRouter {
 
     this.router.post(
       '/register',
-      passport.authenticate('register', { failureRedirect: '/failRegister' }),
+      passport.authenticate('register'),
       registerUser
     );
 
     this.router.post(
       '/login',
-      passport.authenticate('login', { failureRedirect: '/failLogin' }),
+      passport.authenticate('login' ),
       loginUser
     );
 

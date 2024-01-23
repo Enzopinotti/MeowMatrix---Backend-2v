@@ -3,7 +3,11 @@ import mongoose from 'mongoose';
 const CartCollection = 'carts';
 
 const CartSchema = new mongoose.Schema({
-    // acá van las propiedades de los carritos en la base de datos
+    user: { 
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: 'users', // Asumiendo que tu modelo de usuario se llama 'users'
+        index: true
+    },
     products: {
         type: [
             {
@@ -13,21 +17,18 @@ const CartSchema = new mongoose.Schema({
                     index: true
                 }, 
                 quantity: Number,
-                //ahora agrego un campo donde veo cuando se actualizó
                 updatedAt: {
                     type: Date,
-                    default: Date.now // Esto establecerá la fecha actual automáticamente al crear o actualizar un carrito
+                    default: Date.now
                 }
             }
-            
         ],
-        default: [] // Esto establecerá un array vacío por defecto al crear un carrito
+        default: []
     }
 });
 
-// Modificamos la consulta al buscar un carrito para obtener los detalles completos de los productos
 CartSchema.pre('findOne', function(next) {
-    this.populate('products.product', '-createdAt -updatedAt -__v'); // Poblamos los productos con sus detalles excepto algunos campos
+    this.populate('products.product', '-createdAt -updatedAt -__v');
     next();
 });
 

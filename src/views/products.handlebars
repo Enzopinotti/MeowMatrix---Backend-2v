@@ -1,18 +1,26 @@
 
 <div class="header">
-
     <a href="/profile" class="profile-btn">
-  <ion-icon name="person-circle-outline"></ion-icon> Perfil</a>
+        {{#if user.avatar}}
+            <img src="{{user.avatar}}" alt="Perfil" class="profile-img">
+        {{else}}
+            <img src="/img/default.jpg" alt="">
+        {{/if}}
+        Perfil
+    </a>
     {{#if user}}
-    <div class="user-info">
-        <h1 class="products-title">Bienvenido {{user.name}}, rol: {{user.rol}}, Lista de Productos:</h1>   
-    </div>
+        <div class="user-info">
+            <h1 class="products-title">Bienvenido {{user.name}}, rol: {{user.rol}}, Lista de Productos</h1>   
+        </div>
     {{/if}}
-
-    <a href="/api/sessions/logout" class="logout-btn"> <ion-icon name="log-out-outline"></ion-icon> Cerrar sesión </a>
-
+    <a href="/carts" class="cart-btn">
+        <ion-icon name="cart-outline"></ion-icon> Carrito
+    </a>
+    <a href="/api/sessions/logout" id="logout-btn">
+        <ion-icon name="log-out-outline"></ion-icon> Cerrar sesión
+    </a>
+    
 </div>
-
 
 <ul class="products-list">
 
@@ -26,7 +34,8 @@
             <img src="img/{{thumbnails}}" alt="{{name}}" class="product-img">
             <!-- Botón "Ver Detalles" -->
             <a href="/products/{{this._id}}" class="details-btn">Ver Detalles</a>
-            <form action="/api/carts/:cid/product/{{this._id}}" method="POST" class="add-to-cart-form">
+            <form action="/api/carts/current/product/{{this._id}}" method="POST" class="add-to-cart-form" onsubmit="addToCart(event, '{{this._id}}')">
+                <input type="hidden" name="productId" value="{{this._id}}">
                 <button type="submit" class="add-to-cart-btn">Agregar al carrito</button>
             </form>
         </li>
@@ -56,4 +65,4 @@
     <p class="total-pages">Total de páginas: {{totalPages}}</p>
 </div> 
 
-        
+<script src="/js/product.js"></script>

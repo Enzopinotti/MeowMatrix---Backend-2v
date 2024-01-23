@@ -1,4 +1,3 @@
-import messageModel from "../daos/models/message.model.js";
 import * as messageServices from '../services/message.service.js';
 import { io } from '../app.js';
 

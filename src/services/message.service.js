@@ -1,8 +1,11 @@
-import * as messagePersistence from '../persistence/message.persistence.js';
+import { MessageDao } from "../daos/factory.js";
+
+
+
 
 export const getRealTimeMessages = async () => {
   try {
-    return await messagePersistence.getRealTimeMessagesFromDatabase();
+    return await MessageDao.get();
   } catch (error) {
     throw error;
   }
@@ -10,7 +13,7 @@ export const getRealTimeMessages = async () => {
 
 export const postRealTimeMessage = async (messageData) => {
   try {
-    return await messagePersistence.postRealTimeMessageToDatabase(messageData);
+    return await MessageDao.add(messageData);
   } catch (error) {
     throw error;
   }
@@ -18,7 +21,7 @@ export const postRealTimeMessage = async (messageData) => {
 
 export const getMessages = async () => {
   try {
-    return await messagePersistence.getMessagesFromDatabase();
+    return await MessageDao.get();
   } catch (error) {
     throw error;
   }
@@ -26,7 +29,7 @@ export const getMessages = async () => {
 
 export const postMessage = async (messageData) => {
   try {
-    return await messagePersistence.postMessageToDatabase(messageData);
+    return await MessageDao.add(messageData);
   } catch (error) {
     throw error;
   }

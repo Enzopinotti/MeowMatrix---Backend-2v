@@ -1,7 +1,7 @@
 import passport from "passport";
 import local from "passport-local";
 import { hashPassword, isValidPassword, validatePassword } from "../utils.js";
-import userModel from "../daos/models/user.model.js";
+import userModel from "../daos/mongo/models/user.model.js";
 import GitHubStrategy from "passport-github2";
 import config from '../config/server.config.js'
 import jwt from "passport-jwt";
@@ -19,37 +19,39 @@ const cookieExtractor = (req) => {
 }
 
 const initializePassport = () => {
-  passport.use( "register",
-    new LocalStrategy(
-      { passReqToCallback: true, usernameField: "email" },
-      async (req, username, password, done) => {
-        const { name, lastName, email, birthDate, phone } = req.body;
-        try {
-          const user = await userModel.findOne({ email: username });
-          if (user) {
-            console.log("El usuario ya existe");
-            return done(null, false);
-          }
-          if (!validatePassword(password)) {
-            console.log('La contraseña no cumple con los criterios de seguridad');
-            return done(null, false);
-          }
-          const newUser = {
-            name,
-            lastName,
-            email,
-            password: hashPassword(password),
-            birthDate,
-            phone,
-          };
-          const result = await userModel.create(newUser);
-          return done(null, result);
-        } catch (error) {
-          return done("Error al registrar el usuario", error);
+  passport.use("register", new LocalStrategy(
+    { passReqToCallback: true, usernameField: "email" },
+    async (req, username, password, done) => {
+      const { name, lastName, email, birthDate, phone } = req.body;
+      
+      const hashedPassword = hashPassword(password)
+      
+      try {
+        const user = await userModel.findOne({ email: username });
+        if (user) {
+          console.log("El usuario ya existe");
+          return done(null, false, { code: 'EMAIL_EXISTS', message: 'El email ya está registrado' });
         }
+        if (!validatePassword(password)) {
+          console.log('La contraseña no cumple con los criterios de seguridad');
+          return done(null, false, { code: 'INVALID_PASSWORD', message: 'La contraseña no cumple con los criterios de seguridad' });
+        }
+        const newUser = {
+          name,
+          lastName,
+          email,
+          password: hashedPassword,
+          birthDate,
+          phone,
+        };
+        const result = await userModel.create(newUser);
+        return done(null, result);
+      } catch (error) {
+        // En caso de error, enviar una respuesta JSON
+        return done("Error al registrar el usuario", { code: 'SERVER_ERROR', message: error.message });
       }
-    )
-  );
+    }
+  ));
   passport.use( 'login', 
     new LocalStrategy({usernameField: 'email'}, async (username, password, done) => {
         try {

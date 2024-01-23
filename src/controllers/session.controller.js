@@ -1,4 +1,3 @@
-import userModel from "../daos/models/user.model.js";
 import { hashPassword } from "../utils.js";
 import { generateToken } from "../utils.js";
 import * as sessiobServices from '../services/session.service.js';
@@ -19,12 +18,13 @@ export const showRegister = (req, res) => {
 
 export const registerUser = async (req, res) => {
     try {
-        let user = req.user;
-        delete user.password;
-        req.user = user;
-        res.sendSuccess({ status: 'success', message: 'Registration successful' });
+        res.sendSuccess( { status: 'success', payload: req.user } );
     } catch (error) {
-        res.sendServerError(error);
+        if (error.passportMessage) {
+            res.sendUserError(error.passportMessage);
+        } else {
+            res.sendServerError( { status: 'error', message: error.message });
+        }
     }
 };
 
@@ -39,10 +39,10 @@ export const loginUser = async (req, res) => {
     try {
         let user = req.user;
         if (!user)
-            return res.sendUserError({ status: 'error', error: 'User not found' });
+            return res.sendUserError({ error: 'User not found' });
         delete user.password;
         const token = generateToken(user);
-        res.cookie('access_token', token, { maxAge: 600000, httpOnly: true });
+        res.cookie('access_token', token, { maxAge: 3600000, httpOnly: true, rolling: true });
         res.sendSuccess({ status: 'success', message: 'Login successful' });
     } catch (error) {
         res.sendServerError(error);
@@ -52,21 +52,10 @@ export const loginUser = async (req, res) => {
 
 export const logoutUser = async (req, res) => {
     try {
-        console.log(req.session.user);
-        if (req.session.user) {
-            delete req.session.user;
-            req.session.destroy(error => {
-                if (error) {
-                    res.sendServerError("Error al cerrar sesión");
-                } else {
-                    res.sendSuccess('Sesión cerrada correctamente');
-                }
-            });
-        } else {
-            res.redirect('/login');
-        }
+        res.clearCookie('access_token');
+        res.redirect('/login'); // Redirección directa en el lado del servidor
     } catch (error) {
-        res.sendServerError('Error al cerrar la sesión');
+        res.sendServerError('Error al cerrar sesión');
     }
 };
 
