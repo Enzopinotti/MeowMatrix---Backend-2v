@@ -20,7 +20,6 @@ socket.on("product-added", (product) => {
   
     // Selecciona el contenedor de productos
     const productList = document.getElementById("productList");
-    console.log(product);
     // Crea un nuevo elemento de lista (li) para el producto
     const productItem = document.createElement("li");
     productItem.setAttribute("data-product-id", product.dataProductId); 

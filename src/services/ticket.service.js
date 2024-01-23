@@ -29,7 +29,6 @@ export const generateUniqueTicketCode = async () => {
     try {
         
         const ticketCode = uuidv4();
-        console.log(ticketCode);
         const ticket = await TicketDao.getByCode(ticketCode);
         if (ticket) {
             return generateUniqueTicketCode();

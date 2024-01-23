@@ -8,7 +8,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (target.classList.contains('remove-from-cart-btn')) {
             const cartId = target.dataset.cartId;
             const productId = target.dataset.productId;
-            console.log(productId)
             // Llama a la función para eliminar del carrito
             removeFromCart(event, cartId, productId);
         }

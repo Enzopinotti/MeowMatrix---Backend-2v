@@ -14,7 +14,6 @@ export const getTicketView = async (req, res) => {
         const purchaser = await userService.getUserById(latestTicket.purchaser);
         const products = await productService.getProductsByIds(latestTicket.products);
         const purchaseDate = moment(latestTicket.purchase_datetime).format('DD/MM/YYYY HH:mm:ss');
-        console.log('purchaseDate', purchaseDate);
         res.render('ticket', {
             ticket: latestTicket,
             purchaser,
@@ -53,14 +52,12 @@ export async function createTicket(purchaseResult, userId) {
 
     const { purchasedProducts } = purchaseResult;
     const user = await userService.getUserById(userId);
-    console.log('usuario para el ticket', user);
     const ticketData = {
         code: await ticketService.generateUniqueTicketCode(),
         purchase_datetime: new Date(),
         amount: await ticketService.calculateTotalAmount(purchasedProducts),
         purchaser: user._id, 
     };
-    console.log(ticketData);
     const ticket = await ticketService.createTicket(ticketData);
   
     return ticket;

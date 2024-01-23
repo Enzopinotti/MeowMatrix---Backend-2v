@@ -3,10 +3,9 @@ import emailConfig from "../config/email.config.js"
 import { __dirname } from "../utils.js"
 import { generatePdf } from "../utils/pdf.util.js"; // Asegúrate de tener esta función en tu proyecto
 
-export const sendMail = async (req, res) => {
+export const sendMail = async (body) => {
     try {
-        console.log('El reqbody es: ', req.body)
-        const { to, subject, message, ticketHTML } = req.body;
+        const { to, subject, message, ticketHTML } = body;
 
         // Generar el PDF del ticket
         const pdfBuffer = await generatePdf(ticketHTML);
@@ -26,9 +25,9 @@ export const sendMail = async (req, res) => {
         };
 
         const result = await transport.sendMail(mailOptions);
-        res.sendSuccess(result);
+        return result;
     } catch (error) {
         console.log(error);
-        res.sendServerError(error);
+        return error;
     }
 };

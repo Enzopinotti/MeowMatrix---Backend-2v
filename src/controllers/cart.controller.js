@@ -1,7 +1,7 @@
 import * as cartService from "../services/cart.service.js";
 import * as productService from "../services/product.service2.js";
 import moment from 'moment';
-import * as ticketService  from "../services/ticket.service.js";
+import * as userService from "../services/user.service.js";
 import { createTicket } from "./ticket.controller.js";
 import url from 'url';
 import { sendMail } from "./mail.controller.js";
@@ -18,13 +18,11 @@ export const getCartView = async (req, res) => {
         if (userId === undefined) {
              return res.sendServerError('El usuario no está autenticado');
         }
-        console.log('userId: ', userId);
         // Encuentra el carrito específico por su ID
         const cart = await cartService.getCartByUserId(userId);
         if (!cart) {
             return res.sendNotFound('Carrito no encontrado');
         }
-        console.log('enviado a cartview: ', cart)
         res.render('cart', {
             user: req.user, // Pasar información del usuario
             cart: cart.payload, // Pasar información del carrito
@@ -223,17 +221,18 @@ export const purchaseCart = async (req, res) => {
         }
         console.log("el ticket es:", ticket);
         // Generar HTML del ticket (sustituye con tu propia lógica)
+        const user = await userService.getUserById(ticket.purchaser)
+        
         const ticketHTML = `
         <html>
             <h1>Ticket de Compra</h1>
             <p><strong>Código de Ticket:</strong> ${ticket.code}</p>
             <p><strong>Fecha de Compra:</strong> ${moment(ticket.purchase_datetime).format('DD/MM/YYYY HH:mm:ss')}</p>
             <p><strong>Monto Total: </strong> $${ticket.amount.toFixed(2)}</p>
-            <p><strong>Comprador:</strong> ${ticket.purchaser.name} ${ticket.purchaser.lastName}</p> 
+            <p><strong>Comprador:</strong> ${user.name} ${user.lastName}</p> 
         </html>
         `;
         // Enviar el ticket por correo electrónico
-        console.log(req.user.email)
         await sendMail({
             to: req.user.email, 
             subject: 'Confirmación de compra',

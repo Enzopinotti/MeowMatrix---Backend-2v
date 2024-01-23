@@ -6,7 +6,6 @@ const client = twilio(configTwilio.TwilioAccountSID, configTwilio.TwilioAuthToke
 
 export const sendSms = async (req, res) => {
     try {
-        console.log(req.body)
         const { to, name, product } = req.body;
         const body = `Hola ${name}, gracias por tu compra de ${product}`;
         const result = await client.messages.create({
