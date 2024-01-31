@@ -1,11 +1,36 @@
-
-
-document.getElementById('loginForm').addEventListener('submit', function (event) {
+    document.getElementById('loginForm').addEventListener('submit', function (event) {
     // Evita que el formulario se envíe automáticamente
     event.preventDefault();
     const data = new FormData(this);
     const obj = {};
     data.forEach((value, key) => (obj[key] = value));
+    console.log(obj);
+    if (obj.email === '' && obj.password === '') {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Por favor, completa todos los campos',
+            allowOutsideClick: false,
+        });
+        return;
+    }else if (obj.email === '') {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Por favor, completa el campo email',
+            allowOutsideClick: false,
+        });
+        return;
+    }
+    else if (obj.password === '') {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Por favor, completa el campo password',
+            allowOutsideClick: false,
+        });
+        return;
+    }
     fetch('/api/sessions/login', {
         method: 'POST',
         body: JSON.stringify(obj),
@@ -14,15 +39,18 @@ document.getElementById('loginForm').addEventListener('submit', function (event)
         }
     })
     .then(result => {
+        console.log()
         if (result.status === 401) {
             throw new Error('Credenciales incorrectas');
         }
-        if (!result.ok) {
-            throw new Error(`HTTP error! Status: ${result.status}`);
+        if (result.status === 400) {
+
         }
+        
         return result.json();
     })
     .then(json => {
+        console.log(json)
         if (json.status === 'success') {
             window.location.href = '/products';
         }

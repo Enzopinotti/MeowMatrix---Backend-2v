@@ -3,6 +3,7 @@ import {
 } from '../utils.js';
 import BaseRouter from './router.js';
 import {
+  showProfile,
   uploadAvatar
 } from '../controllers/user.controller.js';
 import {
@@ -21,7 +22,7 @@ import {
   postRealTimeMessages
 } from '../controllers/message.controller.js';
 import { 
-    showLogin 
+    showLogin, showRegister 
 } from '../controllers/session.controller.js';
 import {
   authorization
@@ -31,6 +32,12 @@ import { getTicketView } from '../controllers/ticket.controller.js';
 export default class ViewsRouter extends BaseRouter {
   init() {
     this.router.get('/', showLogin);
+
+    this.router.get('/register', showRegister);
+
+    this.router.get('/profile', authorization('usuario') ,showProfile);
+
+    this.router.get('/login', showLogin)
 
     this.router.post('/realTimeProducts', /*authorization('admin') ,*/ uploader.array('productImage', 1), postRealTimeProduct);
 

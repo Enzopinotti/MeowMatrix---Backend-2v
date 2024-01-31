@@ -9,7 +9,7 @@ const userSchema = new mongoose.Schema({
     email: {
         type: String,
         unique: true,
-        required: true,
+        require: true,
         index: true, // Agregar indexación al campo 'email'
     },
     password: {type: String , require:true}, //!sha512

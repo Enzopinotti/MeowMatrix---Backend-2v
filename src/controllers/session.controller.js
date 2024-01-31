@@ -1,6 +1,9 @@
 import { hashPassword } from "../utils.js";
 import { generateToken } from "../utils.js";
-import * as sessiobServices from '../services/session.service.js';
+import * as sessionServices from '../services/session.service.js';
+import CustomError from "../utils/customError.util.js";
+import { generateUserErrorInfo } from "../utils/infoError.util.js";
+import EnumError from "../utils/enumError.util.js";
 
 export const showLogin = (req, res) => {
     res.render('login',{
@@ -38,15 +41,14 @@ export const showRecovery = (req, res) => {
 export const loginUser = async (req, res) => {
     try {
         let user = req.user;
-        if (!user)
-            return res.sendUserError({ error: 'User not found' });
+        console.log(user);
         delete user.password;
         const token = generateToken(user);
         res.cookie('access_token', token, { maxAge: 3600000, httpOnly: true, rolling: true });
-        res.sendSuccess({ status: 'success', message: 'Login successful' });
+        res.sendSuccess({ message: 'Login successful' });
     } catch (error) {
         res.sendServerError(error);
-        res.redirect('/login');
+        console.log(error);
     }
 }
 
@@ -71,7 +73,7 @@ export const recoveryPassword = async (req, res) => {
     try {
         const { email, password } = req.body;
         const newPassword = hashPassword(password);
-        await sessiobServices.updatePassword(email, newPassword);
+        await sessionServices.updatePassword(email, newPassword);
         res.redirect('/login');
       } catch (error) {
         res.sendServerError('Error al recuperar la contraseña');
