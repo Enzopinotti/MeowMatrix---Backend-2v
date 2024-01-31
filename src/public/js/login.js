@@ -4,7 +4,6 @@
     const data = new FormData(this);
     const obj = {};
     data.forEach((value, key) => (obj[key] = value));
-    console.log(obj);
     if (obj.email === '' && obj.password === '') {
         Swal.fire({
             icon: 'error',
@@ -39,18 +38,12 @@
         }
     })
     .then(result => {
-        console.log()
         if (result.status === 401) {
             throw new Error('Credenciales incorrectas');
         }
-        if (result.status === 400) {
-
-        }
-        
         return result.json();
     })
     .then(json => {
-        console.log(json)
         if (json.status === 'success') {
             window.location.href = '/products';
         }

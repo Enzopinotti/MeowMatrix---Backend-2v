@@ -17,7 +17,6 @@ document.getElementById('registerForm').addEventListener('submit', function(even
         }
     })
     .then(result => {
-      console.log(result);
       if (result.status === 200) {
           // Redirigir a la página de inicio de sesión si el registro es exitoso
           window.location.href = '/login';

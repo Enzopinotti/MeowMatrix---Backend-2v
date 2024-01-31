@@ -41,7 +41,6 @@ export const showRecovery = (req, res) => {
 export const loginUser = async (req, res) => {
     try {
         let user = req.user;
-        console.log(user);
         delete user.password;
         const token = generateToken(user);
         res.cookie('access_token', token, { maxAge: 3600000, httpOnly: true, rolling: true });

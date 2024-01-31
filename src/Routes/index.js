@@ -8,6 +8,7 @@ import ViewsRouter from './views.router.js';
 import SessionRouter from './api/session.js';
 import MailRouter from './mail.router.js';
 import SmsRouter from './sms.router.js';
+import MockRouter from './mock.router.js';
 import BaseRouter from './router.js';
 
 
@@ -22,6 +23,7 @@ const sessionRouterInstance = new SessionRouter();
 const viewsRouterInstance = new ViewsRouter();
 const mailRouterInstance = new MailRouter();
 const smsRouterInstance = new SmsRouter();
+const mockRouterInstance = new MockRouter();
 
 //? Routers extraidos
 const userRouter = userRouterInstance.getRouter();
@@ -33,6 +35,7 @@ const sessionRouter = sessionRouterInstance.getRouter();
 const viewsRouter = viewsRouterInstance.getRouter();
 const mailRouter = mailRouterInstance.getRouter();
 const smsRouter = smsRouterInstance.getRouter();
+const mockRouter = mockRouterInstance.getRouter();
 
 
 export const routerGeneral = (app)=> {
@@ -45,5 +48,6 @@ export const routerGeneral = (app)=> {
     app.use('/', viewsRouter);
     app.use('/api/mail', mailRouter);
     app.use('/api/sms', smsRouter);
+    app.use('/api/mock', mockRouter);
 }
 

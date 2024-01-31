@@ -42,12 +42,10 @@ export const generateUniqueTicketCode = async () => {
 export const calculateTotalAmount = async (purchasedProducts) => {
     try {
       // Recorre los productos comprados y calcula el monto total
-      console.log('lo que llega a amount: ',purchasedProducts);
       let totalAmount = 0;
       for (const purchasedProduct of purchasedProducts) {
         // Obtén el producto desde la base de datos
         const product = await ProductDao.getById(purchasedProduct._id);
-        console.log('producto en amount: ',product);
         if (product) {
           // Calcula el monto para este producto
           const productAmount = product.price * purchasedProduct.quantity;

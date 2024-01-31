@@ -28,6 +28,7 @@ import {
   authorization
 } from '../utils.js'
 import { getTicketView } from '../controllers/ticket.controller.js';
+import { getMockProductsView } from '../controllers/mock.controller.js';
 
 export default class ViewsRouter extends BaseRouter {
   init() {
@@ -56,6 +57,8 @@ export default class ViewsRouter extends BaseRouter {
     this.router.post('/upload-avatar', authorization('usuario') ,uploader.single('avatar'), uploadAvatar);
 
     this.router.get('/ticket', getTicketView);
+
+    this.router.get('/mockingproducts', getMockProductsView);
 
   }
 }

@@ -11,7 +11,6 @@ export const getUsers = async () => {
   
 export const getUserById = async (userId) => {
     try {
-      console.log('entro a getuserbid')
       return await UserDao.getById(userId);
     } catch (error) {
       throw error;
@@ -27,9 +26,7 @@ export const addUser = async (userData) => {
       userData.birthDate,
       userData.phone
     );
-
     userDTO.validate(); // Realiza las validaciones definidas en UserDTO
-
     const userObject = userDTO.toObject(); // Obtiene el objeto formateado
 
     return await UserDao.add(userObject);

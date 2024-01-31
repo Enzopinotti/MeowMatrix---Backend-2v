@@ -19,6 +19,8 @@ export let sessionDao;
 
 export let TicketDao;
 
+export let MockDao;
+
 switch (config.persistence) {
     case "MONGO":
         
@@ -33,6 +35,7 @@ switch (config.persistence) {
         const { default: realTimeProductsManagerMongo } = await import("./mongo/mongodb/realTimeProducts.mongodb.js");
         const { default: SessionManagerMongo } = await import("./mongo/mongodb/session.mongodb.js");
         const { default: TicketManagerMongo } = await import("./mongo/mongodb/ticket.mongodb.js");
+        const { default: MockProductManagerMongo } = await import("./mongo/mongodb/mock.mongodb.js");
 
         CartDao = new CartManagerMongo();
         ProductDao = new ProductManagerMongo();
@@ -42,6 +45,7 @@ switch (config.persistence) {
         RealTimeProductsDao = new realTimeProductsManagerMongo();
         sessionDao = new SessionManagerMongo();
         TicketDao = new TicketManagerMongo();
+        MockDao = new MockProductManagerMongo();
         
         break;
     

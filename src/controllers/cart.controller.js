@@ -198,31 +198,23 @@ export const purchaseCart = async (req, res) => {
     const { cid } = req.params;
     
     try {
-        // Obtener el carrito por id
+        // Obtener el carrito por id //
         const cart = await cartService.getCartById(cid);
-        console.log("el carrito es:", cart);
-        // Verificar el stock y procesar la compra
+        // Verificar el stock y procesar la compra //
         const result = await processPurchase(cart);
-        console.log("el resultado es:", result);
-        // Crear un ticket con los detalles de la compra
-        
+        // Crear un ticket con los detalles de la compra //
         const ticket = await createTicket(result, cart.payload.user);
-        console.log("el ticket es:", ticket);
-        // Eliminar productos comprados del carrito
+        // Eliminar productos comprados del carrito //
         for (const productPurchased of result.purchasedProducts) {
-            console.log("el producto comprado es:", productPurchased);
             const updatedCart = await cartService.deleteProductFromCart(cart.payload._id, productPurchased._id);
-            
             if (updatedCart) {
                 console.log(`Producto ${productPurchased} eliminado del carrito con éxito.`);
             } else {
                 console.log(`Error al eliminar el producto ${productPurchased} del carrito.`);
             }
-        }
-        console.log("el ticket es:", ticket);
-        // Generar HTML del ticket (sustituye con tu propia lógica)
-        const user = await userService.getUserById(ticket.purchaser)
-        
+        };
+        // Generar HTML del ticket (sustituye con tu propia lógica) //
+        const user = await userService.getUserById(ticket.purchaser) 
         const ticketHTML = `
         <html>
             <h1>Ticket de Compra</h1>
@@ -232,39 +224,32 @@ export const purchaseCart = async (req, res) => {
             <p><strong>Comprador:</strong> ${user.name} ${user.lastName}</p> 
         </html>
         `;
-        // Enviar el ticket por correo electrónico
+        // Enviar el ticket por correo electrónico //
         await sendMail({
             to: req.user.email, 
             subject: 'Confirmación de compra',
             message: 'Gracias por tu compra. Adjunto encontrarás el ticket de compra.',
             ticketHTML,
         });
-
         const serverUrl = url.format({
             protocol: req.protocol,
             host: req.get('host'),
         });
-
         res.redirect(`${serverUrl}/ticket`);
     } catch (error) {
       res.sendServerError({ status: 'error', message: error.message });
     }
 };
 
-
 async function processPurchase(cart) {
 
     const productsToPurchase = cart.payload.products;
-    
     const result = {
       purchasedProducts: [],
       failedProducts: [],
     };
-  
     for (const productData of productsToPurchase) {
-
         const { product, quantity } = productData;
-        
         try {
             // Verificar el stock del producto
             const availableStock = await productService.checkProductStock(product, quantity);
@@ -283,6 +268,5 @@ async function processPurchase(cart) {
             result.failedProducts.push(product);
         }
     }
-  
     return result;
 }
