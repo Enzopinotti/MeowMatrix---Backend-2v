@@ -2,7 +2,6 @@
 import http from 'http';
 import dotenv from 'dotenv';
 import { Server }  from 'socket.io';
-import { __dirname }  from './utils.js';
 import config from './config/server.config.js';
 import productModel from './daos/mongo/models/product.model.js';
 import app from './index.js';

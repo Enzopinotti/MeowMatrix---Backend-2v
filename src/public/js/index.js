@@ -1,4 +1,4 @@
-const socket = io.connect("http://localhost:8080", {forceNew: true})
+const socket = io.connect("http://localhost:8080", {forceNew: true});
 console.log("conectado");
 
 
@@ -81,4 +81,56 @@ socket.on("message-received", (message) => {
     messageElement.innerHTML = `<strong>${message.user}:</strong> ${message.message}`;
     chatMessages.appendChild(hr);
     chatMessages.appendChild(messageElement);
+});
+
+socket.on('updateCart', ({ cartId, productId }) => {
+    // Encuentra el elemento del carrito en el DOM y elimínalo
+    const cartItem = document.querySelector(`.cart-item[data-cart-id="${cartId}"][data-product-id="${productId}"]`);
+    console.log('cart item en socket',cartItem);
+    if (cartItem) {
+        cartItem.remove();
+        // Actualiza el resumen del carrito (puedes llamar a una función que calcule el nuevo total)
+        updateCartSummary(cartId);
+    }
+});
+
+async function updateCartSummary(cartId) {
+    try {
+        const response = await fetch('/api/carts/${cartId}/summary');
+        console.log('response', response);  
+        if (response.ok) {
+            const cartSummary = await response.json();
+            console.log( 'cartSummary: ', cartSummary)
+            // Actualizar elementos del DOM con los nuevos datos
+            const totalItemsElement = document.querySelector('.total-items');
+            const totalPriceElement = document.querySelector('.total-price');
+            console.log('totalItemsElement', totalItemsElement);
+            console.log('totalPriceElement', totalPriceElement);
+            if (totalItemsElement && totalPriceElement) {
+                // Actualizar el total de productos
+                totalItemsElement.textContent = `Total de productos: ${cartSummary.payload.totalItems}`;
+
+                // Actualizar el total a pagar
+                totalPriceElement.textContent = `Total a pagar: $${cartSummary.payload.totalPrice}`;
+            }
+        } else {
+            // Manejar errores si la petición no fue exitosa
+            console.error('Error al obtener el resumen del carrito:', response.statusText);
+        }
+    } catch (error) {
+        // Manejar errores de red u otros errores durante la solicitud
+        console.error('Error al procesar la solicitud:', error);
+    }
+}
+
+
+socket.on('updateAllCart', ({ cartId }) => {
+    // Encuentra el elemento del carrito en el DOM y elimínalo
+    const cartItem = document.querySelector(`.cart-list`);
+    console.log('cart item en socket',cartItem);
+    if (cartItem) {
+        cartItem.remove();
+        // Actualiza el resumen del carrito (puedes llamar a una función que calcule el nuevo total)
+        updateCartSummary(cartId);
+    }
 });

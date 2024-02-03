@@ -1,5 +1,5 @@
 import { 
-    addProductToCart, changeQuantity, deleteAllProducts, deleteProductFromCart, getCartById, getCarts, postCart, updateCart, deleteCart, addToCurrentCart, purchaseCart 
+    addProductToCart, changeQuantity, deleteAllProducts, deleteProductFromCart, getCartById, getCarts, postCart, updateCart, deleteCart, addToCurrentCart, purchaseCart, getCartSummary
 } from '../controllers/cart.controller.js';
 import BaseRouter from './router.js';
 
@@ -14,6 +14,7 @@ export default class CartRouter extends BaseRouter{
         this.router.delete('/:cid', deleteCart);
         this.router.delete('/:cid/products', deleteAllProducts);
         this.router.post('/current/product/:pid', addToCurrentCart);
-        this.router.get('/:cid/purchase', purchaseCart)
+        this.router.get('/:cid/purchase', purchaseCart);
+        this.router.get('/:cid/summary', getCartSummary);
     }
 };

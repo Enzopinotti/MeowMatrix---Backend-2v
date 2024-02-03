@@ -23,18 +23,21 @@ const initializePassport = () => {
     { passReqToCallback: true, usernameField: "email" },
     async (req, username, password, done) => {
       const { name, lastName, email, birthDate, phone } = req.body;
-      
+      // Verificar si algún campo obligatorio está ausente
+      if (!name || !lastName || !email || !password || !birthDate || !phone) {
+        return done(null, false, { error: 'Todos los campos son obligatorios' });
+      }
       const hashedPassword = hashPassword(password)
       
       try {
         const user = await userModel.findOne({ email: username });
         if (user) {
           console.log("El usuario ya existe");
-          return done(null, false, { code: 'EMAIL_EXISTS', message: 'El email ya está registrado' });
+          return done(null, false, { error: 'El email ya está registrado' });
         }
         if (!validatePassword(password)) {
           console.log('La contraseña no cumple con los criterios de seguridad');
-          return done(null, false, { code: 'INVALID_PASSWORD', message: 'La contraseña no cumple con los criterios de seguridad' });
+          return done(null, false, { error: 'La contraseña no cumple con los criterios de seguridad' });
         }
         const newUser = {
           name,
@@ -47,8 +50,8 @@ const initializePassport = () => {
         const result = await userModel.create(newUser);
         return done(null, result);
       } catch (error) {
-        // En caso de error, enviar una respuesta JSON
-        return done("Error al registrar el usuario", { code: 'SERVER_ERROR', message: error.message });
+        console.error('Error al registrar el usuario:', error.message);
+        return done(null, false, { error: 'Error al registrar el usuario' });
       }
     }
   ));

@@ -75,10 +75,34 @@ export const getUserById = async (req, res) => {
 
 export const postUser = async (req, res) => {
   try {
-      const addedUser = await userService.addUser(req.body);
-      res.sendSuccess(addedUser);
+    // Validar propiedades del usuario antes de agregarlo
+    const { name, lastName, email, password, birthDate } = req.body;
+
+    if (!name || !lastName || !email || !password || !birthDate) {
+      // Lanza un error personalizado si faltan propiedades o son inválidas
+      throw CustomError.createError(
+        EnumError.INVALID_VALUES_ERROR,
+        'Invalid user properties',
+        req.body
+      );
+    }
+
+    const addedUser = await userService.addUser(req.body);
+    res.sendSuccess(addedUser);
   } catch (error) {
+    // Manejo de errores
+    if (error instanceof CustomError) {
+      // Puedes personalizar la respuesta según el tipo de error
+      switch (error.code) {
+        case EnumError.INVALID_VALUES_ERROR:
+          return res.sendUserError({ status: 'error', error: error.message });
+        default:
+          return res.sendServerError(error.message);
+      }
+    } else {
+      // Otros errores no personalizados
       res.sendServerError(error.message);
+    }
   }
 };
 export const deleteUser = async (req, res) => {

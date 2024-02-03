@@ -17,7 +17,7 @@
     <ul class="cart-list">
         {{#each cart.products}}
             <!-- Accede al cart._id utilizando lookup -->
-            <li class="cart-item" data-cart-id="{{lookup ../cart '_id'}}">
+            <li class="cart-item" data-cart-id="{{lookup ../cart '_id'}}" data-product-id="{{this.product._id}}">
                 <section>
                     <img src="img/{{this.product.thumbnails}}" alt="{{name}}" class="product-img">
                 </section>
@@ -36,8 +36,11 @@
         {{/each}}
         
     </ul>
+    <div class="delete_buttom">
+        <button type="button" class="remove-all-from-cart-btn" data-cart-id="{{cart._id}}">Eliminar todo del carrito</button>
+    </div>
     
-    <div class="cart-summary">
+    <div id="cart-summary" class="cart-summary">
         <p class="total-items">Total de productos: {{cart.products.length}}</p>
         <p class="total-price">Total a pagar: ${{calculateTotalPrice}}</p>
     </div>

@@ -1,5 +1,5 @@
 import cartModel from "../models/cart.model.js"
-import { getProductsByIds } from "../../../services/product.service2.js"
+import { calculateTotalPrice } from "../../../utils.js";
 
 export default class CartManager {
     constructor() {}
@@ -96,28 +96,30 @@ export default class CartManager {
 
     addProduct = async (id, product) => {
         try {
-            const cart = await cartModel.findOne({ _id: id });
+            const cart = await cartModel.findById(id);
             if (!cart) {
                 throw new Error('Carrito no encontrado');
             }
+            console.log('cart en persistencia: ', cart)
             // Verificar si el producto ya existe en el carrito
-            const existingProductIndex = cart.products.findIndex(
-                (item) => String(item.product._id) === String(product)
+            const existingProduct = cart.products.find(
+                (item) => String(item.product._id) === String(product._id)
             );
-            if (existingProductIndex !== -1) {
+            console.log('existingProduct: ', existingProduct)
+            if (existingProduct) {
                 // Si el producto ya existe, aumenta la cantidad en uno
-                cart.products[existingProductIndex].quantity += 1;
+                existingProduct.quantity += 1;
             } else {
                 // Si el producto no está en el carrito, se agrega con cantidad 1
-                const productToAdd = await getProductsByIds(product);
-                cart.products.push({ product: productToAdd, quantity: 1 });
+                cart.products.push({ product: product, quantity: 1 });
             }
-            // Guardar el carrito actualizado
-            return await cartModel.findByIdAndUpdate(id, cart, { new: true });
-        
+    
+            // Guardar el carrito actualizado utilizando el método save de Mongoose
+            const updatedCart = await cart.save();
+            return updatedCart;
         } catch (error) {
             throw error;
-        }    
+        }
     };
     
     
@@ -146,6 +148,32 @@ export default class CartManager {
         }
     }
     clear = async (id) => {
+        
         return await cartModel.findByIdAndUpdate(id, { products: [] })
+    }
+
+    getCartSummary = async (userId) => {
+        try {
+
+            console.log('id en mongodb: ', userId)
+            // Obtén el carrito específico por el ID del usuario
+            const cart = await cartModel.findOne({ user: userId });
+            
+    
+            if (!cart) {
+                return null; // Puedes manejar esto de la manera que desees, por ejemplo, lanzar un error
+            }
+    
+            // Utiliza la función calculateTotalPrice para calcular el precio total del carrito
+            const totalPrice = calculateTotalPrice(cart.products);
+    
+            return {
+                totalItems: cart.products.length,
+                totalPrice,
+            };
+        } catch (error) {
+            console.error('Error al obtener el resumen del carrito desde la base de datos:', error);
+            throw new Error('Error al obtener el resumen del carrito desde la base de datos');
+        }
     }
 }

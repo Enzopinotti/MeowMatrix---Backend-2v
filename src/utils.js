@@ -106,3 +106,7 @@ export const authorization = (role) => {
         next();
     }
 };
+
+export const calculateTotalPrice = (products) => {
+    return products.reduce((total, product) => total + (product.quantity * product.product.price), 0);
+};

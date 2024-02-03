@@ -1,9 +1,11 @@
 import { hashPassword } from "../utils.js";
 import { generateToken } from "../utils.js";
 import * as sessionServices from '../services/session.service.js';
+import * as userService from '../services/user.service.js';
 import CustomError from "../utils/customError.util.js";
-import { generateUserErrorInfo } from "../utils/infoError.util.js";
+import { generateInvalidValuesErrorInfo } from "../utils/infoError.util.js";
 import EnumError from "../utils/enumError.util.js";
+
 
 export const showLogin = (req, res) => {
     res.render('login',{
@@ -13,6 +15,7 @@ export const showLogin = (req, res) => {
 };
 
 export const showRegister = (req, res) => {
+    req.logger.warn('Se entró a register user')
     res.render('register',{
         title: 'Registro',
         style: 'register.css',
@@ -21,12 +24,33 @@ export const showRegister = (req, res) => {
 
 export const registerUser = async (req, res) => {
     try {
-        res.sendSuccess( { status: 'success', payload: req.user } );
+        
+        const addedUser = await userService.addUser(req.body);
+        res.sendSuccess({ status: 'success', payload: addedUser });
     } catch (error) {
-        if (error.passportMessage) {
-            res.sendUserError(error.passportMessage);
-        } else {
-            res.sendServerError( { status: 'error', message: error.message });
+        let userErrorInfo = '';
+
+        switch (error.code) {
+            case EnumError.INVALID_VALUES_ERROR:
+                userErrorInfo = infoError.generateInvalidValuesErrorInfo(
+                    req.body.name,
+                    req.body.lastName,
+                    req.body.email,
+                    req.body.password,
+                    req.body.birthDate
+                );
+                res.sendUserError({ status: 'error', message: userErrorInfo });
+                break;
+            case EnumError.DUPLICATE_EMAIL_ERROR:
+                userErrorInfo = infoError.generateDuplicateEmailErrorInfo(req.body.email);
+                res.sendUserError({ status: 'error', message: userErrorInfo });
+                break;
+            case EnumError.WEAK_PASSWORD_ERROR:
+                userErrorInfo = infoError.generateWeakPasswordErrorInfo();
+                res.sendUserError({ status: 'error', message: userErrorInfo });
+                break;
+            default:
+                res.sendServerError({ status: 'error', message: error.message });
         }
     }
 };

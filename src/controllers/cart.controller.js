@@ -1,15 +1,12 @@
 import * as cartService from "../services/cart.service.js";
-import * as productService from "../services/product.service2.js";
+import * as productService from "../services/product.service.js";
 import moment from 'moment';
 import * as userService from "../services/user.service.js";
 import { createTicket } from "./ticket.controller.js";
 import url from 'url';
 import { sendMail } from "./mail.controller.js";
-
-
-const calculateTotalPrice = (products) => {
-    return products.reduce((total, product) => total + (product.quantity * product.product.price), 0);
-};
+import { io } from '../app.js'
+import { calculateTotalPrice } from "../utils.js";
 
 //! Vista de carrito
 export const getCartView = async (req, res) => {
@@ -41,6 +38,7 @@ export const getCartView = async (req, res) => {
 
 export const getCarts = async (req, res) => {
     try {
+        console.log('entro a get cart')
       const carts = await cartService.getCarts();
   
       if (!carts || carts.length === 0) {
@@ -54,6 +52,7 @@ export const getCarts = async (req, res) => {
 };
 
 export const getCartById = async (req, res) => {
+    console.log('entro a get cart by id')
     try {
         const cartId = req.params.cid;
         const cart = await cartService.getCartById(cartId);
@@ -80,9 +79,6 @@ export const addProductToCart = async (req, res) => {
     const cartId = req.params.cid;
     const productId = req.params.pid;
 
-    console.log("id del carrito",cartId);
-    console.log("id del producto",productId);
-
     try {
         const updatedCart = await cartService.addProductToCart(cartId, productId);
         
@@ -99,7 +95,7 @@ export const addProductToCart = async (req, res) => {
 
 export const addToCurrentCart = async (req, res) => {
     
-    const userId = req.user._id; // Supongo que tienes el ID del usuario en req.user
+    const userId = req.user._id; 
     try {
         const productId = req.params.pid;
         const result = await cartService.addToCurrentCart(userId, productId);
@@ -148,13 +144,15 @@ export const changeQuantity = async (req, res) => {
 export const deleteProductFromCart = async (req, res) => {
     const cartId = req.params.cid;
     const productId = req.params.pid;
+
     try {
         const updatedCart = await cartService.deleteProductFromCart(cartId, productId);
 
         if (!updatedCart) {
             return res.sendNotFound('Carrito no encontrado o producto no encontrado en el carrito');
         }
-
+        // Emite un evento a todos los clientes conectados para actualizar la vista del carrito
+        io.emit('updateCart', { cartId, productId });
         res.sendSuccess(updatedCart);
     } catch (error) {
         res.sendUserError(error.message);
@@ -171,7 +169,7 @@ export const deleteAllProducts = async (req, res) => {
         if (!updatedCart) {
         return res.sendNotFound('Carrito no encontrado');
         }
-
+        io.emit('updateAllCart', { cartId });
         res.sendSuccess(updatedCart);
     } catch (error) {
         res.sendServerError(error);
@@ -207,11 +205,6 @@ export const purchaseCart = async (req, res) => {
         // Eliminar productos comprados del carrito //
         for (const productPurchased of result.purchasedProducts) {
             const updatedCart = await cartService.deleteProductFromCart(cart.payload._id, productPurchased._id);
-            if (updatedCart) {
-                console.log(`Producto ${productPurchased} eliminado del carrito con éxito.`);
-            } else {
-                console.log(`Error al eliminar el producto ${productPurchased} del carrito.`);
-            }
         };
         // Generar HTML del ticket (sustituye con tu propia lógica) //
         const user = await userService.getUserById(ticket.purchaser) 
@@ -240,6 +233,24 @@ export const purchaseCart = async (req, res) => {
       res.sendServerError({ status: 'error', message: error.message });
     }
 };
+
+export const getCartSummary = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        if (!userId) {
+            return res.sendServerError('El usuario no está autenticado');
+        }
+
+        // Llama a la capa de servicio para obtener el resumen del carrito
+        const cartSummary = await cartService.getCartSummary(userId);
+
+        // Devuelve los datos del resumen del carrito al cliente
+        res.sendSuccess(cartSummary);
+    } catch (error) {
+        console.error('Error al obtener el resumen del carrito:', error);
+        res.sendServerError(error.message);
+    }
+}
 
 async function processPurchase(cart) {
 

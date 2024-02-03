@@ -10,7 +10,16 @@ export default class UserRouter extends BaseRouter {
     this.router.get('/', getUsers);
     this.router.get('/:userId', getUserById);
     this.router.post('/register',
-    passport.authenticate('register'),
+    passport.authenticate('register', {
+      successRedirect: '/',
+      failureRedirect: '/register',
+      failureFlash: true, // Habilitar mensajes flash para errores de autenticación
+    }),
+    (req, res, next) => {
+      console.log('entro aquí')
+      console.log(req.flash('error')); // Imprime los mensajes flash
+      next();
+    },
     registerUser);
     this.router.delete('/:userId', deleteUser);
     this.router.put('/:userId', updateUser);

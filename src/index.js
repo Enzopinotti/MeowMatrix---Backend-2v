@@ -13,16 +13,19 @@ import { routerGeneral } from './routes/index.js';
 import BaseRouter from './routes/router.js';
 import compression from 'express-compression'
 import ErrorHandler from './middlewares/error/handler.error.js';
+import { addLogger } from './middlewares/log/handler.log.js';
+
+
 
 
 const baseRouterInstance = new BaseRouter();
 
 const app = express();
 const hbs = handlebars.create({
-    runtimeOptions: {
-      allowProtoPropertiesByDefault: true,
-      allowProtoMethodsByDefault: true,
-    }
+  runtimeOptions: {
+    allowProtoPropertiesByDefault: true,
+    allowProtoMethodsByDefault: true,
+  }
 });
 //Inicializo el motor de plantillas handlebars 
 app.engine('handlebars', hbs.engine);
@@ -40,25 +43,27 @@ app.use(express.json())
 app.use(express.static(__dirname+'/public'));
 app.use(express.urlencoded( { extended:true } ))
 app.use(cors());
+app.use(addLogger);
 
 //middleware para utilizar sesiones
 app.use(
     session({
         secret: config.hashKey
-        ,resave: false
+        ,resave: true
         ,saveUninitialized: true
         ,cookie: {
-          maxAge: 60000
+          maxAge: 600000
         }
         ,store: MongoStore.create({
           mongoUrl: config.mongoUrl,
-          ttl: 2 * 60, //Cambio el el primer numero por la cantidad de minutos
+          ttl: 6 * 60, //Cambio el el primer numero por la cantidad de minutos
             
   
         })
       }
     )
   );
+
 
 initializePassport();
 app.use(passport.initialize());

@@ -19,7 +19,6 @@ export const getProductsView = async (req, res) => {
   
       // Resto del código para manejar la respuesta y renderizar la vista
       const user = req.user;
-        console.log(user);
       res.render('products', {
         products: products.docs,
         totalPages: products.totalPages,

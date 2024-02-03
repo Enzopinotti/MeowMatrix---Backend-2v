@@ -20,7 +20,6 @@ export default class ProductManager {
         }
     }
     create = async (ticketData) => {
-        console.log('ticket antes de crear: ', ticketData)
         try {
             const ticket = await ticketModel.create(ticketData);
             return ticket;   

@@ -1,4 +1,5 @@
 import { CartDao } from "../daos/factory.js";
+import { ProductDao } from "../daos/factory.js";
 
 
 
@@ -39,14 +40,15 @@ export const addToCurrentCart = async (userId, productId) => {
   try {
     // Verifica si el usuario tiene un carrito existente
     const existingCart = await CartDao.getByUserId(userId);
+    const product = await ProductDao.getById(productId);
     if (existingCart.status === 'success') {
       // Si el usuario tiene un carrito existente, agrega el producto al carrito actual
-      const result = await CartDao.addProduct(existingCart.payload._id, productId);
+      const result = await CartDao.addProduct(existingCart.payload._id, product);
       return result;
     } else {
       // Si el usuario no tiene un carrito, crea un nuevo carrito y agrega el producto
       const newCart = await CartDao.add({ user: userId, products: [] });
-      const result = await CartDao.addProduct(newCart.payload._id, productId);
+      const result = await CartDao.addProduct(newCart.payload._id, product);
       return result;
     }
   } catch (error) {
@@ -57,7 +59,8 @@ export const addToCurrentCart = async (userId, productId) => {
 
 export const addProductToCart = async (cartId, productId) => {
     try {
-        return await CartDao.addProduct(cartId, productId);
+        const product = await ProductDao.getById(productId);
+        return await CartDao.addProduct(cartId, product);
     } catch (error) {
         throw error;
     }
@@ -102,4 +105,15 @@ export const deleteCart = async (id) => {
     throw new Error(`Error al eliminar el carrito: ${error.message}`);
   }
 };
-  
+
+export const getCartSummary = async (userId) => {
+  try {
+    
+      // Llama a la capa de persistencia para obtener el resumen del carrito desde la base de datos
+      const cartSummary = await CartDao.getCartSummary(userId);
+      return cartSummary;
+  } catch (error) {
+
+      throw new Error('Error al obtener el resumen del carrito desde la capa de servicio');
+  }
+};

@@ -26,11 +26,12 @@
     {{#each products}}
     <li data-product-id="{{_id}}">
         <h2>{{name}}</h2>
+        <img src="img/{{thumbnails}}" alt="{{name}}" class="imgProduct">
         <p>{{description}}</p>
         <p><strong>Precio:</strong> ${{price}}</p>
         <p><strong>Stock:</strong> {{stock}} unidades</p>
         <p><strong>Categoría:</strong> {{category.nameCategory}}</p>
-        <img src="img/{{thumbnails}}" alt="{{name}}" class="imgProduct">
+        
         
         <!-- Agrega un botón para eliminar el producto -->
         <button class="botonDelete" data-product-id="{{_id}}">Eliminar</button>

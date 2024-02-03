@@ -65,12 +65,12 @@ export const calculateTotalAmount = async (purchasedProducts) => {
 export const createTicket = async (ticketData) => {
     try {
       // Llamamos a la función create en TicketDao
-      console.log('ticket antes de dto: ', ticketData);
+      
       const Ticketdto = new TicketDto(ticketData);
-      console.log('ticket antes de validate: ', Ticketdto);
+     
       Ticketdto.validate();
       const ticketObject = Ticketdto.toObject();
-      console.log('ticket despues de dto: ', ticketObject);
+      
       const ticket = await TicketDao.create(ticketObject);
   
       return ticket;

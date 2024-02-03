@@ -1,8 +1,5 @@
-import CategoryManager from '../daos/mongo/mongodb/category.mongodb.js';
-import ProductManager from '../daos/mongo/mongodb/product.mongodb.js';
-
-const CategoryDao = new CategoryManager();
-const ProductDao = new ProductManager();
+import { CategoryDao } from "../daos/factory.js";
+import { ProductDao } from "../daos/factory.js";
 
 export const getAllProducts = async () => {
   try {
