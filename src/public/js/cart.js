@@ -1,3 +1,8 @@
+<<<<<<< HEAD
+=======
+console.log('conectado al cliente cart.js')
+
+>>>>>>> 0e70a0dcbc4ff2beb7a4acbb420353de4b8805bd
 document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('click', (event) => {
         const target = event.target;
@@ -11,6 +16,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (target.classList.contains('remove-all-from-cart-btn')) {
             const cartId = target.dataset.cartId;
+<<<<<<< HEAD
+=======
+            console.log('cartId traida: ', cartId)
+>>>>>>> 0e70a0dcbc4ff2beb7a4acbb420353de4b8805bd
             removeAllFromCart(event, cartId); // Llama a la función para eliminar del carrito
         }
     });
@@ -19,10 +28,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function removeFromCart(event, cartId, productId) {
     event.preventDefault();
+<<<<<<< HEAD
+=======
+    
+>>>>>>> 0e70a0dcbc4ff2beb7a4acbb420353de4b8805bd
     try {
         const response = await fetch(`/api/carts/${cartId}/product/${productId}`, {
             method: 'DELETE',
         });
+<<<<<<< HEAD
+=======
+        console.log(response)
+>>>>>>> 0e70a0dcbc4ff2beb7a4acbb420353de4b8805bd
         if (response.ok) {
             // La eliminación fue exitosa, actualizar la interfaz o mostrar una notificación
             Swal.fire({
@@ -52,10 +69,18 @@ async function removeFromCart(event, cartId, productId) {
 
 async function removeAllFromCart(event, cartId) {
     event.preventDefault();
+<<<<<<< HEAD
+=======
+
+>>>>>>> 0e70a0dcbc4ff2beb7a4acbb420353de4b8805bd
     try {
         const response = await fetch(`/api/carts/${cartId}/products`, {
             method: 'DELETE',
         });
+<<<<<<< HEAD
+=======
+        console.log(response)
+>>>>>>> 0e70a0dcbc4ff2beb7a4acbb420353de4b8805bd
         if (response.ok) {
             // La eliminación fue exitosa, actualizar la interfaz o mostrar una notificación
             Swal.fire({

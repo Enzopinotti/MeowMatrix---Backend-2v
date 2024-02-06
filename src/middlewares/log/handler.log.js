@@ -7,7 +7,12 @@ import { getLogger } from "./factory.log.js";
 export const addLogger = async (req, res, next) => {
     const { logger }   = await getLogger();
     req.logger = logger;
+<<<<<<< HEAD
     req.logger.info(`${req.method} en ${req.url} - ${new Date().toLocaleDateString()}`);
+=======
+    req.logger.http(`${req.method} en ${req.url} - ${new Date().toLocaleDateString()}`);
+    req.logger.warn(`Warning en ${req.url} - ${new Date().toLocaleDateString()}- `);
+>>>>>>> 0e70a0dcbc4ff2beb7a4acbb420353de4b8805bd
 
     next();
 };

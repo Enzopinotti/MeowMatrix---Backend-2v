@@ -8,6 +8,7 @@ import { sendMail } from "./mail.controller.js";
 import { io } from '../app.js'
 import { calculateTotalPrice } from "../utils.js";
 
+<<<<<<< HEAD
 
 
 //!Router de carrito
@@ -45,6 +46,20 @@ export const getCartView = async (req, res) => {
             return res.sendNotFound('Carrito no encontrado');
         }
         req.logger.debug("cart.controller.js: getCartView - Vista de detalles del carrito obtenida");
+=======
+//! Vista de carrito
+export const getCartView = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        if (userId === undefined) {
+             return res.sendServerError('El usuario no está autenticado');
+        }
+        // Encuentra el carrito específico por su ID
+        const cart = await cartService.getCartByUserId(userId);
+        if (!cart) {
+            return res.sendNotFound('Carrito no encontrado');
+        }
+>>>>>>> 0e70a0dcbc4ff2beb7a4acbb420353de4b8805bd
         res.render('cart', {
             user: req.user, // Pasar información del usuario
             cart: cart.payload, // Pasar información del carrito
@@ -54,11 +69,16 @@ export const getCartView = async (req, res) => {
 
         });
     } catch (error) {
+<<<<<<< HEAD
         req.logger.error("cart.controller.js: getCartView - Error al obtener la vista del carrito:", error);
+=======
+        console.log(error);
+>>>>>>> 0e70a0dcbc4ff2beb7a4acbb420353de4b8805bd
         res.sendServerError(error);
     }
 };
 
+<<<<<<< HEAD
 export const getCartById = async (req, res) => {
     try {
         const reqLogger = req.logger;
@@ -72,12 +92,42 @@ export const getCartById = async (req, res) => {
         res.sendSuccess(cart);
     } catch (error) {
         req.logger.error("cart.controller.js: getCartById - Error al obtener el carrito por Id: ", error);
+=======
+//!Router de carrito
+
+export const getCarts = async (req, res) => {
+    try {
+        console.log('entro a get cart')
+      const carts = await cartService.getCarts();
+  
+      if (!carts || carts.length === 0) {
+        return res.sendNotFound('Carritos no encontrados');
+      }
+  
+      res.sendSuccess(carts);
+    } catch (error) {
+      res.sendServerError(error);
+    }
+};
+
+export const getCartById = async (req, res) => {
+    console.log('entro a get cart by id')
+    try {
+        const cartId = req.params.cid;
+        const cart = await cartService.getCartById(cartId);
+        if (!cart) {
+            return res.sendNotFound('Carrito no encontrado');
+        }
+        res.sendSuccess(cart);
+    } catch (error) {
+>>>>>>> 0e70a0dcbc4ff2beb7a4acbb420353de4b8805bd
         res.sendServerError(error);
     }
 };
 
 export const postCart = async (req, res) => {
     const cartData = req.body;
+<<<<<<< HEAD
     const reqLogger = req.logger;
     try {
         const addedCart = await cartService.createCart(cartData, reqLogger);
@@ -105,12 +155,20 @@ export const updateCart = async (req, res) => {
     } catch (error) {
         req.logger.error("cart.controller.js: updateCart - Error al actualizar el Carrito:", error);
         res.sendServerError(error);
+=======
+    try {
+      const addedCart = await cartService.createCart(cartData);
+      res.sendSuccess(addedCart);
+    } catch (error) {
+      res.sendServerError(error);
+>>>>>>> 0e70a0dcbc4ff2beb7a4acbb420353de4b8805bd
     }
 };
 
 export const addProductToCart = async (req, res) => {
     const cartId = req.params.cid;
     const productId = req.params.pid;
+<<<<<<< HEAD
     const reqLogger = req.logger;
     try {
         const updatedCart = await cartService.addProductToCart(cartId, productId, reqLogger);
@@ -122,11 +180,25 @@ export const addProductToCart = async (req, res) => {
         res.sendSuccess(updatedCart);
     } catch (error) {
         req.logger.error("cart.controller.js: addProductToCart - Error al añadir un producto el carrito: ", error);
+=======
+
+    try {
+        const updatedCart = await cartService.addProductToCart(cartId, productId);
+        
+        if (!updatedCart) {
+            return res.sendNotFound('Carrito no encontrado');
+        }
+
+        res.sendSuccess(updatedCart);
+    } catch (error) {
+        console.log(error);
+>>>>>>> 0e70a0dcbc4ff2beb7a4acbb420353de4b8805bd
         res.sendServerError(error.message);
     }
 };
 
 export const addToCurrentCart = async (req, res) => {
+<<<<<<< HEAD
     const userId = req.user._id;
     const reqLogger = req.logger; 
     try {
@@ -141,11 +213,43 @@ export const addToCurrentCart = async (req, res) => {
 };
 
 
+=======
+    
+    const userId = req.user._id; 
+    try {
+        const productId = req.params.pid;
+        const result = await cartService.addToCurrentCart(userId, productId);
+        res.sendSuccess(result.payload);
+      
+    } catch (error) {
+        console.log('error en current: ',error);
+      res.sendServerError(error.message);
+    }
+};
+
+export const updateCart = async (req, res) => {
+    const cartId = req.params.cid;
+    const products = req.body.products;
+
+    try {
+        const updatedCart = await cartService.updateCart(cartId, products);
+
+        if (!updatedCart) {
+        return res.sendNotFound('Carrito no encontrado');
+        }
+
+        res.sendSuccess(updatedCart);
+    } catch (error) {
+        res.sendServerError(error);
+    }
+};
+>>>>>>> 0e70a0dcbc4ff2beb7a4acbb420353de4b8805bd
 
 export const changeQuantity = async (req, res) => {
     const cartId = req.params.cid;
     const productId = req.params.pid;
     const { quantity } = req.body;
+<<<<<<< HEAD
     const reqLogger = req.logger;
     try {
         const updatedCart = await cartService.changeProductQuantity(cartId, productId, quantity, reqLogger);
@@ -158,6 +262,17 @@ export const changeQuantity = async (req, res) => {
         res.sendSuccess(updatedCart);
     } catch (error) {
         req.logger.error("cart.controller.js: changeQuantity - Error en changeQuantity:", error);
+=======
+
+    try {
+        const updatedCart = await cartService.changeProductQuantity(cartId, productId, quantity);
+
+        if (!updatedCart) {
+            return res.sendNotFound('Carrito no encontrado o producto no encontrado en el carrito');
+        }
+        res.sendSuccess(updatedCart);
+    } catch (error) {
+>>>>>>> 0e70a0dcbc4ff2beb7a4acbb420353de4b8805bd
         res.sendServerError(error);
     }
 };
@@ -165,24 +280,38 @@ export const changeQuantity = async (req, res) => {
 export const deleteProductFromCart = async (req, res) => {
     const cartId = req.params.cid;
     const productId = req.params.pid;
+<<<<<<< HEAD
     const reqLogger = req.logger;
     try {
         const updatedCart = await cartService.deleteProductFromCart(cartId, productId, reqLogger);
 
         if (!updatedCart) {
             req.logger.warn("cart.controller.js: deleteProductFromCart - Carrito no encontrado o producto no encontrado en el carrito");
+=======
+
+    try {
+        const updatedCart = await cartService.deleteProductFromCart(cartId, productId);
+
+        if (!updatedCart) {
+>>>>>>> 0e70a0dcbc4ff2beb7a4acbb420353de4b8805bd
             return res.sendNotFound('Carrito no encontrado o producto no encontrado en el carrito');
         }
         // Emite un evento a todos los clientes conectados para actualizar la vista del carrito
         io.emit('updateCart', { cartId, productId });
+<<<<<<< HEAD
         req.logger.debug("cart.controller.js: deleteProductFromCart - Carrito actualizado después de eliminar un producto");
         res.sendSuccess(updatedCart);
     } catch (error) {
         req.logger.error("cart.controller.js: deleteProductFromCart - Error en deleteProductFromCart:", error);
+=======
+        res.sendSuccess(updatedCart);
+    } catch (error) {
+>>>>>>> 0e70a0dcbc4ff2beb7a4acbb420353de4b8805bd
         res.sendUserError(error.message);
     }
 };
 
+<<<<<<< HEAD
 export const deleteAllProducts = async (req, res) => {
     const cartId = req.params.cid;
     const reqLogger = req.logger;
@@ -199,12 +328,28 @@ export const deleteAllProducts = async (req, res) => {
         res.sendSuccess(updatedCart);
     } catch (error) {
         req.logger.error("cart.controller.js: deleteAllProducts - Error en deleteAllProducts:", error);
+=======
+
+export const deleteAllProducts = async (req, res) => {
+    const cartId = req.params.cid;
+
+    try {
+        const updatedCart = await cartService.deleteAllProducts(cartId);
+
+        if (!updatedCart) {
+        return res.sendNotFound('Carrito no encontrado');
+        }
+        io.emit('updateAllCart', { cartId });
+        res.sendSuccess(updatedCart);
+    } catch (error) {
+>>>>>>> 0e70a0dcbc4ff2beb7a4acbb420353de4b8805bd
         res.sendServerError(error);
     }
 };
 
 export const deleteCart = async (req, res) => {
     const cartId = req.params.cid;
+<<<<<<< HEAD
     const reqLogger = req.logger;
     try {
         const deletedCart = await cartService.deleteCart(cartId, reqLogger);
@@ -218,10 +363,22 @@ export const deleteCart = async (req, res) => {
         }
     } catch (error) {
         req.logger.error("cart.controller.js: deleteCart - Error en deleteCart:", error);
+=======
+    try {
+        const deletedCart = await cartService.deleteCart(cartId);
+
+        if (deletedCart.status === "success") {
+            res.sendSuccess(deletedCart);
+        } else {
+            res.sendNotFound(deletedCart);
+        }
+    } catch (error) {
+>>>>>>> 0e70a0dcbc4ff2beb7a4acbb420353de4b8805bd
         res.sendServerError({ status: "error", error: error.message });
     }
 };
 
+<<<<<<< HEAD
 export const purchaseCart = async (req, res) => {
     const { cid } = req.params;
     const reqLogger = req.logger;
@@ -238,6 +395,25 @@ export const purchaseCart = async (req, res) => {
         };
         // Generar HTML del ticket (sustituye con tu propia lógica) //
         const user = await userService.getUserById(ticket.purchaser, reqLogger) 
+=======
+
+export const purchaseCart = async (req, res) => {
+    const { cid } = req.params;
+    
+    try {
+        // Obtener el carrito por id //
+        const cart = await cartService.getCartById(cid);
+        // Verificar el stock y procesar la compra //
+        const result = await processPurchase(cart);
+        // Crear un ticket con los detalles de la compra //
+        const ticket = await createTicket(result, cart.payload.user);
+        // Eliminar productos comprados del carrito //
+        for (const productPurchased of result.purchasedProducts) {
+            const updatedCart = await cartService.deleteProductFromCart(cart.payload._id, productPurchased._id);
+        };
+        // Generar HTML del ticket (sustituye con tu propia lógica) //
+        const user = await userService.getUserById(ticket.purchaser) 
+>>>>>>> 0e70a0dcbc4ff2beb7a4acbb420353de4b8805bd
         const ticketHTML = `
         <html>
             <h1>Ticket de Compra</h1>
@@ -258,24 +434,36 @@ export const purchaseCart = async (req, res) => {
             protocol: req.protocol,
             host: req.get('host'),
         });
+<<<<<<< HEAD
         req.logger.debug("cart.controller.js: purchaseCart - Compra realizada con exito.");
         res.redirect(`${serverUrl}/ticket`);
     } catch (error) {
         req.logger.error("cart.controller.js: purchaseCart - Error en purchaseCart:", error);
         res.sendServerError({ status: 'error', message: error.message });
+=======
+        res.redirect(`${serverUrl}/ticket`);
+    } catch (error) {
+      res.sendServerError({ status: 'error', message: error.message });
+>>>>>>> 0e70a0dcbc4ff2beb7a4acbb420353de4b8805bd
     }
 };
 
 export const getCartSummary = async (req, res) => {
     try {
+<<<<<<< HEAD
         const reqLogger = req.logger;
         const userId = req.user._id;
         if (!userId) {
             req.logger.warn("cart.controller.js: getCartSummary - El usuario no está autenticado");
+=======
+        const userId = req.user._id;
+        if (!userId) {
+>>>>>>> 0e70a0dcbc4ff2beb7a4acbb420353de4b8805bd
             return res.sendServerError('El usuario no está autenticado');
         }
 
         // Llama a la capa de servicio para obtener el resumen del carrito
+<<<<<<< HEAD
         const cartSummary = await cartService.getCartSummary(userId, reqLogger);
 
         // Devuelve los datos del resumen del carrito al cliente
@@ -290,6 +478,20 @@ export const getCartSummary = async (req, res) => {
 
 async function processPurchase(cart, reqLogger) {
     req.logger.debug("cart.controller.js: processPurchase - Procesando carrito");
+=======
+        const cartSummary = await cartService.getCartSummary(userId);
+
+        // Devuelve los datos del resumen del carrito al cliente
+        res.sendSuccess(cartSummary);
+    } catch (error) {
+        console.error('Error al obtener el resumen del carrito:', error);
+        res.sendServerError(error.message);
+    }
+}
+
+async function processPurchase(cart) {
+
+>>>>>>> 0e70a0dcbc4ff2beb7a4acbb420353de4b8805bd
     const productsToPurchase = cart.payload.products;
     const result = {
       purchasedProducts: [],
@@ -299,11 +501,19 @@ async function processPurchase(cart, reqLogger) {
         const { product, quantity } = productData;
         try {
             // Verificar el stock del producto
+<<<<<<< HEAD
             const availableStock = await productService.checkProductStock(product, quantity, reqLogger);
             
             // Si hay suficiente stock, procesar la compra
             if (availableStock) {
                 await productService.updateProductStock(product, quantity, reqLogger);
+=======
+            const availableStock = await productService.checkProductStock(product, quantity);
+            
+            // Si hay suficiente stock, procesar la compra
+            if (availableStock) {
+                await productService.updateProductStock(product, quantity);
+>>>>>>> 0e70a0dcbc4ff2beb7a4acbb420353de4b8805bd
                 product.quantity = quantity;
                 result.purchasedProducts.push(product);
             } else {
@@ -311,7 +521,11 @@ async function processPurchase(cart, reqLogger) {
             }
         } catch (error) {
             // Manejar errores según sea necesario
+<<<<<<< HEAD
             reqLogger.error(`cart.controller.js: processPurchase - Error procesando producto,  ${product}: ${error.message}`);
+=======
+            console.error(`Error processing product ${product}: ${error.message}`);
+>>>>>>> 0e70a0dcbc4ff2beb7a4acbb420353de4b8805bd
             result.failedProducts.push(product);
         }
     }

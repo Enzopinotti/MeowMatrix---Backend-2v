@@ -13,8 +13,13 @@ export const logger = winston.createLogger({
             )
         }),
         new winston.transports.File({
+<<<<<<< HEAD
             filename: "./logs/errors.log",
             level: "error",
+=======
+            filename: "./logs/warn.log",
+            level: "warn",
+>>>>>>> 0e70a0dcbc4ff2beb7a4acbb420353de4b8805bd
             format: winston.format.simple()
         }),
     ]

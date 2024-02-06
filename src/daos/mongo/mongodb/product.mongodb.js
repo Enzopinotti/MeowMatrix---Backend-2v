@@ -3,6 +3,7 @@ import productModel from "../models/product.model.js";
 export default class ProductManager {
     constructor() {}
 
+<<<<<<< HEAD
     get = async (reqLogger) => {
         try {
             const products = await productModel.find();
@@ -15,6 +16,16 @@ export default class ProductManager {
     }
 
     getView = async (page, limit, sort, query, reqLogger) => {
+=======
+    get = async () => {
+        try {
+            return await productModel.find();
+        } catch (error) {
+            return { status: "error", error: error.message }
+        }
+    }
+    getView = async (page, limit, sort, query) => {
+>>>>>>> 0e70a0dcbc4ff2beb7a4acbb420353de4b8805bd
         try {
             const options = {
                 page: parseInt(page),
@@ -22,6 +33,7 @@ export default class ProductManager {
                 sort: sort,
             };
             const result = await productModel.paginate(query, options);
+<<<<<<< HEAD
             reqLogger.debug("En product.mongodb.js: getView - Vista de productos obtenida");
             return result;
         } catch (error) {
@@ -68,10 +80,45 @@ export default class ProductManager {
     }
 
     delete = async (id, reqLogger) => {
+=======
+            return result;
+        } catch (error) {
+            console.log(error);
+            return { status: "error", error: error.message }
+        }
+    }
+    getById = async (id) => {
+        try {
+            return await productModel.findById(id);
+        } catch (error) {
+            return { status: "error", error: error.message }
+        }
+    }
+    add = async (product) => {
+        try {
+            return await productModel.create(product);
+        } catch (error) {
+            return { status: "error", error: error.message }
+        }
+    }
+    update = async (id, product) => {
+        try {
+            const updatedProduct = await productModel.findByIdAndUpdate(id, product, { new: true });
+            if (!updatedProduct) {
+                return { status: "error", error: "Producto no encontrado" };
+            }
+            return updatedProduct;
+        } catch (error) {
+            return { status: "error", error: `Error al actualizar el producto: ${error.message}` };
+        }
+    }
+    delete = async (id) => {
+>>>>>>> 0e70a0dcbc4ff2beb7a4acbb420353de4b8805bd
         try {
             const existingProduct = await productModel.findById(id);
     
             if (!existingProduct) {
+<<<<<<< HEAD
                 reqLogger.error("En product.mongodb.js: delete - Producto no encontrado al intentar eliminar");
                 return { status: "error", error: "Producto no encontrado" };
             }
@@ -117,10 +164,50 @@ export default class ProductManager {
             const product = await productModel.findById(productId);
             if (!product) {
                 reqLogger.error("En product.mongodb.js: updateProductStock - Producto no encontrado al actualizar stock");
+=======
+                return { status: "error", error: "Producto no encontrado" };
+            }
+    
+            return await productModel.findByIdAndDelete(id);
+        } catch (error) {
+            return { status: "error", error: `Error al eliminar el producto: ${error.message}` };
+        }
+    }
+
+    getCount = async (query) => {
+        try {
+            return await productModel.countDocuments(query);
+        } catch (error) {
+            return { status: "error", error: error.message };
+        }
+    }
+
+    checkProductStock = async (productId, quantity) => {
+        try {
+            const product = await productModel.findById(productId);
+            if (!product) {
+                return { status: "error", error: "Producto no encontrado" };
+            }
+            if (product.stock < quantity) {
+                return false;
+            }
+            return true;
+        } catch (error) {
+            return { status: "error", error: `Error al verificar el stock del producto: ${error.message}` };
+        }
+
+    }
+
+    updateProductStock = async (productId, quantity) => {
+        try {
+            const product = await productModel.findById(productId);
+            if (!product) {
+>>>>>>> 0e70a0dcbc4ff2beb7a4acbb420353de4b8805bd
                 return { status: "error", error: "Producto no encontrado" };
             }
             product.stock -= quantity;
             await product.save();
+<<<<<<< HEAD
             reqLogger.debug(`En product.mongodb.js: updateProductStock - Stock del producto con ID ${productId} actualizado a ${product.stock}`);
             return product;
         } catch (error) {
@@ -129,3 +216,14 @@ export default class ProductManager {
         }
     }
 }
+=======
+            return product;
+        } catch (error) {
+            return { status: "error", error: `Error al actualizar el stock del producto: ${error.message}` };
+        }
+    
+
+    }
+    
+}
+>>>>>>> 0e70a0dcbc4ff2beb7a4acbb420353de4b8805bd

@@ -40,6 +40,7 @@ header .profile-btn{
     margin-left: 5rem;
 }
 
+<<<<<<< HEAD
 header .logout-btn{
     display: flex;
     justify-content: center;
@@ -70,6 +71,8 @@ header .profile-btn img {
     margin-right: 1rem;
     opacity: 0.7;
 }
+=======
+>>>>>>> 0e70a0dcbc4ff2beb7a4acbb420353de4b8805bd
 .product-title{
     display: flex;
     justify-content: center;

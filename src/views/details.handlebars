@@ -1,6 +1,7 @@
 
 <header>
     <a href="/profile" class="profile-btn">
+<<<<<<< HEAD
     {{#if user.avatar}}
         <img src="{{user.avatar}}" alt="Perfil" class="profile-img">
     {{else}}
@@ -15,6 +16,11 @@
     <a href="/api/sessions/logout" id="logout-btn">
         <ion-icon name="log-out-outline"></ion-icon> Cerrar sesión
     </a>
+=======
+    <ion-icon name="person-circle-outline"></ion-icon> Perfil</a>
+    <h1 class="product-title">{{product.name}}</h1>
+    <a href="javascript:history.back()" class="back-btn"><ion-icon name="arrow-back-outline"></ion-icon> Volver </a>
+>>>>>>> 0e70a0dcbc4ff2beb7a4acbb420353de4b8805bd
 </header>
 <div class="product-details">
     
@@ -27,11 +33,19 @@
         <p class="product-category"><strong>Categoría: </strong>  {{product.category.nameCategory}}</p>
         
         <!-- Formulario para agregar al carrito -->
+<<<<<<< HEAD
         <form action="/api/carts/current/product/{{product._id}}" method="POST" class="add-to-cart-form" onsubmit="addToCart(event, '{{product._id}}')">
+=======
+        <form action="/api/carts/current/product/{{product._id}}" method="POST" class="add-to-cart-form">
+>>>>>>> 0e70a0dcbc4ff2beb7a4acbb420353de4b8805bd
             <input type="hidden" name="productId" value="{{product._id}}">
             <button type="submit" class="add-to-cart-btn">Agregar al carrito</button>
         </form>
     </div>
+<<<<<<< HEAD
 </div>
 
 <script src="/js/detail.js"></script>
+=======
+</div>
+>>>>>>> 0e70a0dcbc4ff2beb7a4acbb420353de4b8805bd
