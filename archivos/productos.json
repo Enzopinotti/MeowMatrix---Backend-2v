@@ -1,0 +1,13 @@
+[
+  {
+    "id": 1,
+    "name": "Computadora",
+    "description": "Para jugar",
+    "price": 230000,
+    "code": "ABC1010",
+    "stock": 10,
+    "category": "Electronica",
+    "thumbnails": "enzo_del_lofi.png",
+    "status": true
+  }
+]

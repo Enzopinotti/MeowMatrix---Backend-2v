@@ -1,0 +1,42 @@
+[
+  {
+    "id": 1,
+    "name": "Enzo Daniel",
+    "lastName": "Pinotti",
+    "birthDate": "1999/01/10",
+    "email": "enzo@gmail.com",
+    "password": "0ebb141e7e370d6646429781d23bab23fa120424fde2ca77b9b1fa79317528757916b6fccb5e2a5b7ea8ff06d23ad2ecf7b1fd983f3b311943f0b464f8570939"
+  },
+  {
+    "id": 2,
+    "name": "Martin",
+    "lastName": "Pollini",
+    "birthDate": "1995/01/14",
+    "email": "martinpollini@hotmail.com",
+    "password": "ce51abffcb2adec1f65d82fb2aa92d038ae9259d337e9954cd734ee7ddfeb25578abf6cee15e6151b4c89c8461cb64e73246bdcfb05c29e25ee43eb80c0900ee"
+  },
+  {
+    "id": 3,
+    "name": "Prueba Ejemplo",
+    "lastName": "Pruebita",
+    "birthDate": "1999-01-14",
+    "email": "prueba@gmail.com",
+    "password": "cfbd3e3a8adc49b9e0061ade86c84b499012048c903185821f9428dd981c4610b6d660d484a88641bf81b5b840422ea9e3a5da29c12821eed60b0d281e5f43db"
+  },
+  {
+    "id": 4,
+    "name": "Prueba2 Ejemplo",
+    "lastName": "Pruebita2",
+    "birthDate": "1999-01-14",
+    "email": "prueba2@gmail.com",
+    "password": "0947aa45d4cf77ceaeea905af5f9c686b13a89821798f10eac5c9b8aa0dc58ffbfb6944f740263e9cc37789bda83c0bf586b1517253fa32d5eac13b347b735d4"
+  },
+  {
+    "id": 5,
+    "name": "Prueba3 Ejemplo",
+    "lastName": "Pruebita3",
+    "birthDate": "1999-01-14",
+    "email": "prueba3@gmail.com",
+    "password": "8acd56a1ead9912253f58ce15d1a0ccdbe157c4378fb14d6de64af0055ba881615271c2f528cffa4348224495f9f9cbf68d1cbee67a843f66ca8427874537453"
+  }
+]
