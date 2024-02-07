@@ -1,5 +1,4 @@
 import winston from "winston";
-<<<<<<< HEAD
 import { customLoggerOptions } from "../../utils/customLoggerOptions.util.js"; 
 
 export const logger = winston.createLogger({
@@ -13,9 +12,4 @@ export const logger = winston.createLogger({
             )
         }),
     ]
-=======
-
-export const logger = winston.createLogger({
-    transports: [new winston.transports.Console({level: "verbose"})],
->>>>>>> 0e70a0dcbc4ff2beb7a4acbb420353de4b8805bd
 });

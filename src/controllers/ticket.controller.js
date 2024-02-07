@@ -6,13 +6,15 @@ import moment from 'moment';
 
 export const getTicketView = async (req, res) => {
     try {
-        const latestTicket = await ticketService.getLatestTicket();
+        const reqLogger = req.logger;
+        req.logger.debug('ticket.controller.js: getTicketView - Se inició')
+        const latestTicket = await ticketService.getLatestTicket(reqLogger);
         const formattedAmount = latestTicket.amount.toLocaleString('es-AR', {
             style: 'currency',
             currency: 'ARS'
         });
-        const purchaser = await userService.getUserById(latestTicket.purchaser);
-        const products = await productService.getProductsByIds(latestTicket.products);
+        const purchaser = await userService.getUserById(latestTicket.purchaser, reqLogger);
+        const products = await productService.getProductsByIds(latestTicket.products, reqLogger);
         const purchaseDate = moment(latestTicket.purchase_datetime).format('DD/MM/YYYY HH:mm:ss');
         res.render('ticket', {
             ticket: latestTicket,
@@ -45,20 +47,28 @@ export const getTicketByCode = async (req, res) => {
         res.sendSuccess(ticket);
     } catch (error) {
         res.sendServerError(error);
+        throw error;
     }
 }
 
-export async function createTicket(purchaseResult, userId) {
-
-    const { purchasedProducts } = purchaseResult;
-    const user = await userService.getUserById(userId);
-    const ticketData = {
-        code: await ticketService.generateUniqueTicketCode(),
-        purchase_datetime: new Date(),
-        amount: await ticketService.calculateTotalAmount(purchasedProducts),
-        purchaser: user._id, 
-    };
-    const ticket = await ticketService.createTicket(ticketData);
-  
-    return ticket;
+export async function createTicket(purchaseResult, userId, reqLogger) {
+    reqLogger.debug("TicketController: createTicket - pasó con: ", );
+    try {
+        const { purchasedProducts } = purchaseResult;
+        const user = await userService.getUserById(userId, reqLogger);
+        reqLogger.debug("TicketController: createTicket - Usuario encontrado por id para crear el ticket");
+        const ticketData = {
+            code: await ticketService.generateUniqueTicketCode(),
+            purchase_datetime: new Date(),
+            amount: await ticketService.calculateTotalAmount(purchasedProducts, reqLogger),
+            purchaser: user._id, 
+        };
+        reqLogger.debug("TicketController: createTicket - ticket Creado");
+        const ticket = await ticketService.createTicket(ticketData);
+    
+        return ticket;
+    } catch (error) {
+        reqLogger.error("TicketController: createTicket - Error Creando el Ticket: ", error);
+        throw error;
+    }
 };

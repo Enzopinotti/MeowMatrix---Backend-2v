@@ -101,7 +101,6 @@ export const passportCall = (strategy) => {
 //! Autorización según roles
 export const authorization = (role) => {
     return async (req, res, next) => {
-<<<<<<< HEAD
         if (!req.user) {
             return res.status(401).redirect('/login').send({ error: 'Unauthorized' }); // Redirigir al inicio de sesión si el usuario no está autenticado
         } else if (req.user.rol === 'admin') {
@@ -113,14 +112,6 @@ export const authorization = (role) => {
         }
     };
 };
-=======
-        if (!req.user) return res.status(401).send({error: 'Unauthorized'});
-        if (req.user.rol !== role) return res.status(403).send({error: 'No Permissions'});
-        next();
-    }
-};
-
->>>>>>> 0e70a0dcbc4ff2beb7a4acbb420353de4b8805bd
 export const calculateTotalPrice = (products) => {
     return products.reduce((total, product) => total + (product.quantity * product.product.price), 0);
 };

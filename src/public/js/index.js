@@ -1,11 +1,4 @@
 const socket = io.connect("http://localhost:8080", {forceNew: true});
-<<<<<<< HEAD
-=======
-console.log("conectado");
-
-
-
->>>>>>> 0e70a0dcbc4ff2beb7a4acbb420353de4b8805bd
 //! Productos en tiempo real
 
 const addProductForm = document.getElementById("addProductForm");
@@ -76,10 +69,6 @@ socket.on('visibility-toggled', (productId) => {
 
 // Escucha la llegada de nuevos mensajes y agrega al DOM
 socket.on("message-received", (message) => {
-<<<<<<< HEAD
-=======
-    console.log(message);
->>>>>>> 0e70a0dcbc4ff2beb7a4acbb420353de4b8805bd
     const chatMessages = document.getElementById("chat-messages");
     const messageElement = document.createElement("p");
     messageElement.classList.add("message");
@@ -102,25 +91,12 @@ socket.on('updateCart', ({ cartId, productId }) => {
 
 async function updateCartSummary(cartId) {
     try {
-<<<<<<< HEAD
         const response = await fetch(`/api/carts/${cartId}/summary`);
         if (response.ok) {
             const cartSummary = await response.json();
             // Actualizar elementos del DOM con los nuevos datos
             const totalItemsElement = document.querySelector('.total-items');
             const totalPriceElement = document.querySelector('.total-price');
-=======
-        const response = await fetch('/api/carts/${cartId}/summary');
-        console.log('response', response);  
-        if (response.ok) {
-            const cartSummary = await response.json();
-            console.log( 'cartSummary: ', cartSummary)
-            // Actualizar elementos del DOM con los nuevos datos
-            const totalItemsElement = document.querySelector('.total-items');
-            const totalPriceElement = document.querySelector('.total-price');
-            console.log('totalItemsElement', totalItemsElement);
-            console.log('totalPriceElement', totalPriceElement);
->>>>>>> 0e70a0dcbc4ff2beb7a4acbb420353de4b8805bd
             if (totalItemsElement && totalPriceElement) {
                 // Actualizar el total de productos
                 totalItemsElement.textContent = `Total de productos: ${cartSummary.payload.totalItems}`;
@@ -139,20 +115,13 @@ async function updateCartSummary(cartId) {
 }
 
 
-<<<<<<< HEAD
-socket.on('updateAllCart', ({ cartId, reqLogger }) => {
-    // Encuentra el elemento del carrito en el DOM y elimínalo
-    const cartItem = document.querySelector(`.cart-list`);
-    reqLogger.debug('cart item en socket: ', cartItem);
-=======
 socket.on('updateAllCart', ({ cartId }) => {
     // Encuentra el elemento del carrito en el DOM y elimínalo
     const cartItem = document.querySelector(`.cart-list`);
-    console.log('cart item en socket',cartItem);
->>>>>>> 0e70a0dcbc4ff2beb7a4acbb420353de4b8805bd
     if (cartItem) {
         cartItem.remove();
         // Actualiza el resumen del carrito (puedes llamar a una función que calcule el nuevo total)
         updateCartSummary(cartId);
     }
+    return
 });

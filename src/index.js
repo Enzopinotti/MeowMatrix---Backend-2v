@@ -10,20 +10,11 @@ import MongoStore from 'connect-mongo';
 import cookieParser from 'cookie-parser';
 import config from './config/server.config.js';
 import { routerGeneral } from './routes/index.js';
-<<<<<<< HEAD
-import BaseRouter from './Routes/router.js';
-import compression from 'express-compression'
-import ErrorHandler from './middlewares/error/handler.error.js';
-import { addLogger } from './middlewares/log/handler.log.js';
-import { isAdmin } from './utils/handlebarsHelpers.util.js'
-=======
 import BaseRouter from './routes/router.js';
 import compression from 'express-compression'
 import ErrorHandler from './middlewares/error/handler.error.js';
 import { addLogger } from './middlewares/log/handler.log.js';
-
-
->>>>>>> 0e70a0dcbc4ff2beb7a4acbb420353de4b8805bd
+import { isAdmin } from './utils/handlebarsHelpers.util.js'
 
 
 const baseRouterInstance = new BaseRouter();
@@ -33,12 +24,9 @@ const hbs = handlebars.create({
   runtimeOptions: {
     allowProtoPropertiesByDefault: true,
     allowProtoMethodsByDefault: true,
-<<<<<<< HEAD
   },
   helpers: {
     isAdmin: isAdmin
-=======
->>>>>>> 0e70a0dcbc4ff2beb7a4acbb420353de4b8805bd
   }
 });
 //Inicializo el motor de plantillas handlebars 
@@ -93,13 +81,9 @@ app.use((err, req, res, next) => {
 
 //middleware para utilizar cookies 
 app.use(
-<<<<<<< HEAD
   
     cookieParser(
     "1ad1f78ab931039683574d95dce673abae20e29f4e6cac1ab02dea191695082948c82f6e890cca8636a9fde1e4a1e1baa21710353a9f278fb62db53e922961c6"
-=======
-    cookieParser( "1ad1f78ab931039683574d95dce673abae20e29f4e6cac1ab02dea191695082948c82f6e890cca8636a9fde1e4a1e1baa21710353a9f278fb62db53e922961c6"
->>>>>>> 0e70a0dcbc4ff2beb7a4acbb420353de4b8805bd
   ));
   
 

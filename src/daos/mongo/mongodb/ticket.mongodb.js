@@ -35,13 +35,14 @@ export default class ProductManager {
             return { status: "error", error: error.message }
         }
     }
-    getLast = async () => {
+    getLast = async (reqLogger) => {
         try {
             // Busca el último ticket en la base de datos
             const lastTicket = await ticketModel.findOne().sort({ _id: -1 }).limit(1);
+            reqLogger.debug("ticket.mongodb.js: getLast - Ticket obtenido.");
             return lastTicket;
         } catch (error) {
-            return { status: "error", error: error.message };
+            throw error;
         }
     };
 }

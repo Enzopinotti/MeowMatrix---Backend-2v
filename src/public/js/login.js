@@ -16,7 +16,7 @@
         Swal.fire({
             icon: 'error',
             title: 'Error',
-            text: 'Por favor, completa el campo email',
+            text: 'Por favor, completa el campo email para avanzar',
             allowOutsideClick: false,
         });
         return;
@@ -25,7 +25,7 @@
         Swal.fire({
             icon: 'error',
             title: 'Error',
-            text: 'Por favor, completa el campo password',
+            text: 'Por favor, completa el campo contraseña para avanzar',
             allowOutsideClick: false,
         });
         return;

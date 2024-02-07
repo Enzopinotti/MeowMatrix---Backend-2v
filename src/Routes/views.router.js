@@ -40,7 +40,6 @@ export default class ViewsRouter extends BaseRouter {
 
     this.router.get('/login', showLogin)
 
-<<<<<<< HEAD
     this.router.post('/realTimeProducts', authorization('admin') , uploader.array('productImage', 1), postRealTimeProduct);
 
     this.router.get('/realTimeProducts',authorization('admin') , getRealTimeProducts);
@@ -54,21 +53,6 @@ export default class ViewsRouter extends BaseRouter {
     this.router.get('/products/:productId', authorization('usuario') ,getProductByIdView);
 
     this.router.get('/carts', authorization('usuario') ,getCartView);
-=======
-    this.router.post('/realTimeProducts', /*authorization('admin') ,*/ uploader.array('productImage', 1), postRealTimeProduct);
-
-    this.router.get('/realTimeProducts',/*authorization('admin') ,*/ getRealTimeProducts);
-
-    this.router.get('/message', /*authorization('usuario'),*/ getRealTimeMessages);
-
-    this.router.post('/message', /*authorization('usuario'),*/ postRealTimeMessages);
-
-    this.router.get('/products', /*authorization('usuario'),*/ getProductsView);
-
-    this.router.get('/products/:productId', authorization('usuario') ,getProductByIdView);
-
-    this.router.get('/carts',/* authorization('usuario') ,*/getCartView);
->>>>>>> 0e70a0dcbc4ff2beb7a4acbb420353de4b8805bd
 
     this.router.post('/upload-avatar', authorization('usuario') ,uploader.single('avatar'), uploadAvatar);
 
