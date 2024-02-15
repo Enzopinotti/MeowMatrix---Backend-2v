@@ -41,6 +41,17 @@ export default class ProductManager {
         }
     }
 
+    getMy = async (userEmail, reqLogger) => {
+        try {
+            const products = await productModel.find({ owner: userEmail }).populate('category', 'nameCategory');
+            reqLogger.debug("En product.mongodb.js: getMy - Productos por email obtenidos de la base de datos");
+            return products;
+        } catch (error) {
+            reqLogger.error("En product.mongodb.js: getMy - Error al obtener productos de un usuario:", error.message);
+            throw error;
+        }
+    }
+
     add = async (product, reqLogger) => {
         try {
             const addedProduct = await productModel.create(product);

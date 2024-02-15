@@ -1,4 +1,4 @@
-    document.getElementById('loginForm').addEventListener('submit', function (event) {
+document.getElementById('loginForm').addEventListener('submit', function (event) {
     // Evita que el formulario se envíe automáticamente
     event.preventDefault();
     const data = new FormData(this);

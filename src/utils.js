@@ -59,14 +59,27 @@ export function isValidPassword(password, user) {
     //compareSync compara la contraseña ingresada con la contraseña encriptada del usuario
 }
 
+export async function comparePasswords(password, hashedPassword) {
+    try {
+        // Comparar la contraseña sin hashear con la contraseña hasheada
+        const match = await bcrypt.compare(password, hashedPassword);
+        return match;
+    } catch (error) {
+        console.error('Error al comparar las contraseñas:', error);
+        throw new Error('Error al comparar las contraseñas');
+    }
+}
+
 export function validatePassword(password) {
-    // Verifica si la contraseña tiene al menos una mayúscula y un número
+    // Verifica si la contraseña tiene al menos una mayúscula, una minúscula, un número y longitud mayor a 6 caracteres
+    const lowercaseRegex = /[a-z]/;
     const uppercaseRegex = /[A-Z]/;
     const numberRegex = /[0-9]/;
+    const lengthCheck = password.length > 6;
+    const hasLowercase = lowercaseRegex.test(password);
     const hasUppercase = uppercaseRegex.test(password);
     const hasNumber = numberRegex.test(password);
-  
-    return hasUppercase && hasNumber;
+    return lengthCheck && hasLowercase && hasUppercase && hasNumber;
 }
 
 const PRIVATE_KEY = config.tokenKey;
@@ -75,6 +88,7 @@ export function generateToken(user) {
     const token = jwt.sign({ user }, PRIVATE_KEY, { expiresIn: '1h' });
     return token;
 };
+
 export function authToken(token) {
     const authHeader =req.headers.authorization;
     if (!authHeader) return res.status(401).send({status: "error", error:"Unauthorized"});
@@ -99,16 +113,14 @@ export const passportCall = (strategy) => {
     }
 };
 //! Autorización según roles
-export const authorization = (role) => {
+export const authorization = (roles) => {
     return async (req, res, next) => {
         if (!req.user) {
             return res.status(401).redirect('/login').send({ error: 'Unauthorized' }); // Redirigir al inicio de sesión si el usuario no está autenticado
-        } else if (req.user.rol === 'admin') {
-            next(); // Permitir el acceso si el usuario es un administrador
-        } else if (req.user.rol !== role) {
-            return res.status(403).redirect('/login'); // Redirigir al inicio de sesión si el usuario no tiene permisos adecuados
+        } else if (req.user.rol === 'admin' || roles.includes(req.user.rol)) {
+            next(); // Permitir el acceso si el usuario es un administrador o tiene uno de los roles especificados
         } else {
-            next(); // Continuar si el usuario está autenticado y tiene los permisos adecuados
+            return res.status(403).redirect('/login'); // Redirigir al inicio de sesión si el usuario no tiene permisos adecuados
         }
     };
 };

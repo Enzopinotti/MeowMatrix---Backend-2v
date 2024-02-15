@@ -80,6 +80,17 @@ export default class UserManager {
         }
     }
 
+    getByResetToken = async (token, reqLogger) => {
+        try {
+            const user = await userModel.findOne({ resetPasswordToken: token });
+            reqLogger.debug("En user.mongodb.js: getByResetToken - Usuario obtenido token de reseteo de contraseña.");
+            return user;
+        } catch (error) {
+            reqLogger.error("En user.mongodb.js: getByResetToken - Error al obtener usuario por token de reseteo:", error);
+            throw error;
+        }
+    }
+
     updateAvatar = async (userId, imagePath, reqLogger) => {
         try {
             const updatedUser = await userModel.findByIdAndUpdate(userId, { avatar: imagePath });

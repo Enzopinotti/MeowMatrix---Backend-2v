@@ -2,8 +2,8 @@ import { CategoryDao } from "../daos/factory.js";
 
 export const getCategories = async (reqLogger) => {
   try {
-    const categories = await CategoryDao.get();
-    reqLogger.debug("En category.service.js: getCategories - Categorías obtenidas:", categories);
+    const categories = await CategoryDao.get(reqLogger);
+    reqLogger.debug("En category.service.js: getCategories - Categorías obtenidas.");
     return categories;
   } catch (error) {
     reqLogger.error("En category.service.js: getCategories - Error al obtener categorías:", error);

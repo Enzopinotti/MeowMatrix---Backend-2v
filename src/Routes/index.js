@@ -9,13 +9,13 @@ import SessionRouter from './api/session.js';
 import MailRouter from './mail.router.js';
 import MockRouter from './mock.router.js';
 import BaseRouter from './router.js';
-import TestRouter from '../Routes/test.router.js';
+import TestRouter from '../routes/test.router.js';
 
 
 
 
 //?Instancias de las clases de los routers
-const baseRouterInstance = new BaseRouter();
+export const baseRouterInstance = new BaseRouter();
 const userRouterInstance = new UserRouter();
 const cartRouterInstance = new CartRouter();
 const messageRouterInstance = new MessageRouter();

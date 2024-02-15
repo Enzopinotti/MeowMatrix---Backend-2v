@@ -11,3 +11,4 @@ export const updatePassword = async (email, newPassword) => {
     throw error;
   }
 };
+

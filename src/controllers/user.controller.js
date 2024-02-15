@@ -120,6 +120,28 @@ export const updateUser = async (req, res) => {
   }
 };
 
+export const upgradeToPremium = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const reqLogger = req.logger;
+    req.logger.debug("En user.controller.js: upgradeToPremium - Entró");
+    const user = await userService.getUserById(userId, reqLogger);
+    console.log('id de usuario: ', userId)
+    // Verificar si el usuario existe y su rol actual es "usuario"
+    if (!user || user.rol !== 'usuario') {
+        return res.sendNotFound('Usuario no encontrado o no es elegible para actualización.');
+    }
+    // Actualizar el rol del usuario a "premium"
+    user.rol = 'premium';
+    await user.save();
+    req.logger.error("En user.controller.js: upgradeToPremium - Rol Actualizado Correctamente.");
+    res.sendSuccess('Usuario actualizado a premium correctamente.');
+  } catch (error) {
+    req.logger.error("En user.controller.js: upgradeToPremium - Error al actualizar el rol del usuario:", error);
+    res.sendServerError('Error al actualizar el rol del usuario.');
+  }
+};
+
 
 export const uploadAvatar = async (req, res) => {
   const reqLogger = req.logger;

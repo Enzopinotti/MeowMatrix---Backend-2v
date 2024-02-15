@@ -68,6 +68,17 @@ export const getProductsByIds = async (productIds, reqLogger) => {
     }
 };
 
+export const getMyProducts = async (userEmail, reqLogger) => {
+    try {
+        const products = await ProductDao.getMy(userEmail, reqLogger);
+        reqLogger.debug("En product.service.js: getMyProducts - Productos obtenidos por usuario");
+        return products;
+    } catch (error) {
+        reqLogger.error("En product.service.js: getMyProducts - Error al obtener productos por usuario:", error);
+        throw error;
+    }
+}
+
 export const createProduct = async (productData, reqLogger) => {
     try {
         const addedProduct = await ProductDao.add(productData, reqLogger);

@@ -3,12 +3,12 @@ import emailConfig from "../config/email.config.js"
 import { __dirname } from "../utils.js"
 import { generatePdf } from "../utils/pdf.util.js"; // Asegúrate de tener esta función en tu proyecto
 
-export const sendMail = async (body) => {
+export const sendMailWithPdf = async (body) => {
     try {
-        const { to, subject, message, ticketHTML } = body;
+        const { to, subject, message, ticket, user, products } = body;
 
         // Generar el PDF del ticket
-        const pdfBuffer = await generatePdf(ticketHTML);
+        const pdfBuffer = await generatePdf(ticket, user, products);
 
         const mailOptions = {
             from: emailConfig.emailUser,
@@ -24,10 +24,41 @@ export const sendMail = async (body) => {
             ],
         };
 
-        const result = await transport.sendMail(mailOptions);
+        const result =  transport.sendMail(mailOptions);
         return result;
     } catch (error) {
         console.log(error);
         return error;
     }
 };
+export const sendMail = async (body) => {
+    try {
+        const { to, subject, message } = body;
+        const mailOptions = {
+            from: emailConfig.emailUser,
+            to,
+            subject,
+            html: `<div>${message}</div>`,
+        };
+        const result = await transport.sendMail(mailOptions);
+        return result;
+    } catch (error) {
+        console.log(error);
+        return error;
+    }
+}
+
+export const sendRecoveryEmail = async (email, token) => {
+    try {
+      
+      transport.sendMail({
+        from: emailConfig.emailUser,
+        to: email,
+        subject: 'Recuperar Contraseña',
+        html: `<p>Haga clic  <a href="http://localhost:8080/resetPassword/${token}">aquí</a> para restablecer la contraseña. Este enlace caducará en 1 hora.</p>`
+      });
+      console.log('Recovery email sent');
+    } catch (error) {
+      console.error('Error sending recovery email:', error);
+    }
+  };

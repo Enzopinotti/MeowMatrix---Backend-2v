@@ -7,3 +7,19 @@ export const isAdmin = (user, options) => {
         return options.inverse(this);
     }
 };
+
+export const isNotPremium = (user, options) => {
+    if (user && user.rol !== 'premium') {
+        return options.fn(this);
+    } else {
+        return options.inverse(this);
+    }
+};
+
+export const isPremium = (user, options) => {
+    if (user && user.rol === 'premium') {
+        return options.fn(this);
+    } else {
+        return options.inverse(this);
+    }
+};

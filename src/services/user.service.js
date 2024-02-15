@@ -23,6 +23,30 @@ export const getUserById = async (userId, reqLogger) => {
   }
 };
 
+export const getUserByEmail = async (email, reqLogger) => {
+  try {
+    const user = await UserDao.getByEmail(email, reqLogger);
+    reqLogger.debug(`En user.service.js: getUserByEmail - Usuario encontrado con email ${email}.`);
+    return user;
+  } catch (error) {
+    reqLogger.error(`En user.service.js: getUserByEmail - Error al obtener usuario con email ${email}: ${error.message}`);
+    throw error;
+  }
+}
+
+export const getUserByResetToken = async (token, reqLogger) => {
+  try {
+    const user = await UserDao.getByResetToken(token, reqLogger);
+    reqLogger.debug(`En user.service.js: getUserByResetToken - Usuario encontrado con token ${token}.`);
+    return user;
+  } catch (error) {
+    reqLogger.error(`En user.service.js: getUserByResetToken - Error al obtener usuario con token ${token}: ${error.message}`);
+    throw error;
+  }
+}
+
+
+
 export const addUser = async (userData, reqLogger) => {
   try {
     const userDTO = new UserDTO(
@@ -89,3 +113,4 @@ export const updateAvatar = async (userId, imagePath, reqLogger) => {
       throw error;
   }
 };
+

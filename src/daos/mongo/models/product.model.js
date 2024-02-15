@@ -23,6 +23,7 @@ const ProductSchema = new mongoose.Schema({
     status: { type: Boolean, required: true, default: true },
     isVisible: {type: Boolean, required: true, default: true},
     tags: [String], // Campo para palabras clave
+    owner: { type: String, required: true, default: 'admin' },
     createdAt: {
         type: Date,
         default: Date.now // Esto establecerá la fecha actual automáticamente al crear un producto

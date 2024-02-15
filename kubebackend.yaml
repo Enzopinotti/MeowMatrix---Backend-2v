@@ -1,0 +1,79 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: kubeservice
+spec:
+  selector:
+    app: testbackend
+  ports:
+    - port: 80
+      targetPort: 8080
+  type: LoadBalancer
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kubedeploy
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: testbackend
+  template:
+    metadata:
+      labels:
+        app: testbackend
+    spec:
+      containers:
+      - name: kubecontainer
+        image: enzopinotti/testbackend:1.0.0
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 8080
+          
+        imagePullPolicy: Always
+
+
+#Comando para usar kubernetes: kubectl apply -f kubeBackend.yaml para implementar el servicio y el deploy
+# kubectl delete -f kubeBackend.yaml para eliminar el servicio y el deploy
+# kubectl get pods para ver los pods
+# kubectl get services para ver los servicios
+# minikube service list para ver los servicios de minikube
+
+
+
+#MAS COMANDOS
+
+# kubectl get deployments para ver los deployments
+# kubectl get nodes para ver los nodos
+# kubectl get events para ver los eventos
+# kubectl describe pods para ver los detalles de los pods
+# kubectl describe services para ver los detalles de los servicios
+# kubectl describe deployments para ver los detalles de los deployments
+# kubectl describe nodes para ver los detalles de los nodos
+# kubectl describe events para ver los detalles de los eventos
+# kubectl logs pods para ver los logs de los pods
+# kubectl logs services para ver los logs de los servicios
+# kubectl logs deployments para ver los logs de los deployments
+# kubectl logs nodes para ver los logs de los nodos
+# kubectl logs events para ver los logs de los eventos
+# kubectl exec pods -it -- bash para ejecutar el bash de los pods
+# kubectl exec services -it -- bash para ejecutar el bash de los servicios
+# kubectl exec deployments -it -- bash para ejecutar el bash de los deployments
+# kubectl exec nodes -it -- bash para ejecutar el bash de los nodos
+# kubectl exec events -it -- bash para ejecutar el bash de los eventos
+# kubectl delete pods para eliminar los pods
+# kubectl delete services para eliminar los servicios
+# kubectl delete deployments para eliminar los deployments
+# kubectl delete nodes para eliminar los nodos
+# kubectl delete events para eliminar los eventos
+# kubectl rollout restart deployments para reiniciar los deployments
+# kubectl rollout restart services para reiniciar los servicios
+# kubectl rollout restart pods para reiniciar los pods
+# kubectl rollout restart nodes para reiniciar los nodos
+# kubectl rollout restart events para reiniciar los eventos
+# kubectl rollout undo deployments para deshacer el rollout del deployments
+# kubectl 

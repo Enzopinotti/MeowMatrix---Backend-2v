@@ -16,8 +16,11 @@ const userSchema = new mongoose.Schema({
     birthDate: {type: Date, require:true},
     phone: {type: String},
     avatar: {type: String},
+    resetPasswordToken: String,
+    resetPasswordExpires: Date,
     cart:{ type: mongoose.Schema.Types.ObjectId, ref: 'carts' },
     rol: {type: String, require:true, default:'usuario'},
+    
 });
 
 const userModel = mongoose.model(userCollection, userSchema);

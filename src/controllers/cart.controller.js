@@ -4,7 +4,7 @@ import moment from 'moment';
 import * as userService from "../services/user.service.js";
 import { createTicket } from "./ticket.controller.js";
 import url from 'url';
-import { sendMail } from "./mail.controller.js";
+import { sendMailWithPdf } from "./mail.controller.js";
 import { io } from '../app.js'
 import { calculateTotalPrice } from "../utils.js";
 
@@ -144,6 +144,7 @@ export const addToCurrentCart = async (req, res) => {
     const reqLogger = req.logger; 
     try {
         const productId = req.params.pid;
+        
         const result = await cartService.addToCurrentCart(userId, productId, reqLogger);
         req.logger.debug("cart.controller.js: addToCurrentCart - Producto Añadido al carrito con éxito.");
         res.sendSuccess(result.payload);
@@ -239,6 +240,7 @@ export const deleteCart = async (req, res) => {
 export const purchaseCart = async (req, res) => {
     const { cid } = req.params;
     const reqLogger = req.logger;
+    let updatedCart;
     try {
         // Obtener el carrito por id //
         const cart = await cartService.getCartById(cid, reqLogger);
@@ -248,29 +250,25 @@ export const purchaseCart = async (req, res) => {
         reqLogger.debug("cart.controller.js: purchaseCart - Proceso de compra finalizado.");
         // Crear un ticket con los detalles de la compra //
         const ticket = await createTicket(result, cart.payload.user, reqLogger);
+        const user = await userService.getUserById(cart.payload.user, reqLogger);
+  
+        
         reqLogger.debug("cart.controller.js: purchaseCart - Ticket Creado");
         // Eliminar productos comprados del carrito //
         
         for (const productPurchased of result.purchasedProducts) {
-            const updatedCart = await cartService.deleteProductFromCart(cart.payload._id, productPurchased._id, reqLogger);
+            updatedCart = await cartService.deleteProductFromCart(cart.payload._id, productPurchased._id, reqLogger);
         };
-        // Generar HTML del ticket (sustituye con tu propia lógica) //
-        const user = await userService.getUserById(ticket.purchaser, reqLogger) 
-        const ticketHTML = `
-        <html>
-            <h1>Ticket de Compra</h1>
-            <p><strong>Código de Ticket:</strong> ${ticket.code}</p>
-            <p><strong>Fecha de Compra:</strong> ${moment(ticket.purchase_datetime).format('DD/MM/YYYY HH:mm:ss')}</p>
-            <p><strong>Monto Total: </strong> $${ticket.amount.toFixed(2)}</p>
-            <p><strong>Comprador:</strong> ${user.name} ${user.lastName}</p> 
-        </html>
-        `;
+        const products =  result.purchasedProducts;
+
         // Enviar el ticket por correo electrónico //
-        await sendMail({
+        await sendMailWithPdf({
             to: req.user.email, 
             subject: 'Confirmación de compra',
-            message: 'Gracias por tu compra. Adjunto encontrarás el ticket de compra.',
-            ticketHTML,
+            message: 'Gracias por tu compra. Adjunto encontrarás el ticket de la transacción.',
+            ticket,
+            products,
+            user
         });
         const serverUrl = url.format({
             protocol: req.protocol,

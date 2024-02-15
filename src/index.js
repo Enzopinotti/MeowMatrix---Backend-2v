@@ -10,14 +10,13 @@ import MongoStore from 'connect-mongo';
 import cookieParser from 'cookie-parser';
 import config from './config/server.config.js';
 import { routerGeneral } from './routes/index.js';
-import BaseRouter from './routes/router.js';
+import { baseRouterInstance } from './routes/index.js';
 import compression from 'express-compression'
 import ErrorHandler from './middlewares/error/handler.error.js';
 import { addLogger } from './middlewares/log/handler.log.js';
-import { isAdmin } from './utils/handlebarsHelpers.util.js'
+import { isAdmin, isNotPremium, isPremium } from './utils/handlebarsHelpers.util.js'
 
 
-const baseRouterInstance = new BaseRouter();
 
 const app = express();
 const hbs = handlebars.create({
@@ -26,7 +25,9 @@ const hbs = handlebars.create({
     allowProtoMethodsByDefault: true,
   },
   helpers: {
-    isAdmin: isAdmin
+    isAdmin: isAdmin,
+    isNotPremium: isNotPremium,
+    isPremium: isPremium,
   }
 });
 //Inicializo el motor de plantillas handlebars 

@@ -1,5 +1,6 @@
 import { CartDao } from "../daos/factory.js";
 import { ProductDao } from "../daos/factory.js";
+import { UserDao } from "../daos/factory.js";
 
 export const getCarts = async (reqLogger) => {
   try {
@@ -47,7 +48,12 @@ export const addToCurrentCart = async (userId, productId, reqLogger) => {
     // Verifica si el usuario tiene un carrito existente
     const existingCart = await CartDao.getByUserId(userId, reqLogger);
     const product = await ProductDao.getById(productId, reqLogger);
-
+    const user = await UserDao.getById(userId, reqLogger);
+    console.log('usuario: ', user, ' producto: ', product)
+    if( product.owner === user.email){
+      reqLogger.error("En cart.service.js: addToCurrentCart - Error: El producto es propio del usuario.");
+      throw new Error("El producto es propio del usuario.");
+    }
     if (existingCart.status === 'success') {
       // Si el usuario tiene un carrito existente, agrega el producto al carrito actual
       const result = await CartDao.addProduct(existingCart.payload._id, product, reqLogger);

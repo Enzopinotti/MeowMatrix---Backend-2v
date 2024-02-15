@@ -15,10 +15,22 @@
                 <ion-icon name="settings-outline"></ion-icon> Administrar Productos
             </a>
         {{/isAdmin}}
-        <div class="user-info">
-            <h1 class="products-title">Bienvenido {{user.name}}, rol: {{user.rol}}, Lista de Productos</h1>   
-        </div>
+
+        {{#isPremium user}}
+            <a href="/myProducts" class="admin-btn">
+                <ion-icon name="settings-outline"></ion-icon> Mis Productos
+            </a>
+        {{/isPremium}}
+
+        {{#isNotPremium user}}
+            <button class="premium-btn" onclick="upgradeToPremium(event)">
+                <ion-icon name="star-outline"></ion-icon> Convertirse en Premium
+            </button>
+        {{/isNotPremium}}
+
+        
     {{/if}}
+
     <a href="/carts" class="cart-btn">
         <ion-icon name="cart-outline"></ion-icon> Carrito
     </a>

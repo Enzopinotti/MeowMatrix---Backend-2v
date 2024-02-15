@@ -7,7 +7,10 @@ import {
   uploadAvatar
 } from '../controllers/user.controller.js';
 import {
+  getEditProductView,
+  getMyProductsView,
   getProductByIdView,
+  getProductCreateView,
   getProductsView
 } from '../controllers/product.controller.js';
 import {
@@ -22,13 +25,14 @@ import {
   postRealTimeMessages
 } from '../controllers/message.controller.js';
 import { 
-    showLogin, showRegister 
+    showLogin, showRecovery, showRegister, showReset 
 } from '../controllers/session.controller.js';
 import {
   authorization
 } from '../utils.js'
 import { getTicketView } from '../controllers/ticket.controller.js';
 import { getMockProductsView } from '../controllers/mock.controller.js';
+
 
 export default class ViewsRouter extends BaseRouter {
   init() {
@@ -44,21 +48,31 @@ export default class ViewsRouter extends BaseRouter {
 
     this.router.get('/realTimeProducts',authorization('admin') , getRealTimeProducts);
 
-    this.router.get('/message', authorization('usuario'), getRealTimeMessages);
+    this.router.get('/message', authorization(['usuario', 'premium']), getRealTimeMessages);
 
-    this.router.post('/message', authorization('usuario'), postRealTimeMessages);
+    this.router.post('/message', authorization(['usuario', 'premium']), postRealTimeMessages);
 
-    this.router.get('/products', authorization('usuario'), getProductsView);
+    this.router.get('/products', authorization(['usuario', 'premium']) ,getProductsView);
 
-    this.router.get('/products/:productId', authorization('usuario') ,getProductByIdView);
+    this.router.get('/products/:productId', authorization(['usuario', 'premium']),getProductByIdView);
 
-    this.router.get('/carts', authorization('usuario') ,getCartView);
+    this.router.get('/carts', authorization(['usuario', 'premium']) ,getCartView);
 
-    this.router.post('/upload-avatar', authorization('usuario') ,uploader.single('avatar'), uploadAvatar);
+    this.router.post('/upload-avatar', authorization(['usuario', 'premium']), uploader.single('avatar'), uploadAvatar);
 
     this.router.get('/ticket', getTicketView);
 
     this.router.get('/mockingproducts', getMockProductsView);
 
+    this.router.get('/recoveryPass', showRecovery);
+
+    this.router.get('/resetPassword/:tokenId',  showReset);
+
+    this.router.get('/myProducts',authorization(['premium']), getMyProductsView)
+
+    this.router.get('/products/:productId/edit',authorization(['premium']), getEditProductView )
+
+    this.router.get('/createProduct', authorization(['premium']), getProductCreateView)
+    
   }
 }

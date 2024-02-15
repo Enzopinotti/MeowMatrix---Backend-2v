@@ -1,5 +1,5 @@
 import BaseRouter from '../../routes/router.js';
-import { loginUser, logoutUser, recoveryPassword, registerUser } from '../../controllers/session.controller.js';
+import { loginUser, logoutUser, recoveryPassword, registerUser, resetPassword } from '../../controllers/session.controller.js';
 import { showProfile } from '../../controllers/user.controller.js';
 import passport from 'passport';
 
@@ -39,7 +39,9 @@ export default class SessionRouter extends BaseRouter {
 
     this.router.post('/profile', showProfile);
 
-    this.router.post('/recovery', recoveryPassword);
+    this.router.post('/recoveryPass', recoveryPassword);
+      
+    this.router.post('/resetPassword', resetPassword);
 
   }
 }
