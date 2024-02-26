@@ -1,20 +1,23 @@
 // UserDTO.js
 class UserDTO {
-    constructor(name, lastName, email, password, birthDate, phone) {
+    constructor(name, lastName, email, password, birthDate, phone, reason) {
       this.name = name;
       this.lastName = lastName;
       this.email = email;
       this.password = password;
       this.birthDate = birthDate;
       this.phone = phone;
+      this.reason = reason;
     }
-  
+    
+
     validate() {
-      // Realiza validaciones aquí, por ejemplo:
-      if (!this.name || !this.lastName || !this.email || !this.password || !this.birthDate) {
-        throw new Error('Los campos obligatorios no pueden estar vacíos.');
+
+      if(this.reason === 'register'){
+        if (!this.name || !this.lastName || !this.email || !this.password || !this.birthDate || !this.phone) {
+          throw new Error('Los campos obligatorios no pueden estar vacíos.');
+        }
       }
-  
       // Puedes agregar más validaciones según tus requisitos.
     }
   

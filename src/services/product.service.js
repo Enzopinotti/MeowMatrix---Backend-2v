@@ -35,9 +35,8 @@ export const getProductsView = async (page, limit, sort, query, reqLogger) => {
 
         const categoriesResponse = await CategoryDao.get(reqLogger);
 
-        const categories = categoriesResponse.payload;
         const categoryMap = {};
-        categories.forEach(category => {
+        categoriesResponse.forEach(category => {
             categoryMap[category._id.toString()] = category.nameCategory;
         });
 
@@ -98,7 +97,6 @@ export const updateProduct = async (productId, newData, reqLogger) => {
             reqLogger.error("En product.service.js: updateProduct - Producto no encontrado al intentar actualizar");
             return { status: "error", error: "Producto no encontrado" };
         }
-
         reqLogger.debug("En product.service.js: updateProduct - Producto actualizado.");
         return updatedProduct;
     } catch (error) {
@@ -132,13 +130,13 @@ export const checkProductStock = async (productId, quantity, reqLogger) => {
 
 export const deleteProduct = async (productId, reqLogger) => {
     try {
-        const existingProduct = await ProductDao.findById(productId, reqLogger);
+        const existingProduct = await ProductDao.getById(productId, reqLogger);
         if (!existingProduct) {
             reqLogger.error("En product.service.js: deleteProduct - Producto no encontrado al intentar eliminar");
             return { status: "error", error: "Producto no encontrado" };
         }
         const deletedProduct = await ProductDao.delete(productId, reqLogger);
-        reqLogger.debug("En product.service.js: deleteProduct - Producto eliminado:", deletedProduct);
+        reqLogger.debug("En product.service.js: deleteProduct - Producto eliminado."); 
         return deletedProduct;
     } catch (error) {
         reqLogger.error("En product.service.js: deleteProduct - Error al eliminar producto:", error);

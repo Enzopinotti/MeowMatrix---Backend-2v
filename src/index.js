@@ -17,7 +17,6 @@ import { addLogger } from './middlewares/log/handler.log.js';
 import { isAdmin, isNotPremium, isPremium } from './utils/handlebarsHelpers.util.js'
 
 
-
 const app = express();
 const hbs = handlebars.create({
   runtimeOptions: {
@@ -30,6 +29,10 @@ const hbs = handlebars.create({
     isPremium: isPremium,
   }
 });
+
+
+
+
 //Inicializo el motor de plantillas handlebars 
 app.engine('handlebars', hbs.engine);
 app.set('views', __dirname + '/views');
@@ -43,7 +46,7 @@ app.use(compression({
     },
 }));
 app.use(express.json())
-app.use(express.static(__dirname+'/public'));
+app.use(express.static(__dirname +'/public'));
 app.use(express.urlencoded( { extended:true } ))
 app.use(cors());
 app.use(addLogger);
@@ -82,14 +85,20 @@ app.use((err, req, res, next) => {
 
 //middleware para utilizar cookies 
 app.use(
-  
-    cookieParser(
+  cookieParser(
     "1ad1f78ab931039683574d95dce673abae20e29f4e6cac1ab02dea191695082948c82f6e890cca8636a9fde1e4a1e1baa21710353a9f278fb62db53e922961c6"
-  ));
+  )
+);
+
+
+
+
+
   
 
 app.use(baseRouterInstance.generateCustomResponses);
 routerGeneral(app);
+
 app.use(ErrorHandler)
 
 export default app;

@@ -1,0 +1,8 @@
+{
+    "config": {
+      "target": "https://miapp.staging:3002",
+      "tls": {
+        "rejectUnauthorized": false
+      }
+    }
+}

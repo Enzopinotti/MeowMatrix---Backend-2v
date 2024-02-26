@@ -2,11 +2,12 @@ import * as categoryServices from '../services/category.service.js';
 
 export const getCategories = async (req, res) => {
   try {
-    const categories = await categoryServices.getCategories();
-    req.logger.debug("En category.controller.js: getCategories - Categorías obtenidas:", categories);
+    const reqLogger = req.logger;
+    const categories = await categoryServices.getCategories(reqLogger);
+    req.logger.debug("En category.controller.js: getCategories - Categorías obtenidas.");
     res.sendSuccess(categories);
   } catch (error) {
-    req.logger.error("En category.controller.js: getCategories - Error al obtener categorías:", error);
+    req.logger.error("En category.controller.js: getCategories - Error al obtener categorías.");
     res.sendServerError(error);
   }
 };

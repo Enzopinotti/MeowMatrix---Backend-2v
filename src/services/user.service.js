@@ -4,10 +4,10 @@ import UserDTO from "../daos/DTOs/user.dto.js";
 export const getUsers = async (reqLogger) => {
   try {
     const users = await UserDao.get(reqLogger);
-    reqLogger.debug("En user.service.js: getUsers - Usuarios obtenidos:", users);
+    reqLogger.debug("En user.service.js: getUsers - Usuarios obtenidos.");
     return users;
   } catch (error) {
-    reqLogger.error("En user.service.js: getUsers - Error al obtener usuarios:", error);
+    reqLogger.error("En user.service.js: getUsers - Error al obtener usuarios.");
     throw error;
   }
 };
@@ -54,7 +54,8 @@ export const addUser = async (userData, reqLogger) => {
         userData.email,
         userData.password,
         userData.birthDate,
-        userData.phone
+        userData.phone,
+        userData.reason = 'register',
     );
 
         userDTO.validate(); // Realiza las validaciones definidas en UserDTO
@@ -89,7 +90,8 @@ export const updateUser = async (userId, userData, reqLogger) => {
             userData.email,
             userData.password,
             userData.birthDate,
-            userData.phone
+            userData.phone,
+            userData.reason = 'update',
         );
   
         userDTO.validate(); // Realiza las validaciones definidas en UserDTO

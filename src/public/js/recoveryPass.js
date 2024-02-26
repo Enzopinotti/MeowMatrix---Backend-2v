@@ -45,5 +45,20 @@ document.getElementById('RecoveryForm').addEventListener('submit', function (eve
                 }
             });
         }
+        if (json.status === 'notFound') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'El usuario no existe, registrate',
+                allowOutsideClick: false,
+                showConfirmButton: true, // Mostrar un botón de confirmación
+                confirmButtonText: 'Ir al Registro', 
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Si el usuario hace clic en el botón de confirmación, redirigir al login
+                    window.location.href = '/register';
+                }
+            });
+        }
     });
 })

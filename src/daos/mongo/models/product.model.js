@@ -4,13 +4,10 @@ import mongoosePaginate from 'mongoose-paginate-v2';
 const ProductCollection = 'products';
 
 const ProductSchema = new mongoose.Schema({
-    
-// acá van las propiedades de los usuarios en la base de datos
-
     name: { type: String, required: true },
     description: { type: String, required: false },
     price: { type: Number, required: true },
-    code: { type: String, required: true, unique: true, index:true  },
+    code: { type: String, required: true, unique: true, index: true  },
     stock: { type: Number, required: true },
     category: { type: mongoose.Schema.Types.ObjectId, ref: "categories", index: true  },
     thumbnails: {

@@ -31,7 +31,7 @@ export default class SessionRouter extends BaseRouter {
 
     this.router.post(
       '/login',
-        passport.authenticate('login' ),
+      passport.authenticate('login' ),
       loginUser
     );
 

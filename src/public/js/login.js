@@ -44,6 +44,7 @@ document.getElementById('loginForm').addEventListener('submit', function (event)
         return result.json();
     })
     .then(json => {
+        console.log('json: ', json);
         if (json.status === 'success') {
             window.location.href = '/products';
         }

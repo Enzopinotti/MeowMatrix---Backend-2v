@@ -1,0 +1,304 @@
+openapi: 3.0.1
+info:
+  title: API Carts
+  version: 1.0.0
+paths:
+  /api/carts:
+    get:
+      summary: Obtengo todos los carritos.
+      tags: 
+        - Carts
+      responses:
+        200:
+          description: Se obtuvieron los carritos.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Cart'
+        500:
+          description: Error interno del servidor.
+        400:
+          description: Error interno del servidor, usualmente generado por un query defectuoso.
+    post:
+      summary: Creo un carrito vacío.
+      tags: 
+        - Carts
+      responses:
+        200:
+          description: Se cargó el carrito.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+        500:
+          description: Error interno del servidor.
+        400:
+          description: Error interno del servidor, usualmente generado por un query defectuoso.
+  /api/carts/{cid}:
+    get:
+      summary: Obtengo un carrito por su ID.
+      tags: 
+        - Carts
+      parameters:
+        - in: path
+          name: cid
+          schema:
+            $type: string
+          required: true
+          description: ID del carrito.
+      responses:
+        200:
+          description: Se obtuvo el carrito.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+        500:
+          description: Error interno del servidor.
+        400:
+          description: Error interno del servidor, usualmente generado por un query defectuoso.
+    put:
+      summary: Actualizo un carrito por su ID.
+      tags: 
+        - Carts
+      parameters:
+        - in: path
+          name: cid
+          schema:
+            type: string
+          required: true
+          description: ID del carrito.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#components/requestBodies/upadateCart'
+      responses:
+        200:
+          description: Se actualizo el carrito.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+        500:
+          description: Error interno del servidor.
+        400:
+          description: Error interno del servidor, usualmente generado por un query defectuoso.
+    delete:
+      summary: Elimino un carrito por su ID.
+      tags: 
+        - Carts
+      parameters:
+        - in: path
+          name: cid
+          schema:
+            type: string
+          required: true
+          description: ID del carrito.
+      responses:
+        200:
+          description: Se elimino el carrito.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+        500:
+          description: Error interno del servidor.
+        400:
+          description: Error interno del servidor, usualmente generado por un query defectuoso.
+  /api/carts/{cid}/products:
+    delete:
+      summary: Elimino todos los productos de un carrito.
+      tags: 
+        - Carts
+      parameters:
+        - in: path
+          name: cid
+          schema:
+            type: string
+          required: true
+          description: ID del carrito.
+      responses:
+        200:
+          description: Se elimino el carrito.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+        500:
+          description: Error interno del servidor.
+        400:
+          description: Error interno del servidor, usualmente generado por un query defectuoso.
+  /api/carts/{cid}/products/{pid}:
+    put:
+      summary: Cambio la cantidad de un producto en un carrito.
+      tags: 
+        - Carts
+      parameters:
+        - in: path
+          name: cid
+          schema:
+            type: string
+          required: true
+          description: ID del carrito.
+        - in: path
+          name: pid
+          schema:
+            type: string
+          required: true
+          description: ID del producto.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                quantity:
+                  type: number
+                  description: Cantidad del producto.
+                  example: 8
+      responses:
+        200:
+          description: Se actualizo la cantidad del producto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+        500:
+          description: Error interno del servidor.  
+  /api/carts/{cid}/product/{pid}:
+    delete:
+      summary: Elimino un producto de un carrito.
+      tags: 
+        - Carts
+      parameters:
+        - in: path
+          name: cid
+          schema:
+            type: string
+          required: true
+          description: ID del carrito.
+        - in: path
+          name: pid
+          schema:
+            type: string
+          required: true
+          description: ID del producto.
+      responses:
+        200:
+          description: Se elimino el producto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+        500:
+          description: Error interno del servidor.
+        400:
+          description: Error interno del servidor, usualmente generado por un query defectuoso.
+  /api/carts/current/product/{pid}:
+    post:
+      summary: Agrego un producto a un carrito del usuario actual.
+      tags: 
+        - Carts
+      parameters:
+        - in: path
+          name: pid
+          schema:
+            type: string
+          required: true
+          description: ID del producto.
+      responses:
+        200:
+          description: Se agrego el producto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+        500:
+          description: Error interno del servidor.
+        400:
+          description: Error interno del servidor, usualmente generado por un query defectuoso.
+  /api/carts/{cid}/purchase:
+    get:
+      summary: Realizo la compra del carrito actual.
+      tags: 
+        - Carts
+      parameters:
+        - in: path
+          name: cid
+          schema:
+            type: string
+          required: true
+          description: ID del carrito.
+      responses:
+        200:
+          description: Se realizo la compra.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cart'
+        500:
+          description: Error interno del servidor.
+        400:
+          description: Error interno del servidor, usualmente generado por un query defectuoso.
+        401:
+          description: No se encuentra autorizado.
+components:
+  schemas:
+    Cart:
+      type: object
+      properties:
+        _id:
+          type: string
+        user:
+          type: mongoose.Schema.Types.ObjectId
+        products:
+          type: array
+          items:
+            type: object
+            properties:
+              product:
+                type: mongoose.Schema.Types.ObjectId
+              quantity:
+                type: number
+              updatedAt:
+                type: date
+      example:
+        _id: ObjectId("629e9c9d6e7b7f9d3d6e7b7f")
+        user: ObjectId("629e9c9d6e7b7f9d3d6e7b7f")
+        products:
+          - product: ObjectId("629e9c9d6sdfsdd3d6e7b7f")
+            quantity: 1
+            updatedAt: 2022-11-11T12:00:00.000Z
+          - product: ObjectId("629e9c234d9d3d6e7b7f")
+            quantity: 2
+            updatedAt: 2022-11-11T12:00:00.000Z
+  requestBodies:   
+    upadateCart:
+      description: Actualiza un carrito.
+      properties:
+        user:
+          type: string
+          description: ID del usuario.
+          example: "629e9c9d6e7b7f9d3d6e7b7f"
+        products:
+          type: array
+          items:
+            type: object
+            properties:
+              product:
+                type: string
+                description: ID del producto.
+                example: "629e9c9d6e7b7f9d3d6e7b7f"
+              quantity:
+                type: number
+                description: Cantidad del producto.
+                example: 8
+              updatedAt:
+                type: date
+                description: Fecha de actualización del producto.
+                example: "2022-11-11T12:00:00.000Z"

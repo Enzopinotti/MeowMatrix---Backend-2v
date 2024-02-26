@@ -10,7 +10,9 @@ import MailRouter from './mail.router.js';
 import MockRouter from './mock.router.js';
 import BaseRouter from './router.js';
 import TestRouter from '../routes/test.router.js';
-
+import swaggerJSDoc from 'swagger-jsdoc';
+import swaggerUi from 'swagger-ui-express';
+import { __dirname } from '../utils.js';
 
 
 
@@ -40,6 +42,27 @@ const mockRouter = mockRouterInstance.getRouter();
 const testRouter = testRouterInstance.getRouter();
 
 
+const swaggerOptions = {
+    definition: {
+      openapi: '3.0.1',
+      info: {
+          title: 'Documentación de app E-commerce',
+          version: '1.0.0',
+          description: 'Muestra todo lo que se puede hacer en la aplicación.',
+          contact: {
+              name: 'Enzo Pinotti',
+              email: 'enzopinottii@gmail.com',
+              github: 'https://github.com/Enzopinotti',
+              linkedin: 'https://www.linkedin.com/in/enzo-daniel-pinotti-667270179/',
+          }
+      },
+    },
+    apis: [__dirname + '/docs/**/*.yaml'],
+  }
+  
+const swaggerDocs = swaggerJSDoc(swaggerOptions);
+
+
 export const routerGeneral = (app)=> {
     app.use('/api/users', userRouter);
     app.use('/api/carts', cartRouter);
@@ -50,6 +73,7 @@ export const routerGeneral = (app)=> {
     app.use('/', viewsRouter);
     app.use('/api/mail', mailRouter);
     app.use('/api/mock', mockRouter);
-    app.use('/api/tests', testRouter )
+    app.use('/api/tests', testRouter);
+    app.use('/api', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 }
 

@@ -8,10 +8,10 @@ export default class CartManager {
         try {
           reqLogger.debug("En cart.mongodb.js: get - pasó");
           const carts = await cartModel.find();
-          return { status: "success", payload: carts };
+          return carts;
         } catch (error) {
           reqLogger.error("En cart.mongodb.js: get - Error:", error);
-          return { status: "error", error: `Error al obtener carritos: ${error.message}` };
+          throw error;
         }
     };
     getById = async (id, reqLogger) => {
@@ -24,7 +24,7 @@ export default class CartManager {
         return { status: "success", payload: cart };
       } catch (error) {
         reqLogger.error(`En cart.mongodb.js: getById - Error con id: ${id}`, error);
-        return { status: "error", error: `Error al obtener el carrito: ${error.message}` };
+        throw error;
       }
     };
   
@@ -38,7 +38,7 @@ export default class CartManager {
         return { status: "success", payload: cart };
       } catch (error) {
         reqLogger.error(`En cart.mongodb.js: getByUserId - Error con userId: ${userId}`, error);
-        return { status: "error", error: `Error al obtener el carrito: ${error.message}` };
+        throw error;
       }
     };
   
@@ -49,7 +49,7 @@ export default class CartManager {
         return { status: "success", payload: newCart };
       } catch (error) {
         reqLogger.error("En cart.mongodb.js: add - Error:", error);
-        return { status: "error", error: `Error al agregar el carrito: ${error.message}` };
+        throw error;
       }
     };
   
@@ -69,7 +69,7 @@ export default class CartManager {
         return { status: "success", payload: updatedCart };
       } catch (error) {
         reqLogger.error(`En cart.mongodb.js: update - Error con id: ${id}`, error);
-        return { status: "error", error: `Error al actualizar el carrito: ${error.message}` };
+        throw error;
       }
     };
   
@@ -83,7 +83,7 @@ export default class CartManager {
         return { status: "success", payload: deletedCart };
       } catch (error) {
         reqLogger.error(`En cart.mongodb.js: delete - Error con id: ${id}`, error);
-        return { status: "error", error: `Error al eliminar el carrito: ${error.message}` };
+        throw error;
       }
     };
     
@@ -103,7 +103,7 @@ export default class CartManager {
         return { status: "success", payload: updatedCart };
       } catch (error) {
         reqLogger.error(`En cart.mongodb.js: deleteProduct - Error con id: ${id}, productId: ${productId}`, error);
-        return { status: "error", error: `Error al eliminar el producto del carrito: ${error.message}` };
+        throw error;
       }
     };
   

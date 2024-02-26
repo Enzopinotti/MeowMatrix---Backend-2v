@@ -31,7 +31,6 @@ io.on("connection", (socket) => {
 });
 
 if (cluster.isPrimary) {
-  console.log('config: ', config)
   console.log(`Primary ${process.pid} is running`);
   const numCPUs = cpus().length;
   for (let i = 0; i < numCPUs; i++) {

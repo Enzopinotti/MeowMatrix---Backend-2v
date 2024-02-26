@@ -7,10 +7,10 @@ export default class CategoryManager {
         try {
             const categories = await categoryModel.find();
             reqLogger.debug("En category.mongodb.js: get - Categorías obtenidas");
-            return { status: "success", payload: categories };
+            return categories;
         } catch (error) {
             reqLogger.error("En category.mongodb.js: get - Error al obtener categorías:", error);
-            return { status: "error", error: error.message };
+            throw error;
         }
     }
 
@@ -25,7 +25,7 @@ export default class CategoryManager {
             return { status: "success", payload: category };
         } catch (error) {
             reqLogger.error("En category.mongodb.js: getById - Error al obtener categoría por ID:", error);
-            return { status: "error", error: error.message };
+            throw error;
         }
     }
 
@@ -36,7 +36,7 @@ export default class CategoryManager {
             return { status: "success", payload: newCategory };
         } catch (error) {
             reqLogger.error("En category.mongodb.js: add - Error al crear nueva categoría:", error);
-            return { status: "error", error: error.message };
+            throw error;
         }
     }
 
@@ -51,7 +51,7 @@ export default class CategoryManager {
             return { status: "success", payload: updatedCategory };
         } catch (error) {
             reqLogger.error("En category.mongodb.js: update - Error al actualizar categoría:", error);
-            return { status: "error", error: error.message };
+            throw error;
         }
     }
 }

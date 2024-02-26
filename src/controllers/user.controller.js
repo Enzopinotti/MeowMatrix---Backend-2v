@@ -112,7 +112,7 @@ export const updateUser = async (req, res) => {
       req.logger.error("En user.controller.js: updateUser - Usuario no encontrado al actualizar");
       return res.sendNotFound('User not found');
     }
-    req.logger.debug("En user.controller.js: updateUser - Usuario actualizado con éxito:", updatedUser);
+    req.logger.debug("En user.controller.js: updateUser - Usuario actualizado con éxito:");
     res.sendSuccess(updatedUser);
   } catch (error) {
     req.logger.error("En user.controller.js: updateUser - Error al actualizar usuario:", error.message);

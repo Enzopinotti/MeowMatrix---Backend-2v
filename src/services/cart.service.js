@@ -99,15 +99,15 @@ export const updateCart = async (cartId, products, reqLogger) => {
   }
 };
 
-export const changeProductQuantity = async (req, cartId, productId, quantity, reqLogger) => {
+export const changeProductQuantity = async (cartId, productId, quantity, reqLogger) => {
   try {
     reqLogger.debug("En cart.service.js: changeProductQuantity - pasó");
     
     const result = await CartDao.updateProductQuantity(cartId, productId, quantity, reqLogger);
-    reqLogger.debug("En cart.service.js: changeProductQuantity - Cantidad de producto en el carrito modificada. Resultado:", result);
+    reqLogger.debug("En cart.service.js: changeProductQuantity - Cantidad de producto en el carrito modificada.");
     return result;
   } catch (error) {
-    reqLogger.error("En cart.service.js: changeProductQuantity - Error:", error);
+    reqLogger.error("En cart.service.js: changeProductQuantity - Error.");
     throw error;
   }
 };

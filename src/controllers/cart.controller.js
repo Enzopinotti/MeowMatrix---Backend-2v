@@ -22,7 +22,7 @@ export const getCarts = async (req, res) => {
             req.logger.warn("cart.controller.js: getCarts - Producto no encontrado con ID:", productId);
             return res.sendNotFound('Carritos no encontrados');
         }
-        req.logger.debug("cart.controller.js: getCarts - Productos obtenidos:", products);
+        req.logger.debug("cart.controller.js: getCarts - Carritos obtenidos.");
         res.sendSuccess(carts);
     } catch (error) {
         req.logger.error("cart.controller.js: getCarts - Error al obtener carritos:", error);
@@ -140,6 +140,10 @@ export const addProductToCart = async (req, res) => {
 };
 
 export const addToCurrentCart = async (req, res) => {
+    if(!req.user){
+        req.logger.warn("cart.controller.js: addToCurrentCart - El usuario no está autenticado");
+        return res.sendUnauthorized('El usuario no está autenticado');
+    }
     const userId = req.user._id;
     const reqLogger = req.logger; 
     try {
@@ -157,13 +161,17 @@ export const addToCurrentCart = async (req, res) => {
 
 
 export const changeQuantity = async (req, res) => {
+    
     const cartId = req.params.cid;
+   
     const productId = req.params.pid;
     const { quantity } = req.body;
     const reqLogger = req.logger;
+    
     try {
+        
         const updatedCart = await cartService.changeProductQuantity(cartId, productId, quantity, reqLogger);
-
+        
         if (!updatedCart) {
             req.logger.warn("cart.controller.js: changeQuantity - Carrito no encontrado o producto no encontrado en el carrito");
             return res.sendNotFound('Carrito no encontrado o producto no encontrado en el carrito');
@@ -171,8 +179,8 @@ export const changeQuantity = async (req, res) => {
         req.logger.debug("cart.controller.js: changeQuantity - Cantidad Cambiada con exito.");
         res.sendSuccess(updatedCart);
     } catch (error) {
-        req.logger.error("cart.controller.js: changeQuantity - Error en changeQuantity:", error);
-        res.sendServerError(error);
+        req.logger.error("cart.controller.js: changeQuantity - Error en changeQuantity.");
+        res.sendServerError(error.message);
     }
 };
 
@@ -243,6 +251,10 @@ export const purchaseCart = async (req, res) => {
     let updatedCart;
     try {
         // Obtener el carrito por id //
+        if(!req.user){
+            req.logger.warn("cart.controller.js: purchaseCart - El usuario no está autenticado");
+            return res.sendUnauthorized('El usuario no está autenticado');
+        }
         const cart = await cartService.getCartById(cid, reqLogger);
         reqLogger.debug("cart.controller.js: purchaseCart - Carrito obtenido por ID.");
         // Verificar el stock y procesar la compra //

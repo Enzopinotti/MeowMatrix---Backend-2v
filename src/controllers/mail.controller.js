@@ -57,7 +57,6 @@ export const sendRecoveryEmail = async (email, token) => {
         subject: 'Recuperar Contraseña',
         html: `<p>Haga clic  <a href="http://localhost:8080/resetPassword/${token}">aquí</a> para restablecer la contraseña. Este enlace caducará en 1 hora.</p>`
       });
-      console.log('Recovery email sent');
     } catch (error) {
       console.error('Error sending recovery email:', error);
     }

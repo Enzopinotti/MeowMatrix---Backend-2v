@@ -10,7 +10,7 @@ export default class UserManager {
             return users;
         } catch (error) {
             reqLogger.error("En user.mongodb.js: get - Error al obtener usuarios:", error);
-            return { status: "error", error: error.message }
+            throw error;
         }
     }
 
@@ -21,7 +21,7 @@ export default class UserManager {
             return user;
         } catch (error) {
             reqLogger.error("En user.mongodb.js: getById - Error al obtener usuario por ID:", error);
-            return { status: "error", error: error.message }
+            throw error;
         }
     }
 
@@ -32,7 +32,7 @@ export default class UserManager {
             return addedUser;
         } catch (error) {
             reqLogger.error("En user.mongodb.js: add - Error al crear usuario:", error);
-            return { status: "error", error: error.message }
+            throw error;
         }
     }
 
@@ -43,7 +43,7 @@ export default class UserManager {
             return updatedUser;
         } catch (error) {
             reqLogger.error("En user.mongodb.js: update - Error al actualizar usuario:", error);
-            return { status: "error", error: error.message }
+            throw error;
         }
     }
 
@@ -61,7 +61,7 @@ export default class UserManager {
     getByEmail = async (email, reqLogger) => {
         try {
             const user = await userModel.findOne({ email });
-            reqLogger.debug("En user.mongodb.js: getByEmail - Usuario obtenido por email:", user);
+            reqLogger.debug("En user.mongodb.js: getByEmail - Usuario obtenido por email de la base de datos.");
             return user;
         } catch (error) {
             reqLogger.error("En user.mongodb.js: getByEmail - Error al obtener usuario por email:", error);

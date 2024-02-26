@@ -102,9 +102,10 @@ export const recoveryPassword = async (req, res) => {
 
         // Verificar si el correo electrónico existe en la base de datos
         const user = await userService.getUserByEmail(email, reqLogger);
-        if (!user) {
+        console.log('usuario: ',user);
+        if (user == null) {
             // Si el usuario no existe, mostrar un mensaje de error o redirigir a una página de error
-            return res.sendNotFound({ error: 'El usuario no existe' });
+            return res.sendNotFound('El usuario no existe');
         }
         req.logger.debug("session.controller.js: recoveryPassword - Usuario encontrado.");
         // Generar un token único para el usuario (puedes usar una biblioteca como `uuid` para esto)

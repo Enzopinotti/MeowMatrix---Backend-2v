@@ -1,0 +1,243 @@
+openapi: 3.0.1
+info:
+  title: API Products
+  version: 1.0.0
+paths:
+  /api/products:
+    get:
+      summary: Obtengo todos los productos.
+      tags: 
+        - Products
+      responses:
+        200:
+          description: Se obtuvieron los productos.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+        500:
+          description: Error interno del servidor.
+        400:
+          description: Error interno del servidor, usualmente generado por un query defectuoso.
+    post:
+      summary: Cargo un producto.
+      tags: 
+        - Products
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#components/requestBodies/createProduct'
+      responses:
+        200:
+          description: Se cargó el producto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        500:
+          description: Error interno del servidor.
+        400:
+          description: Error interno del servidor, usualmente generado por un query defectuoso.
+  /api/products/{pid}:
+    get:
+      summary: Obtengo un producto por su ID.
+      tags: 
+        - Products
+      parameters:
+        - in: path
+          name: pid
+          schema:
+            $type: string
+          required: true
+          description: ID del producto.
+      responses:
+        200:
+          description: Se obtuvo el producto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        500:
+          description: Error interno del servidor.
+        400:
+          description: Error interno del servidor, usualmente generado por un query defectuoso.
+    put:
+      summary: Actualizo un producto por su ID.
+      tags: 
+        - Products
+      parameters:
+        - in: path
+          name: pid
+          schema:
+            type: string
+          required: true
+          description: ID del producto.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#components/requestBodies/upadateProduct'
+      responses:
+        200:
+          description: Se actualizo el producto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        500:
+          description: Error interno del servidor.
+        400:
+          description: Error interno del servidor, usualmente generado por un query defectuoso.
+    delete:
+      summary: Elimino un producto por su ID.
+      tags: 
+        - Products
+      parameters:
+        - in: path
+          name: pid
+          schema:
+            type: string
+          required: true
+          description: ID del producto.
+      responses:
+        200:
+          description: Se elimino el producto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        500:
+          description: Error interno del servidor.
+        400:
+          description: Error interno del servidor, usualmente generado por un query defectuoso.
+components:
+  schemas:
+    Product:
+      type: object
+      properties:
+        _id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+        code:
+          type: string
+        stock:
+          type: number
+        category:
+          type: mongoose.Schema.Types.ObjectId
+        thumbnail:
+          type: array
+        status:
+          type: boolean
+        isVisible:
+          type: boolean
+        owner:
+          type: string
+        createdAt:
+          type: date
+        updatedAt:
+          type: date
+      example:
+        _id: 629e9c9d6e7b7f9d3d6e7b7f
+        name: Producto 1
+        description: Descripción del producto 1
+        price: 100
+        code: PRD-001
+        stock: 10
+        category: ObjectId("629e9c9d6e7b7f9d3d6e7b7f")
+        thumbnail: []
+        status: true
+        isVisible: true
+        owner: enzopinottii@gmail.com
+        createdAt: 2023-05-01T00:00:00.000Z
+        updatedAt: 2023-05-01T00:00:00.000Z
+  requestBodies:
+    upadateProduct:
+      description: Datos del producto a actualizar.
+      properties:
+        name:
+          type: string
+          description: Nombre del producto.
+        description:
+          type: string
+          description: Descripción del producto.
+        price:
+          type: number
+          description: Precio del producto.
+        code:
+          type: string
+          description: Código del producto.
+        stock:
+          type: number
+          description: Stock del producto.
+        category:
+          type: mongoose.Schema.Types.ObjectId
+          description: Categoría del producto.
+        thumbnail:
+          type: array
+          description: Imágenes del producto.
+        status:
+          type: boolean
+          description: Estado del producto.
+        isVisible:
+          type: boolean
+          description: Visibilidad del producto.
+      example:
+        name: Producto 1
+        description: Descripción del producto 1
+        price: 100
+        code: PRD-001
+        stock: 10
+        category: 655c465b9dd5c1c11f0a6281
+        thumbnail: []
+        status: true
+        isVisible: true
+    createProduct:
+      description: Datos del producto a crear.
+      properties:
+        name:
+          type: string
+          description: Nombre del producto.
+        description:
+          type: string
+          description: Descripción del producto.
+        price:
+          type: number
+          description: Precio del producto.
+        code:
+          type: string
+          description: Código del producto.
+        stock:
+          type: number
+          description: Stock del producto.
+        category:
+          type: mongoose.Schema.Types.ObjectId
+          description: Categoría del producto.
+        thumbnail:
+          type: array
+          description: Imágenes del producto.
+        status:
+          type: boolean
+          description: Estado del producto.
+        isVisible:
+          type: boolean
+          description: Visibilidad del producto.
+      example:
+        name: Producto Prueba
+        description: Descripción del producto de Prueba
+        price: 100
+        code: PRD-003
+        stock: 10
+        category: 655c45f69dd5c1c11f0a6279
+        thumbnail: []
+        status: true
+        isVisible: true
