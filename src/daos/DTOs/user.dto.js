@@ -1,4 +1,5 @@
 // UserDTO.js
+import { UserDao } from "../factory.js";
 class UserDTO {
     constructor(name, lastName, email, password, birthDate, phone, reason) {
       this.name = name;
@@ -12,13 +13,7 @@ class UserDTO {
     
 
     validate() {
-
-      if(this.reason === 'register'){
-        if (!this.name || !this.lastName || !this.email || !this.password || !this.birthDate || !this.phone) {
-          throw new Error('Los campos obligatorios no pueden estar vacíos.');
-        }
-      }
-      // Puedes agregar más validaciones según tus requisitos.
+      
     }
   
     toObject() {

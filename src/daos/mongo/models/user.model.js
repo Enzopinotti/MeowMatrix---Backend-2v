@@ -18,7 +18,7 @@ const userSchema = new mongoose.Schema({
     avatar: {type: String},
     resetPasswordToken: String,
     resetPasswordExpires: Date,
-    cart:{ type: mongoose.Schema.Types.ObjectId, ref: 'carts' },
+    cart:{ type: mongoose.Schema.Types.ObjectId, ref: 'carts'},
     rol: {type: String, require:true, default:'usuario'},
 });
 

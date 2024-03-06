@@ -90,7 +90,7 @@ export function generateToken(user) {
 };
 
 export function authToken(token) {
-    const authHeader =req.headers.authorization;
+    const authHeader = req.headers.authorization;
     if (!authHeader) return res.status(401).send({status: "error", error:"Unauthorized"});
     token = authHeader.split(" ")[1];
     jwt.verify(token, PRIVATE_KEY, (error, credentials) => {

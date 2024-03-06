@@ -58,36 +58,19 @@ export const postUser = async (req, res) => {
   try {
     const reqLogger = req.logger;
     const { name, lastName, email, password, birthDate } = req.body;
-
-    if (!name || !lastName || !email || !password || !birthDate) {
-      // Lanza un error personalizado si faltan propiedades o son inválidas
-      throw CustomError.createError(
-        EnumError.INVALID_VALUES_ERROR,
-        'Invalid user properties',
-        req.body
-      );
-    }
-
+    
     const addedUser = await userService.addUser(req.body, reqLogger);
-    req.logger.debug("En user.controller.js: postUser - Usuario agregado con éxito:", addedUser);
-    res.sendSuccess(addedUser);
+    req.logger.debug("En user.controller.js: postUser - Usuario agregado con éxito.");
+    res.sendCreated(addedUser);
   } catch (error) {
-    // Manejo de errores
-    if (error instanceof CustomError) {
-      // Puedes personalizar la respuesta según el tipo de error
-      switch (error.code) {
-        case EnumError.INVALID_VALUES_ERROR:
-          req.logger.error("En user.controller.js:  postUser - Propiedades de usuario inválidas al agregar usuario");
-          return res.sendUserError({ status: 'error', error: error.message });
-        default:
-          req.logger.error("En user.controller.js: postUser - Error al agregar usuario:", error.message);
-          return res.sendServerError(error.message);
-      }
-    } else {
-      // Otros errores no personalizados
-      req.logger.error("En user.controller.js: postUser - Error al agregar usuario:", error.message);
+    req.logger.error("En user.controller.js: postUser - Error al agregar usuario:", error);
+    if(error.message === "User already exists") {
+      res.sendUserError(error.message);
+    }else{
       res.sendServerError(error.message);
     }
+    
+    
   }
 };
 

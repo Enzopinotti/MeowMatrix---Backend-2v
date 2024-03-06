@@ -13,6 +13,7 @@ export default class CartRouter extends BaseRouter{
         this.router.put('/:cid/products/:pid', changeQuantity);
         this.router.delete('/:cid', deleteCart);
         this.router.delete('/:cid/products', deleteAllProducts);
+        this.router.post('/:cid/product/:pid', addProductToCart);
         this.router.post('/current/product/:pid', addToCurrentCart);
         this.router.get('/:cid/purchase', purchaseCart);
         this.router.get('/:cid/summary', getCartSummary);

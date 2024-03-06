@@ -57,13 +57,14 @@ export const addUser = async (userData, reqLogger) => {
         userData.phone,
         userData.reason = 'register',
     );
+      
+    userDTO.validate(); // Realiza las validaciones definidas en UserDTO
+  
+    const userObject = userDTO.toObject(); // Obtiene el objeto formateado
 
-        userDTO.validate(); // Realiza las validaciones definidas en UserDTO
-        const userObject = userDTO.toObject(); // Obtiene el objeto formateado
-
-        const addedUser = await UserDao.add(userObject, reqLogger);
-        reqLogger.debug("En user.service.js: addUser - Usuario creado:", addedUser);
-        return addedUser;
+    const addedUser = await UserDao.add(userObject, reqLogger);
+    reqLogger.debug("En user.service.js: addUser - Usuario creado.");
+    return addedUser;
   }catch (error) {
     reqLogger.error("En user.service.js: addUser - Error al crear usuario:", error);
     throw error;

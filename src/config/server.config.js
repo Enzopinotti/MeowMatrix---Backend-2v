@@ -11,8 +11,13 @@ commander.option(
 commander.parse();
 
 const mode = commander.opts().mode;
+let envPath
 
-const envPath = `.env.${mode}`;
+if (mode === undefined) {
+    envPath = ".env.development";
+}else{
+    envPath = `.env.${mode}`;
+}
 
 dotenv.config({ path: envPath });
 

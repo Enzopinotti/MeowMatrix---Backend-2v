@@ -26,6 +26,7 @@ export default class BaseRouter {
     generateCustomResponses(req, res, next) {
 
         res.sendSuccess = payload => res.status(200).send({ status: "success", payload });
+        res.sendCreated = payload => res.status(201).send({ status: "created", payload });
         res.sendServerError = error => res.status(500).send({ status: "serverError", error });
         res.sendUserError = error => res.status(400).send({ status: "userError", error });
         res.sendNotFound = error => res.status(404).send({ status: "notFound", error });

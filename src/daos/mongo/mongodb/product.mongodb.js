@@ -88,7 +88,7 @@ export default class ProductManager {
             }
     
             const deletedProduct = await productModel.findByIdAndDelete(id);
-            reqLogger.debug("En product.mongodb.js: delete - Producto eliminado:", deletedProduct);
+            reqLogger.debug("En product.mongodb.js: delete - Producto eliminado.");
             return deletedProduct;
         } catch (error) {
             reqLogger.error("En product.mongodb.js: delete - Error al eliminar producto:", error.message);

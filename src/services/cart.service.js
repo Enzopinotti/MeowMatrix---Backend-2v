@@ -72,7 +72,7 @@ export const addToCurrentCart = async (userId, productId, reqLogger) => {
   }
 };
 
-export const addProductToCart = async (req, cartId, productId, reqLogger) => {
+export const addProductToCart = async (cartId, productId, reqLogger) => {
   try {
     reqLogger.debug("En cart.service.js: addProductToCart - pasó");
     
