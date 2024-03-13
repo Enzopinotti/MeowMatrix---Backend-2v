@@ -1,8 +1,8 @@
-async function addToCart(event, productId) {
+async function addToCart(event, ProductId) {
     event.preventDefault();
 
     try {
-        const response = await fetch(`/api/carts/current/product/${productId}`, {
+        const response = await fetch(`/api/carts/product/${ProductId}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -40,7 +40,7 @@ async function addToCart(event, productId) {
 async function upgradeToPremium(event){
     event.preventDefault();
     try {
-        const response = await fetch(`/api/users/upgrade`, {
+        const response = await fetch(`/api/users/premium`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',

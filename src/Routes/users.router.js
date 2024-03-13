@@ -12,7 +12,7 @@ export default class UserRouter extends BaseRouter {
     this.router.get('/:userId', getUserById);
     this.router.post('/register', passport.authenticate('register'), registerUser);
     this.router.delete('/:userId', deleteUser);
-    this.router.put('/upgrade', upgradeToPremium);
+    this.router.put('/premium', upgradeToPremium);
     this.router.put('/:userId', updateUser);
     
   };

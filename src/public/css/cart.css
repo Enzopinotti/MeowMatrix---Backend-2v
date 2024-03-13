@@ -1,9 +1,13 @@
-
+body{
+    background-color: rgb(86, 89, 87);
+    display: flex;
+    flex-direction: column;
+}
 .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem;
+    padding: 1.7rem;
     background-color: rgba(222, 222, 222, 0.479);
 }
 

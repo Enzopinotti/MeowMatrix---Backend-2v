@@ -117,3 +117,12 @@ export const updateAvatar = async (userId, imagePath, reqLogger) => {
   }
 };
 
+export const updateLastConnection = async (userId) => {
+  try {
+    await UserDao.updateLastConnection(userId);
+  } catch (error) {
+    console.error(`Error al actualizar la fecha de última conexión del usuario con ID ${userId}: ${error.message}`);
+  }
+}
+
+

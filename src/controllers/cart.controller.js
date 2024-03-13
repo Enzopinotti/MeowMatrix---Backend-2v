@@ -148,7 +148,7 @@ export const addToCurrentCart = async (req, res) => {
     const reqLogger = req.logger; 
     try {
         const productId = req.params.pid;
-        
+        console.log('llega el id: ', productId);
         const result = await cartService.addToCurrentCart(userId, productId, reqLogger);
         req.logger.debug("cart.controller.js: addToCurrentCart - Producto Añadido al carrito con éxito.");
         res.sendSuccess(result.payload);

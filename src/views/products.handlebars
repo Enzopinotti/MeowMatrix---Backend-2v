@@ -23,7 +23,7 @@
         {{/isPremium}}
 
         {{#isNotPremium user}}
-            <button class="premium-btn" onclick="upgradeToPremium(event)">
+            <button class="premium-btn" onclick="upgradeToPremium(event, {{user._id}})">
                 <ion-icon name="star-outline"></ion-icon> Convertirse en Premium
             </button>
         {{/isNotPremium}}

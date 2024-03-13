@@ -40,7 +40,7 @@ export default class ViewsRouter extends BaseRouter {
 
     this.router.get('/register', showRegister);
 
-    this.router.get('/profile', authorization('usuario') ,showProfile);
+    this.router.get('/profile', authorization(['usuario', 'premium']) ,showProfile);
 
     this.router.get('/login', showLogin)
 

@@ -23,7 +23,6 @@ export const showRegister = (req, res) => {
 
 export const registerUser = async (req, res) => {
     try {
-        req.logger.debug("session.controller.js: registerUser - Creando usuario");   
         res.sendSuccess( { status: 'success', payload: req.user } );
     } catch (error) {
         res.sendServerError(error);
@@ -70,6 +69,7 @@ export const loginUser = async (req, res) => {
     try {
         let user = req.user;
         delete user.password;
+        await userService.updateLastConnection(user._id);
         const token = generateToken(user);
         res.cookie('access_token', token, { maxAge: 3600000, httpOnly: true, rolling: true });
         res.sendSuccess('Login successful');
@@ -80,6 +80,8 @@ export const loginUser = async (req, res) => {
 
 export const logoutUser = async (req, res) => {
     try {
+        let user = req.user;
+        await userService.updateLastConnection(user._id);
         res.clearCookie('access_token');
         res.redirect('/login'); // Redirección directa en el lado del servidor
     } catch (error) {

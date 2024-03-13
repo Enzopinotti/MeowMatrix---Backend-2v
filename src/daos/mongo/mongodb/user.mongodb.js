@@ -91,4 +91,13 @@ export default class UserManager {
             throw error;
         }
     }
+
+    updateLastConnection = async (userId) => {
+        try {
+            console.log('pasé ')
+             return await userModel.findByIdAndUpdate(userId, { last_connection: new Date() });
+        } catch (error) {
+            throw error;
+        }
+    }
 }

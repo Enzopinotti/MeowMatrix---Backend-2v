@@ -20,6 +20,11 @@ const userSchema = new mongoose.Schema({
     resetPasswordExpires: Date,
     cart:{ type: mongoose.Schema.Types.ObjectId, ref: 'carts'},
     rol: {type: String, require:true, default:'usuario'},
+    documents: [{
+        name: { type: String },
+        reference: { type: String }
+    }],
+    last_connection: {type: Date, require:true},
 });
 
 const userModel = mongoose.model(userCollection, userSchema);

@@ -12,3 +12,5 @@ export const updatePassword = async (email, newPassword) => {
   }
 };
 
+
+

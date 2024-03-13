@@ -109,7 +109,6 @@ export const upgradeToPremium = async (req, res) => {
     const reqLogger = req.logger;
     req.logger.debug("En user.controller.js: upgradeToPremium - Entró");
     const user = await userService.getUserById(userId, reqLogger);
-    console.log('id de usuario: ', userId)
     // Verificar si el usuario existe y su rol actual es "usuario"
     if (!user || user.rol !== 'usuario') {
         return res.sendNotFound('Usuario no encontrado o no es elegible para actualización.');
@@ -135,7 +134,7 @@ export const uploadAvatar = async (req, res) => {
     }
 
     const userId = req.user._id;
-    const imagePath = `/img/avatars/${req.file.filename}`;
+    const imagePath = `/img/profiles/${req.file.filename}`;
 
     await userService.updateAvatar(userId, imagePath, reqLogger);
 

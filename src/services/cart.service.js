@@ -49,7 +49,6 @@ export const addToCurrentCart = async (userId, productId, reqLogger) => {
     const existingCart = await CartDao.getByUserId(userId, reqLogger);
     const product = await ProductDao.getById(productId, reqLogger);
     const user = await UserDao.getById(userId, reqLogger);
-    console.log('usuario: ', user, ' producto: ', product)
     if( product.owner === user.email){
       reqLogger.error("En cart.service.js: addToCurrentCart - Error: El producto es propio del usuario.");
       throw new Error("El producto es propio del usuario.");
