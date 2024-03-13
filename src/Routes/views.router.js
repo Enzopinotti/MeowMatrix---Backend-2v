@@ -58,8 +58,6 @@ export default class ViewsRouter extends BaseRouter {
 
     this.router.get('/carts', authorization(['usuario', 'premium']) ,getCartView);
 
-    this.router.post('/upload-avatar', authorization(['usuario', 'premium']), uploader.single('avatar'), uploadAvatar);
-
     this.router.get('/ticket', getTicketView);
 
     this.router.get('/mockingproducts', getMockProductsView);

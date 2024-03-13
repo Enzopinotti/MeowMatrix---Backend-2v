@@ -103,6 +103,36 @@ export const updateUser = async (req, res) => {
   }
 };
 
+export const UploadDocuments = async (req, res) => {
+  const userId = req.params.uid;
+  const reqLogger = req.logger;
+  console.log('entre')
+  try {
+    if (!req.files || req.files.length === 0) {
+      req.logger.error("En user.controller.js: UploadDocuments - No se han seleccionado archivos al subir documentos");
+      return res.sendUserError({ error: 'No se han seleccionado archivos.' });
+    }
+    const files = req.files;
+    // Verificar qué razones se enviaron
+    const reasons = {
+      identification: req.body.reason_identification || '',
+      address: req.body.reason_address || '',
+      bankStatement: req.body.reason_bankStatement || ''
+    };
+    //Acá siempre llegan las 3 razones
+    await userService.uploadDocuments(userId, files, reqLogger);
+    req.logger.debug("En user.controller.js: UploadDocuments - Documentos subidos correctamente.");
+    res.sendSuccess('Documentos subidos correctamente.');
+
+  } catch (error) {
+    req.logger.error("En user.controller.js: UploadDocuments - Error al subir documentos:", error.message);
+    res.sendServerError(error.message);
+  }
+}
+
+
+
+
 export const upgradeToPremium = async (req, res) => {
   try {
     const userId = req.user._id;
@@ -132,7 +162,7 @@ export const uploadAvatar = async (req, res) => {
       req.logger.error("En user.controller.js: uploadAvatar - No se ha seleccionado ningún archivo al subir el avatar");
       return res.sendUserError({ error: 'No se ha seleccionado ningún archivo.' });
     }
-
+    
     const userId = req.user._id;
     const imagePath = `/img/profiles/${req.file.filename}`;
 
@@ -140,15 +170,7 @@ export const uploadAvatar = async (req, res) => {
 
     req.user.avatar = imagePath;
 
-    req.session.save((err) => {
-      if (err) {
-        req.logger.error("En user.controller.js: uploadAvatar - Error al guardar la sesión al subir el avatar:", err);
-        return res.status(500).json({ error: 'Error al guardar la sesión.' });
-      }
-
-      req.logger.debug("En user.controller.js: uploadAvatar - Avatar subido con éxito");
-      return res.redirect('/profile');
-    });
+    
   } catch (error) {
     req.logger.error("En user.controller.js: uploadAvatar - Error al subir el avatar:", error);
     return res.status(500).json({ error: 'Error al subir el avatar.' });

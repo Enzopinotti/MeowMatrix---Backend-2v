@@ -17,12 +17,18 @@ const __filename = fileURLToPath(import.meta.url);
 export const __dirname = dirname(__filename);
 
 const storage = multer.diskStorage({
+
     destination: function (req, file, cb) {
+        
         if (file.fieldname === 'avatar') {
-            cb(null, path.join(__dirname, 'public', 'img', 'avatars')); // Ruta para las imágenes de usuarios
+            cb(null, path.join(__dirname, 'public', 'img', 'profiles')); // Ruta para las imágenes de usuarios
         } else if (file.fieldname === 'productImage') {
-            cb(null, path.join(__dirname, 'public', 'img')); // Ruta para las imágenes de productos
-        } else {
+            cb(null, path.join(__dirname, 'public', 'img', 'products')); // Ruta para las imágenes de productos
+        } else if(file.fieldname === 'documents') {
+            cb(null, path.join(__dirname, 'public', 'documents')); // Ruta para los documentos
+        } 
+        
+        else {
             cb(new Error('Invalid field name'), null);
         }
     },
@@ -32,13 +38,8 @@ const storage = multer.diskStorage({
     }
 });
 
-// Función para filtrar los archivos que se pueden subir
 const fileFilter = (req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) {
-        cb(null, true);
-    } else {
-        cb(new Error('El archivo subido no es una imagen'), false);
-    }
+    cb(null, true);
 };
 
 // Configuración de multer

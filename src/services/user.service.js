@@ -85,27 +85,48 @@ export const deleteUser = async (userId, reqLogger) => {
 };
 
 export const updateUser = async (userId, userData, reqLogger) => {
-    try {
-        const userDTO = new UserDTO(
-            userData.name,
-            userData.email,
-            userData.password,
-            userData.birthDate,
-            userData.phone,
-            userData.reason = 'update',
-        );
-  
-        userDTO.validate(); // Realiza las validaciones definidas en UserDTO
-        const userObject = userDTO.toObject(); // Obtiene el objeto formateado
-  
-        const updatedUser = await UserDao.update(userId, userObject, reqLogger);
-        reqLogger.debug("En user.service.js: updatedUser - Usuario actualizado.");
-        return updatedUser;
-    } catch (error) {
-        reqLogger.error("En user.service.js: updatedUser - Error al actualizar usuario:", error);
-        throw error;
-    }
-  };
+  try {
+      const userDTO = new UserDTO(
+          userData.name,
+          userData.email,
+          userData.password,
+          userData.birthDate,
+          userData.phone,
+          userData.reason = 'update',
+      );
+
+      userDTO.validate(); // Realiza las validaciones definidas en UserDTO
+      const userObject = userDTO.toObject(); // Obtiene el objeto formateado
+
+      const updatedUser = await UserDao.update(userId, userObject, reqLogger);
+      reqLogger.debug("En user.service.js: updatedUser - Usuario actualizado.");
+      return updatedUser;
+  } catch (error) {
+      reqLogger.error("En user.service.js: updatedUser - Error al actualizar usuario:", error);
+      throw error;
+  }
+};
+
+export const uploadDocuments = async (userId, files, reqLogger) => {
+  try {
+    // Lógica para procesar los archivos recibidos y realizar operaciones relacionadas con la base de datos
+    // Por ejemplo, guardar las referencias de los documentos en la base de datos
+
+    // Aquí necesitarás implementar la lógica específica según tus requisitos
+    const documentReferences = files.map(file => ({
+      name: file.originalname,
+      reference: `/documents/${file.filename}`,// Cambia esto por la ruta real donde se almacenan los documentos
+    }));
+
+    await UserDao.addDocuments(userId, documentReferences);
+
+    reqLogger.debug(`En user.service.js: uploadDocuments - Documentos cargados para el usuario con ID ${userId}.`);
+
+  } catch (error) {
+    reqLogger.error(`En user.service.js: uploadDocuments - Error al cargar documentos para el usuario con ID ${userId}: ${error.message}`);
+    throw error;
+  }
+};
 
 export const updateAvatar = async (userId, imagePath, reqLogger) => {
   try {

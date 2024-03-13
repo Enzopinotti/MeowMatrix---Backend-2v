@@ -92,6 +92,22 @@ export default class UserManager {
         }
     }
 
+    addDocuments = async (userId, documents) => {
+        try {
+          // Actualiza el modelo de usuario con los documentos proporcionados
+          const updatedUser = await userModel.findByIdAndUpdate(
+            userId, 
+            { $push: { documents: { $each: documents } } }, 
+            { new: true }
+          );
+      
+          return updatedUser;
+      
+        } catch (error) {
+          throw error;
+        }
+      };
+
     updateLastConnection = async (userId) => {
         try {
             console.log('pasé ')

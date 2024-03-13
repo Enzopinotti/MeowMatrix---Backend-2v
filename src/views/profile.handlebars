@@ -23,9 +23,9 @@
             <p><strong>Rol:</strong> {{ user.rol }}</p>
         </div>
         <!-- Formulario para cargar el avatar -->
-        <form action="/upload-avatar" method="POST" enctype="multipart/form-data">
+        <form action="/api/users/upload-avatar" method="POST" enctype="multipart/form-data">
             <div class="file-input-wrapper">
-                <input type="file" id="avatar" name="avatar" accept="image/*">
+                <input type="file" id="avatar" name="avatar">
                 <label for="avatar" class="file-input-label">Seleccionar Imagen</label>
             </div>
             <button type="submit">Subir Avatar</button>
@@ -33,9 +33,25 @@
     </section>
 
     <section>
-        <h2>Detalles del Perfil</h2>
-        <p><strong>Fecha de Nacimiento:</strong> {{ birthDateFormated }}</p>
-        <p><strong>Teléfono:</strong> {{ user.phone }}</p>
+        <h2>Documentación Para Ser Premium</h2>
+        <form action="/api/users/{{ user._id }}/documents" method="POST" enctype="multipart/form-data">
+            <div class="file-input-wrapper">
+                <input type="file" id="identification" name="documents">
+                <input type="hidden" name="reason_identification" value="Identificación">
+                <label for="identification" class="file-input-label">Identificación</label>
+            </div>
+            <div class="file-input-wrapper">
+                <input type="file" id="proofOfAddress" name="documents">
+                <input type="hidden" name="reason_proofOfAddress" value="Comprobante de domicilio">
+                <label for="proofOfAddress" class="file-input-label">Comprobante de domicilio</label>
+            </div>
+            <div class="file-input-wrapper">
+                <input type="file" id="bankStatement" name="documents">
+                <input type="hidden" name="reason_bankStatement" value="Comprobante de estado de cuenta">
+                <label for="bankStatement" class="file-input-label">Comprobante de estado de cuenta</label>
+            </div>
+            <button type="submit">Subir Documentos</button>
+        </form>
     </section>
 
 </main>
