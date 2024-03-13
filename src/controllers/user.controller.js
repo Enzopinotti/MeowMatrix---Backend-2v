@@ -14,6 +14,35 @@ export const showProfile = (req, res) => {
   res.render('profile', { user, birthDateFormated , style: 'profile.css' , title: 'Perfil del Usuario'});
 };
 
+export const showAdminView = async (req, res) => {
+  const reqLogger = req.logger;
+  const user = req.user;
+  const { page = 1, limit = 16 } = req.query;
+  console.log(user)
+  try {
+    const { users, totalDocs } = await userService.getUsersView(page, limit, reqLogger);
+    res.render('adminView', 
+      {
+        user, 
+        users: users.docs,
+        totalPages: users.totalPages,
+        currentPage: users.page,
+        hasNextPage: users.hasNextPage,
+        hasPrevPage: users.hasPrevPage,
+        totalDocs,
+        style: 'adminView.css', 
+        title: 'Administrador'
+      }
+    );
+  } catch (error) {
+    req.logger.error("En user.controller.js: showAdminView - Error al obtener usuarios:", error.message);
+    res.sendServerError(error.message);
+  
+  }
+
+}
+
+
 
 export const getUsers = async (req, res) => {
   

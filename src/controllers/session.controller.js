@@ -81,9 +81,14 @@ export const loginUser = async (req, res) => {
 export const logoutUser = async (req, res) => {
     try {
         let user = req.user;
-        await userService.updateLastConnection(user._id);
-        res.clearCookie('access_token');
-        res.redirect('/login'); // Redirección directa en el lado del servidor
+        if (!user) {
+            res.redirect('/login');
+        }else{
+            await userService.updateLastConnection(user._id);
+            res.clearCookie('access_token');
+            res.redirect('/login'); // Redirección directa en el lado del servidor
+        }
+        
     } catch (error) {
         res.sendServerError('Error al cerrar sesión');
     }

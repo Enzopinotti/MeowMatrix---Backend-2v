@@ -11,7 +11,7 @@ export default class realTimeProductsManager {
         .populate('category', 'nameCategory')
         .lean()
         .exec();
-      reqLogger.debug("En realTimeProducts.service.js: get - Productos en tiempo real obtenidos. Resultado:", products);
+      reqLogger.debug("En realTimeProducts.service.js: get - Productos en tiempo real obtenidos.");
       return products;
     } catch (error) {
       reqLogger.error("En realTimeProducts.service.js: get - Error al obtener productos en tiempo real:", error);

@@ -130,6 +130,7 @@ main {
     
 }
 
+
 .formulario .title-form{
     background-color: rgba(255, 255, 255, 0.473);
     padding: 1rem;
@@ -140,6 +141,22 @@ main {
     -moz-border-radius: 1rem;
     -ms-border-radius: 1rem;
     -o-border-radius: 1rem;
+}
+
+.formulario .isVisible {
+    display: flex;
+    background-color: rgba(0, 0, 0, 0.466);
+    color: white;
+    padding: 0.8rem;
+    border-radius: 0.5rem;
+    -webkit-border-radius: 0.5rem;
+    -moz-border-radius: 0.5rem;
+    -ms-border-radius: 0.5rem;
+    -o-border-radius: 0.5rem;
+}
+
+.formulario .isVisible #isVisible{
+    margin-left: 0.9rem;
 }
 
 .formulario input[type="text"],
@@ -203,7 +220,7 @@ main {
 }
 
 
-.realTimeProducts {
+.realTimeCategories {
     margin-top: 1rem;
     list-style: none;
     margin-left: 4rem;
@@ -214,7 +231,7 @@ main {
     gap: 20px; /* Espacio entre elementos */
 }
 
-.realTimeProducts li {
+.realTimeCategories li {
     background-color: rgba(222, 222, 222, 0.479);
     border: 3px solid #ddd;
     border-radius: 20px;
@@ -225,7 +242,7 @@ main {
     align-items: center;
     text-align: center;
     width: 25rem;
-    height: 30rem;
+    height: 13rem;
     padding: 2rem;
     -webkit-border-radius: 20px;
     -moz-border-radius: 20px;
@@ -244,12 +261,12 @@ main {
     font-size: 1rem;
 }
 
-.realTimeProducts li h2 {
+.realTimeCategories li h2 {
     font-size: 1.5rem;
     margin: 10px 0;
 }
 
-.realTimeProducts li p {
+.realTimeCategories li p {
     font-size: 1rem;
     margin: 5px 0;
 }

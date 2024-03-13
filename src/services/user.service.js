@@ -12,6 +12,17 @@ export const getUsers = async (reqLogger) => {
   }
 };
 
+export const getUsersView = async (page, limit, reqLogger) => {
+  try {
+    const { users, totalDocs } =  await UserDao.getUsersView(page, limit, reqLogger);
+    reqLogger.debug("En user.service.js: getUsersView - Usuarios obtenidos.");
+    return { users, totalDocs };
+  }catch{
+
+  }
+
+}
+
 export const getUserById = async (userId, reqLogger) => {
   try {
     const user = await UserDao.getById(userId, reqLogger);

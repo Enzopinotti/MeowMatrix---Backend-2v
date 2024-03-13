@@ -5,7 +5,7 @@ export const getRealTimeProducts = async (reqLogger) => {
   try {
     reqLogger.debug("En realTimeProducts.service.js: getRealTimeProducts - Intentando obtener productos en tiempo real.");
     const products = await RealTimeProductsDao.get(reqLogger);
-    reqLogger.debug("En realTimeProducts.service.js: getRealTimeProducts - Productos en tiempo real obtenidos. Resultado:", products);
+    reqLogger.debug("En realTimeProducts.service.js: getRealTimeProducts - Productos en tiempo real obtenidos.");
     return products;
   } catch (error) {
     reqLogger.error("En realTimeProducts.service.js: getRealTimeProducts - Error al obtener productos en tiempo real:", error);

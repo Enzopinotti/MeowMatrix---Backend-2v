@@ -6,7 +6,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import config from './config/server.config.js'
 import * as passport from 'passport';
-
+import fs from 'fs';
 
 
 //Ahora uso fileURLToPath para obtener la ruta absoluta del archivo y dirname para obtener la ruta relativa
@@ -19,14 +19,29 @@ export const __dirname = dirname(__filename);
 const storage = multer.diskStorage({
 
     destination: function (req, file, cb) {
+
+        
+
         console.log('Entre')
         if (file.fieldname === 'avatar') {
             cb(null, path.join(__dirname, 'public', 'img', 'profiles')); // Ruta para las imágenes de usuarios
         } else if (file.fieldname === 'productImage') {
             cb(null, path.join(__dirname, 'public', 'img', 'products')); // Ruta para las imágenes de productos
         } else if(file.fieldname === 'identification' || file.fieldname === 'address' || file.fieldname === 'bankStatement') {
-            console.log('Entre')
-            cb(null, path.join(__dirname, 'public', 'documents')); // Ruta para los documentos
+            const documentDirectory = path.join(__dirname, 'public', 'documents');
+            const filename = `${file.fieldname}-${req.user._id}${path.extname(file.originalname)}`;
+            // Ruta completa del archivo
+            const filePath = path.join(documentDirectory, filename);
+            // Verificar si ya existe un archivo con el mismo nombre
+            fs.access(filePath, fs.constants.F_OK, (err) => {
+                if (!err) {
+                    console.log('Encontró un archivo igual')
+                    // Si el archivo ya existe, eliminarlo antes de guardar el nuevo archivo
+                    fs.unlinkSync(filePath);
+                }
+                cb(null, documentDirectory);
+            });
+
         } 
         
         else {
@@ -34,8 +49,20 @@ const storage = multer.diskStorage({
         }
     },
     filename: function (req, file, cb) {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, file.originalname.replace(/\.[^.]+$/, '') + '-' + uniqueSuffix + path.extname(file.originalname)); // Nombre del archivo
+        const uniqueSuffix = Math.round(Math.random() * 1E9);
+        const userId = req.user._id;
+        
+        if(file.fieldname === 'identification'){
+            cb(null, file.fieldname +'-'+ userId + path.extname(file.originalname));
+        } else if (file.fieldname === 'address'){
+            cb(null, file.fieldname +'-'+ userId + path.extname(file.originalname));
+        } else if (file.fieldname === 'bankStatement') {
+            cb(null, file.fieldname +'-'+ userId + path.extname(file.originalname));
+        }else{
+            cb(null, file.originalname.replace(/\.[^.]+$/, '') + '-' + uniqueSuffix + path.extname(file.originalname));
+        }
+            
+         // Nombre del archivo
     }
 });
 

@@ -12,6 +12,29 @@ export default class UserManager {
         }
     }
 
+    
+    getUsersView = async (page, limit, reqLogger) => {
+        try {
+            const options = {
+                page: parseInt(page),
+                limit: parseInt(limit),
+            }
+            const result = await userModel.paginate({}, options);
+            if (!result) {
+                console.log('entré')
+                throw new Error('No se encontraron usuarios');
+            }
+            const users = result;
+            const totalDocs = result.totalDocs;
+            reqLogger.debug('En user.mongodb.js: getUsersView - Usuarios obtenidos con limit y page.');
+            return { users, totalDocs };
+        } catch (error) {
+            throw error;
+        }
+    }
+    
+
+
     getById = async (id) => {
         try {
             const user = await userModel.findById(id);

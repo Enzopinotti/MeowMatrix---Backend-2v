@@ -28,6 +28,7 @@ export default class SessionRouter extends BaseRouter {
       passport.authenticate('register'),
       registerUser
     );
+    //this.router.post('/register-admin', registerAdminUser);
 
     this.router.post(
       '/login',

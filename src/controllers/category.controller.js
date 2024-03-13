@@ -24,6 +24,23 @@ export const getCategory = async (req, res) => {
   }
 }
 
+export const getRealTimeCategories = async (req, res) => {
+  const reqLogger = req.logger;
+  try {
+    const categories = await categoryServices.getCategories(reqLogger);
+    req.logger.debug("En category.controller.js: getRealTimeCategories - Categorías obtenidas.");
+    res.render('realTimeCategories', { 
+      categories,
+      title: 'Categorías en tiempo real',
+      style: 'realTimeCategories.css' ,
+    }); 
+  } catch (error) {
+    req.logger.error("En category.controller.js: getRealTimeCategories - Error al obtener categorías:", error);
+    res.sendServerError(error);
+  }
+    
+}
+
 export const postCategory = async (req, res) => {
   const categoryData = req.body;
   try {

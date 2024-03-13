@@ -14,7 +14,7 @@ import { baseRouterInstance } from './routes/index.js';
 import compression from 'express-compression'
 import ErrorHandler from './middlewares/error/handler.error.js';
 import { addLogger } from './middlewares/log/handler.log.js';
-import { isAdmin, isNotPremium, isPremium } from './utils/handlebarsHelpers.util.js'
+import { capitalize, formatDate, formatTime, isAdmin, isNotPremium, isPremium } from './utils/handlebarsHelpers.util.js'
 
 
 const app = express();
@@ -27,6 +27,9 @@ const hbs = handlebars.create({
     isAdmin: isAdmin,
     isNotPremium: isNotPremium,
     isPremium: isPremium,
+    capitalize: capitalize,
+    formatDate: formatDate,
+    formatTime: formatTime
   }
 });
 

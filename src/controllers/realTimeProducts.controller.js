@@ -9,7 +9,7 @@ export const getRealTimeProducts = async (req, res) => {
     const reqLogger = req.logger;
     const products = await realTimeProductsServices.getRealTimeProducts(reqLogger);
     const categories = await categoryModel.find().lean().exec();
-    req.logger.debug("En realTimeProducts.controller.js: getRealTimeProducts - Productos en tiempo real obtenidos. Resultado:", products);
+    req.logger.debug("En realTimeProducts.controller.js: getRealTimeProducts - Productos en tiempo real obtenidos.");
     res.render('realTimeProducts', {
       products,
       categories, // Enviar las categorías al renderizar la vista
@@ -21,6 +21,7 @@ export const getRealTimeProducts = async (req, res) => {
     res.sendServerError(error);
   }
 };
+
     
 
 export const postRealTimeProduct = async (req, res) => {

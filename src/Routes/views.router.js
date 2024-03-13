@@ -4,7 +4,7 @@ import {
 import BaseRouter from './router.js';
 import {
   showProfile,
-  uploadAvatar
+  showAdminView
 } from '../controllers/user.controller.js';
 import {
   getEditProductView,
@@ -32,6 +32,7 @@ import {
 } from '../utils.js'
 import { getTicketView } from '../controllers/ticket.controller.js';
 import { getMockProductsView } from '../controllers/mock.controller.js';
+import { getRealTimeCategories } from '../controllers/category.controller.js';
 
 
 export default class ViewsRouter extends BaseRouter {
@@ -44,9 +45,13 @@ export default class ViewsRouter extends BaseRouter {
 
     this.router.get('/login', showLogin)
 
+    this.router.get('/adminView', authorization('admin') ,showAdminView)
+
     this.router.post('/realTimeProducts', authorization('admin') , uploader.array('productImage', 1), postRealTimeProduct);
 
-    this.router.get('/realTimeProducts',authorization('admin') , getRealTimeProducts);
+    this.router.get('/realTimeProducts', authorization('admin') , getRealTimeProducts);
+
+    this.router.get('/realTimeCategories', authorization('admin'), getRealTimeCategories)
 
     this.router.get('/message', authorization(['usuario', 'premium']), getRealTimeMessages);
 
