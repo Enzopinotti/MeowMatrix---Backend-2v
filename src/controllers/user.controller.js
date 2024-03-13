@@ -106,21 +106,16 @@ export const updateUser = async (req, res) => {
 export const UploadDocuments = async (req, res) => {
   const userId = req.params.uid;
   const reqLogger = req.logger;
-  console.log('entre')
   try {
     if (!req.files || req.files.length === 0) {
       req.logger.error("En user.controller.js: UploadDocuments - No se han seleccionado archivos al subir documentos");
       return res.sendUserError({ error: 'No se han seleccionado archivos.' });
     }
     const files = req.files;
-    // Verificar qué razones se enviaron
-    const reasons = {
-      identification: req.body.reason_identification || '',
-      address: req.body.reason_address || '',
-      bankStatement: req.body.reason_bankStatement || ''
-    };
+    console.log('Archivos: ',files)
+
     //Acá siempre llegan las 3 razones
-    await userService.uploadDocuments(userId, files, reqLogger);
+    await userService.uploadDocuments(userId, files ,reqLogger);
     req.logger.debug("En user.controller.js: UploadDocuments - Documentos subidos correctamente.");
     res.sendSuccess('Documentos subidos correctamente.');
 

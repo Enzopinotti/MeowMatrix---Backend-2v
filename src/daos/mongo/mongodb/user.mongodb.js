@@ -92,20 +92,29 @@ export default class UserManager {
         }
     }
 
-    addDocuments = async (userId, documents) => {
+    addDocuments = async (user, documents, reqLogger) => {
         try {
-          // Actualiza el modelo de usuario con los documentos proporcionados
-          const updatedUser = await userModel.findByIdAndUpdate(
-            userId, 
-            { $push: { documents: { $each: documents } } }, 
-            { new: true }
-          );
+
+            // Verificar si ya existe un documento con la misma razón
+            documents.forEach(newDoc => {
+                const existingDocIndex = user.documents.findIndex(doc => doc.reason === newDoc.reason);
+                if (existingDocIndex !== -1) {
+                    // Actualizar el documento existente
+                    reqLogger.debug(`En user.mongodb.js: uploadDocuments - Documento existe, actualizando.`);
+                    user.documents[existingDocIndex] = newDoc;
+                } else {
+                    // Agregar el nuevo documento
+                    reqLogger.debug(`En user.mongodb.js: uploadDocuments - Documento no existe, agregando.`);
+                    user.documents.push(newDoc);
+                }
+            });
+            // Guardar el usuario actualizado en la base de datos
+            await user.save();
       
-          return updatedUser;
-      
+            reqLogger.debug(`En user.mongodb.js: uploadDocuments - Documentos cargados para el usuario con ID ${user._id}.`);
         } catch (error) {
-          throw error;
-        }
+            throw error;
+        }   
       };
 
     updateLastConnection = async (userId) => {

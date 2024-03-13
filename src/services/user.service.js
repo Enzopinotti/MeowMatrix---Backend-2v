@@ -107,18 +107,20 @@ export const updateUser = async (userId, userData, reqLogger) => {
   }
 };
 
-export const uploadDocuments = async (userId, files, reqLogger) => {
+export const uploadDocuments = async (userId, files , reqLogger) => {
   try {
-    // Lógica para procesar los archivos recibidos y realizar operaciones relacionadas con la base de datos
-    // Por ejemplo, guardar las referencias de los documentos en la base de datos
+    // Obtener el usuario
+    const user = await UserDao.getById(userId);
 
-    // Aquí necesitarás implementar la lógica específica según tus requisitos
-    const documentReferences = files.map(file => ({
+    // Mapear los nuevos documentos
+    const documentReferences = files.map((file) => ({
       name: file.originalname,
-      reference: `/documents/${file.filename}`,// Cambia esto por la ruta real donde se almacenan los documentos
+      reference: `/documents/${file.filename}`,
+      reason: file.fieldname // La razón asociada al archivo
     }));
+    console.log(documentReferences);
 
-    await UserDao.addDocuments(userId, documentReferences);
+    await UserDao.addDocuments(user, documentReferences, reqLogger);
 
     reqLogger.debug(`En user.service.js: uploadDocuments - Documentos cargados para el usuario con ID ${userId}.`);
 

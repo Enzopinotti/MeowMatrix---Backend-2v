@@ -16,6 +16,6 @@ export default class UserRouter extends BaseRouter {
     this.router.put('/premium', upgradeToPremium);
     this.router.put('/:userId', updateUser);
     this.router.post('/upload-avatar', authorization(['usuario', 'premium']), uploader.single('avatar'), uploadAvatar);
-    this.router.post('/:uid/documents', uploader.array('documents'), UploadDocuments);
+    this.router.post('/:uid/documents', uploader.any(), UploadDocuments);
   };
 };

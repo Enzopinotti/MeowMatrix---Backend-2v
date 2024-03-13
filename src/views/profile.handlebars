@@ -36,18 +36,15 @@
         <h2>Documentación Para Ser Premium</h2>
         <form action="/api/users/{{ user._id }}/documents" method="POST" enctype="multipart/form-data">
             <div class="file-input-wrapper">
-                <input type="file" id="identification" name="documents">
-                <input type="hidden" name="reason_identification" value="Identificación">
+                <input type="file" id="identification" name="identification">
                 <label for="identification" class="file-input-label">Identificación</label>
             </div>
             <div class="file-input-wrapper">
-                <input type="file" id="proofOfAddress" name="documents">
-                <input type="hidden" name="reason_proofOfAddress" value="Comprobante de domicilio">
+                <input type="file" id="proofOfAddress" name="address">
                 <label for="proofOfAddress" class="file-input-label">Comprobante de domicilio</label>
             </div>
             <div class="file-input-wrapper">
-                <input type="file" id="bankStatement" name="documents">
-                <input type="hidden" name="reason_bankStatement" value="Comprobante de estado de cuenta">
+                <input type="file" id="bankStatement" name="bankStatement">
                 <label for="bankStatement" class="file-input-label">Comprobante de estado de cuenta</label>
             </div>
             <button type="submit">Subir Documentos</button>

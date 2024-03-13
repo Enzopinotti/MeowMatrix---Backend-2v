@@ -19,12 +19,13 @@ export const __dirname = dirname(__filename);
 const storage = multer.diskStorage({
 
     destination: function (req, file, cb) {
-        
+        console.log('Entre')
         if (file.fieldname === 'avatar') {
             cb(null, path.join(__dirname, 'public', 'img', 'profiles')); // Ruta para las imágenes de usuarios
         } else if (file.fieldname === 'productImage') {
             cb(null, path.join(__dirname, 'public', 'img', 'products')); // Ruta para las imágenes de productos
-        } else if(file.fieldname === 'documents') {
+        } else if(file.fieldname === 'identification' || file.fieldname === 'address' || file.fieldname === 'bankStatement') {
+            console.log('Entre')
             cb(null, path.join(__dirname, 'public', 'documents')); // Ruta para los documentos
         } 
         
