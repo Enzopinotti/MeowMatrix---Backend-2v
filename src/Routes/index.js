@@ -9,7 +9,7 @@ import SessionRouter from './api/session.js';
 import MailRouter from './mail.router.js';
 import MockRouter from './mock.router.js';
 import BaseRouter from './router.js';
-import TestRouter from '../routes/test.router.js';
+import TestRouter from '../Routes/test.router.js';
 import swaggerJSDoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 import { __dirname } from '../utils.js';
