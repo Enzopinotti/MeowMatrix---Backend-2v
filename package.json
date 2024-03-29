@@ -9,7 +9,7 @@
   },
   "scripts": {
     "test": "mocha",
-    "start": "node src/app.js --mode development",
+    "start": "node src/app.js --mode production",
     "dev": "nodemon src/app.js --mode development"
   },
   "keywords": [],
