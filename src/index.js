@@ -9,8 +9,8 @@ import session from 'express-session';
 import MongoStore from 'connect-mongo';
 import cookieParser from 'cookie-parser';
 import config from './config/server.config.js';
-import { routerGeneral } from './routes/index.js';
-import { baseRouterInstance } from './routes/index.js';
+import { routerGeneral } from './Routes/index.js';
+import { baseRouterInstance } from './Routes/index.js';
 import compression from 'express-compression'
 import ErrorHandler from './middlewares/error/handler.error.js';
 import { addLogger } from './middlewares/log/handler.log.js';
