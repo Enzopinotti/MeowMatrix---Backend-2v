@@ -8,7 +8,7 @@ import config from './config/server.config.js'
 import * as passport from 'passport';
 import fs from 'fs';
 
-
+const PRIVATE_KEY = config.tokenKey;
 //Ahora uso fileURLToPath para obtener la ruta absoluta del archivo y dirname para obtener la ruta relativa
 const __filename = fileURLToPath(import.meta.url);
 
@@ -28,8 +28,12 @@ const storage = multer.diskStorage({
         } else if (file.fieldname === 'productImage') {
             cb(null, path.join(__dirname, 'public', 'img', 'products')); // Ruta para las imágenes de productos
         } else if(file.fieldname === 'identification' || file.fieldname === 'address' || file.fieldname === 'bankStatement') {
+            const token = obtenerTokenDeCookie(req.headers.cookie);
+            const decoded = jwt.verify(token, PRIVATE_KEY);
+            const user = decoded.user;
+            const userId = user._id;
             const documentDirectory = path.join(__dirname, 'public', 'documents');
-            const filename = `${file.fieldname}-${req.user._id}${path.extname(file.originalname)}`;
+            const filename = `${file.fieldname}-${userId}${path.extname(file.originalname)}`;
             // Ruta completa del archivo
             const filePath = path.join(documentDirectory, filename);
             // Verificar si ya existe un archivo con el mismo nombre
@@ -50,7 +54,10 @@ const storage = multer.diskStorage({
     },
     filename: function (req, file, cb) {
         const uniqueSuffix = Math.round(Math.random() * 1E9);
-        const userId = req.user._id;
+        const token = obtenerTokenDeCookie(req.headers.cookie);
+        const decoded = jwt.verify(token, PRIVATE_KEY);
+        const user = decoded.user;
+        const userId = user._id;
         
         if(file.fieldname === 'identification'){
             cb(null, file.fieldname +'-'+ userId + path.extname(file.originalname));
@@ -111,7 +118,7 @@ export function validatePassword(password) {
     return lengthCheck && hasLowercase && hasUppercase && hasNumber;
 }
 
-const PRIVATE_KEY = config.tokenKey;
+
 
 export function generateToken(user) {
     const token = jwt.sign({ user }, PRIVATE_KEY, { expiresIn: '1h' });
@@ -130,6 +137,23 @@ export function authToken(token) {
     });
 
 };
+
+export const obtenerTokenDeCookie = (cookieString) => {
+    if (!cookieString) {
+        return null;
+    }
+    
+    const cookies = cookieString.split(';');
+    
+    for (const cookie of cookies) {
+        const [name, value] = cookie.trim().split('=');
+        if (name === 'access_token') {
+            return value;
+        }
+    }
+    
+    return null;
+};
 //!Manejo de errores de passport
 export const passportCall = (strategy) => {
     return async (req, res, next) => {
@@ -144,12 +168,16 @@ export const passportCall = (strategy) => {
 //! Autorización según roles
 export const authorization = (roles) => {
     return async (req, res, next) => {
-        if (!req.user) {
-            return res.status(401).redirect('/login').send({ error: 'Unauthorized' }); // Redirigir al inicio de sesión si el usuario no está autenticado
-        } else if (req.user.rol === 'admin' || roles.includes(req.user.rol)) {
-            next(); // Permitir el acceso si el usuario es un administrador o tiene uno de los roles especificados
+        const token = obtenerTokenDeCookie(req.headers.cookie);
+        const decoded = jwt.verify(token, PRIVATE_KEY);
+        const user = decoded.user;
+
+        if (!user) {
+            return res.status(401).json({ error: 'Unauthorized' }); // Devuelve un mensaje de error JSON si el usuario no está autenticado
+        } else if (user.rol === 'admin' || roles.includes(user.rol)) {
+            next(); // Permite el acceso si el usuario es un administrador o tiene uno de los roles especificados
         } else {
-            return res.status(403).redirect('/login'); // Redirigir al inicio de sesión si el usuario no tiene permisos adecuados
+            return res.status(403).json({ error: 'Forbidden' }); // Devuelve un mensaje de error JSON si el usuario no tiene permisos adecuados
         }
     };
 };

@@ -1,6 +1,5 @@
 import http from 'http';
 import dotenv from 'dotenv';
-import { Server } from 'socket.io';
 import config from './config/server.config.js';
 import productModel from './daos/mongo/models/product.model.js';
 import app from './index.js';
@@ -9,26 +8,12 @@ import { cpus } from 'os';
 
 dotenv.config();
 
-const port = config.port;
+const port = config.port||8080;
 const mode = config.mode;
 
 const server = http.createServer(app);
-export const io = new Server(server);
 
-io.on("connection", (socket) => {
-  console.log("Un cliente se ha conectado");
 
-  socket.on('toggle-visibility', async (productId) => {
-    try {
-      const product = await productModel.findById(productId);
-      product.isVisible = false; // Cambia esto según tu campo de visibilidad
-      await product.save();
-      io.emit("visibility-toggled", productId);
-    } catch (error) {
-      console.error(`Error al ocultar el producto: ${error.message}`);
-    }
-  });
-});
 
 if (cluster.isPrimary) {
   console.log(`Primary ${process.pid} is running`);

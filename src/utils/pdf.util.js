@@ -8,7 +8,6 @@ export const generatePdf = async (ticket, user, products) => {
     const fontSize = 12;
     const margin = 50;
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-    console.log('productos en utils: ', products)
     // Crear el contenido del ticket
     const ticketContent = `
         Ticket de Compra

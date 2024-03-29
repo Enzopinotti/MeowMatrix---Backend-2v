@@ -27,6 +27,8 @@ const userSchema = new mongoose.Schema({
         reason: { type: String },
     }],
     last_connection: {type: Date, require:true},
+    likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'products', default:[]}],
+    wantPremium: {type: Boolean, require:true, default:false},
 });
 
 userSchema.plugin(mongoosePaginate)

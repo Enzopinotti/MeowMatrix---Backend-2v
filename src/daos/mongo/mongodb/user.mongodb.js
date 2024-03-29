@@ -44,6 +44,16 @@ export default class UserManager {
         }
     }
 
+    getByIdWithLikes = async (id) => {
+        try {
+            console.log('id en mongodb:', id)
+            const user = await userModel.findById(id).populate('likes');
+            return user;
+        } catch (error) {
+            throw error;
+        }
+    }
+
     add = async (user) => {
         try {
             const addedUser = await userModel.create(user);
@@ -56,6 +66,15 @@ export default class UserManager {
     update = async (id, user) => {
         try {
             const updatedUser = await userModel.findByIdAndUpdate(id, user, { new: true });
+            return updatedUser;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    updateAvatar = async (userId, imagePath) => {
+        try {
+            const updatedUser = await userModel.findByIdAndUpdate(userId, { avatar: imagePath });
             return updatedUser;
         } catch (error) {
             throw error;
@@ -106,14 +125,7 @@ export default class UserManager {
         }
     }
 
-    updateAvatar = async (userId, imagePath) => {
-        try {
-            const updatedUser = await userModel.findByIdAndUpdate(userId, { avatar: imagePath });
-            return updatedUser;
-        } catch (error) {
-            throw error;
-        }
-    }
+
 
     addDocuments = async (user, documents, reqLogger) => {
         try {
@@ -133,16 +145,62 @@ export default class UserManager {
             });
             // Guardar el usuario actualizado en la base de datos
             await user.save();
-      
+            
             reqLogger.debug(`En user.mongodb.js: uploadDocuments - Documentos cargados para el usuario con ID ${user._id}.`);
+
+            return user;
         } catch (error) {
             throw error;
         }   
-      };
+        
+    };
 
+    handleLike = async (userId, postId) => {
+        try {
+            const user = await userModel.findById(userId);
+            if (!user) {
+                throw new Error('Usuario no encontrado');
+            }
+            if (!user.likes) {
+                user.likes = [];
+            }
+    
+            const index = user.likes.indexOf(postId); // Busca el índice del postId en los likes del usuario
+    
+            if (index === -1) {
+                // Si el postId no está en los likes del usuario, lo agregamos
+                user.likes.push(postId);
+            } else {
+                // Si el postId está en los likes del usuario, lo eliminamos
+                user.likes.splice(index, 1);
+            }
+    
+            await user.save();
+            return user; // Devolvemos el usuario actualizado
+        } catch (error) {
+            throw error;  
+        }
+    }
+    deleteLike = async (userId, productId) => {
+        try {
+            const user = await userModel.findById(userId);
+            console.log('usuario: ', user)
+            if (!user) {
+                throw new Error('Usuario no encontrado');
+            }
+            if (!user.likes) {
+                user.likes = [];
+            }
+            console.log('ProductId: ', productId)
+            user.likes = user.likes.filter(id => id.toString() !== productId);
+            console.log('likes: ', user.likes)
+            await user.save();
+        } catch (error) {
+            throw error;
+        }
+    }
     updateLastConnection = async (userId) => {
         try {
-            console.log('pasé ')
              return await userModel.findByIdAndUpdate(userId, { last_connection: new Date() });
         } catch (error) {
             throw error;

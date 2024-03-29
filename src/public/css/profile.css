@@ -1,20 +1,95 @@
-body {
-    font-family: Arial, sans-serif;
+*{
     margin: 0;
     padding: 0;
+    box-sizing: border-box;
+    
 }
 
-header {
-    background-color: #333;
-    color: white;
-    text-align: center;
-    padding: 20px 0;
+body{
     display: flex;
-    justify-content: space-around;
+    flex-direction: column;
 }
 
-header h1 {
-    margin: 0;
+.header {
+    display: grid;
+    grid-template-columns: 25% 75%; /* Divide el header en tres columnas */
+    align-items: center; /* Centra verticalmente los elementos */
+    background-color: #333;
+    padding: 1rem 0;
+}
+.header .img-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.header .buttom-primary {
+    position: relative;
+    right: 5.2rem;
+}
+.header .buttom-primary .admin-btn p {
+    position: relative;
+    left: 0.4rem;
+}
+
+.header .buttom-primary .premium-btn p {
+    position: relative;
+    left: 0.4rem;
+}
+
+.header .buttom-primary  .cart-btn p {
+    position: relative;
+    left: 0.4rem;
+}
+
+.header .buttom-primary  a p {
+    position: relative;
+    left: 0.4rem;
+}
+.header .img-container .nombre-marca {
+    color: #f01945; /* Color principal */
+    font-size: 3em; /* Tamaño de la fuente */
+    font-family: 'Montserrat', sans-serif; /* Fuente */
+    font-weight: bold; /* Peso de la fuente */
+    text-transform: uppercase; /* Transformar texto a mayúsculas */
+    letter-spacing: 3px; /* Espaciado entre letras */
+    text-shadow: 
+        -3px -3px 0 #ffffff, /* Arriba-izquierda */
+        3px -3px 0 #ffffff, /* Arriba-derecha */
+        -3px 3px 0 #ffffff, /* Abajo-izquierda */
+        3px 3px 0 #ffffff; /* Abajo-derecha */
+    line-height: 0.9; /* Ajustar el interlineado según sea necesario */
+}
+
+.header .img-container img {
+    width: 35%; /* Reduce el tamaño de la imagen del logo */
+    height: auto;
+}
+.header section{
+    display: flex;
+    justify-content: center;
+}
+
+.header a{
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    color: black;
+    font-weight: 700;
+    font-size:medium;
+    background-color: rgb(255, 255, 255);
+    padding: 0.5rem;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+    border-radius: 1rem;
+    -webkit-border-radius: 1rem;
+    -moz-border-radius: 1rem;
+    -ms-border-radius: 1rem;
+    -o-border-radius: 1rem;
+    height: 4rem;
+    width: 9rem;
+    margin: 0 2rem;
 }
 
 main {
@@ -28,23 +103,7 @@ main {
     background-color: #f9f9f9;
 }
 
-.back-btn {
 
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    color: black;
-    font-size: medium;
-    background-color: rgba(222, 222, 222, 0.479);
-    padding: 0.5rem;
-    border-radius: 1rem;
-    
-    -webkit-border-radius: 1rem;
-    -moz-border-radius: 1rem;
-    -ms-border-radius: 1rem;
-    -o-border-radius: 1rem;
-    
-}
 
 .avatar-section {
     display: flex;
@@ -98,11 +157,15 @@ button[type="submit"] {
     color: white;
     border: none;
     cursor: pointer;
+    height: 3rem;
     border-radius: 0.5rem;
     -webkit-border-radius: 0.5rem;
     -moz-border-radius: 0.5rem;
     -ms-border-radius: 0.5rem;
     -o-border-radius: 0.5rem;
+}
+.submit-container {
+    height: 100%;
 }
 
 input[type="file"] {
@@ -123,8 +186,7 @@ input[type="file"] {
     top: 0;
     left: 0;
     z-index: -1;
-    width: 100%;
-    height: 100%;
+
 }
 
 .file-input-label {
@@ -142,8 +204,48 @@ input[type="file"] {
     margin-left: 1rem;
     margin-right:4rem;
     font-size: 1rem;
+    height: 2.5rem;
+    display: flex;
+    width: 8rem;
+    align-items: center;
+    justify-content: center;
 }
 
 .file-input-label:hover {
     background-color: #0056b3;
+}
+
+.uploaded-documents {
+    margin-top: 20px;
+}
+
+.section-title {
+    font-size: 24px;
+    color: #333;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 5px;
+    margin-bottom: 10px;
+}
+
+.document-list {
+    list-style: none;
+    padding: 0;
+}
+
+.document-item {
+    margin-bottom: 10px;
+}
+
+.document-reason {
+    font-weight: bold;
+}
+
+.view-document-link {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.view-document-link:hover {
+    text-decoration: underline;
+    color: #0056b3;
 }

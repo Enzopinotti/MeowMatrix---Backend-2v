@@ -3,10 +3,17 @@ import * as categoryServices from '../services/category.service.js'
 
 export const getProducts = async (req, res) => {
     try {
+        const { page = 1, limit = 6, sort, query } = req.query;
         const reqLogger = req.logger;
-        const products = await productServices.getAllProducts(reqLogger);
-        req.logger.debug("product.controller.js: getProducts - productos obtenidos correctamente");
-        res.sendSuccess(products);
+        console.log('page: ', page)
+        const { products, totalDocs } = await productServices.getProductsView(page, limit, sort, query, reqLogger);
+        
+        reqLogger.debug("product.controller.js: getProducts - productos obtenidos correctamente");
+        
+        res.sendSuccess({
+            products,
+            
+        });
     } catch (error) {
         req.logger.error("product.controller.js: getProducts - Error al obtener productos:", error);
         res.sendServerError(error.message);
@@ -24,7 +31,6 @@ export const getProductsView = async (req, res) => {
         
         // Resto del código para manejar la respuesta y renderizar la vista
         const user = req.user;
-        console.log(user)
         res.render('products', {
             products: products.docs,
             totalPages: products.totalPages,

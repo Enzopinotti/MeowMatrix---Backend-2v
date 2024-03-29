@@ -1,5 +1,4 @@
 import * as messageServices from '../services/message.service.js';
-import { io } from '../app.js';
 
 //! Vista de mensajes en tiempo real
 export const getRealTimeMessages = async (req, res) => {
@@ -23,7 +22,6 @@ export const postRealTimeMessages = async (req, res) => {
         const reqLogger = req.logger;
         const newMessage = await messageServices.postRealTimeMessage(req.body, reqLogger);
         req.logger.debug("En message.controller.js:  postRealTimeMessages - Nuevo mensaje obtenido con exito: ", newMessage);
-        io.emit('message-received', newMessage);
     } catch (error) {
         req.logger.error("En message.controller.js: postRealTimeMessages - Error al obtener la vista de mensajes: ", error);
         res.sendServerError(error);

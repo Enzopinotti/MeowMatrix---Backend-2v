@@ -6,81 +6,107 @@
 }
 
 body{
-    background-color: rgb(86, 89, 87);
     display: flex;
     flex-direction: column;
 }
 
+.montserrat {
+    font-family: "Montserrat", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 100;
+    font-style: normal;
+}
+
 .header{
-    display: flex;
-    margin-bottom: 2rem;
-    padding-top: 1rem;
-    padding-bottom: 1rem;
-    background-color: rgba(222, 222, 222, 0.479);
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: 25% 65% 10%; /* Divide el header en tres columnas */
+    align-items: center; /* Centra verticalmente los elementos */
+    background-color: #333;
+    padding: 1rem 0;
 }
-.header .tittle_header{
+
+.header .img-container {
     width: 100%;
-    text-align: center;
-    text-justify: center;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
+
+.header .img-container .nombre-marca {
+    color: #f01945; /* Color principal */
+    font-size: 3em; /* Tamaño de la fuente */
+    font-family: 'Montserrat', sans-serif; /* Fuente */
+    font-weight: bold; /* Peso de la fuente */
+    text-transform: uppercase; /* Transformar texto a mayúsculas */
+    letter-spacing: 3px; /* Espaciado entre letras */
+    text-shadow: 
+        -3px -3px 0 #ffffff, /* Arriba-izquierda */
+        3px -3px 0 #ffffff, /* Arriba-derecha */
+        -3px 3px 0 #ffffff, /* Abajo-izquierda */
+        3px 3px 0 #ffffff; /* Abajo-derecha */
+    line-height: 0.9; /* Ajustar el interlineado según sea necesario */
+}
+
+
+.header .img-container img {
+    width: 35%; /* Reduce el tamaño de la imagen del logo */
+    height: auto;
+}
+
+.header section{
+    display: flex;
+    justify-content: center;
+}
+
+
+
 
 .header a{
     text-decoration: none;
     display: flex;
     align-items: center;
     color: black;
+    font-weight: 700;
     font-size:medium;
-    background-color: rgba(222, 222, 222, 0.479);
+    background-color: rgb(255, 255, 255);
     padding: 0.5rem;
     padding-left: 1.5rem;
     padding-right: 1.5rem;
     border-radius: 1rem;
-    margin-right: 4rem  ;
     -webkit-border-radius: 1rem;
     -moz-border-radius: 1rem;
     -ms-border-radius: 1rem;
     -o-border-radius: 1rem;
     height: 4rem;
+    width: 9rem;
+    margin: 0 2rem;
+}
+
+.header a ion-icon {
+    margin-top: 2rem;
 }
 .header .profile-btn {
     display: flex;
     align-items: center;
     color: black;
+    font-weight: 700;
     font-size: medium;
-    background-color: rgba(222, 222, 222, 0.479);
-    padding: 0.5rem;
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
     border-radius: 1rem;
-    margin-right: 4rem;
     -webkit-border-radius: 1rem;
     -moz-border-radius: 1rem;
     -ms-border-radius: 1rem;
     -o-border-radius: 1rem;
     height: 4rem;
-    margin-left: 3rem;
+    width: 100%;
+    justify-content: center;
+    background-color: #33333300;
+    margin: 0;
+    padding: 0;
+    cursor: pointer;
 }
 
-.header .premium-btn{
-    display: flex;
-    align-items: center;
-    color: black;
-    font-size: medium;
-    background-color: rgba(222, 222, 222, 0.479);
-    padding: 0.5rem;
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
-    border-radius: 1rem;
-    margin-right: 4rem;
-    -webkit-border-radius: 1rem;
-    -moz-border-radius: 1rem;
-    -ms-border-radius: 1rem;
-    -o-border-radius: 1rem;
-    height: 4rem;
-    margin-left: 3rem;
-    cursor: pointer
-}
+
 
 .header .user-info{
     display: flex;
@@ -89,10 +115,9 @@ body{
 
 .header .profile-btn img {
     border-radius: 50%;
-    width: 40px; /* Ajusta el tamaño según tus necesidades */
-    height: 37px; /* Ajusta el tamaño según tus necesidades */
-    margin-right: 1rem;
-    opacity: 0.7;
+    width: 3rem; 
+    height: 2.8rem;
+    opacity: 1;
 }
 .header a ion-icon{
     margin-right: 0.2rem;
@@ -105,27 +130,181 @@ body{
     
 
 }
+
+
+.admin-btn ion-icon {
+    position: relative;
+    bottom: 1rem;
+}
+
+.premium-btn ion-icon {
+    position: relative;
+    bottom: 1rem;
+}
+
+.cart-btn ion-icon {
+    position: relative;
+    bottom: 1rem;
+}
+
+#logout-btn ion-icon {
+    position: relative;
+    bottom: 1rem;
+}
+
+
+.header .buttom-primary .admin-btn p {
+    position: relative;
+    left: 0.4rem;
+}
+
+.header .buttom-primary .premium-btn p {
+    position: relative;
+    left: 0.4rem;
+}
+
+.header .buttom-primary  .cart-btn p {
+    position: relative;
+    left: 0.4rem;
+}
+
+.header .buttom-primary  a p {
+    position: relative;
+    left: 0.4rem;
+}
+
+.header .buttom-primary .back-btn p {
+    position: relative;
+    left: 0.4rem;
+}
+
+.central-section {
+    background-color: #F5F5F5;
+    display: grid;
+    grid-template-columns: 25% 75%; /* Una columna para el aside y dos para la lista de productos */
+}
+.sidebar {
+    padding: 1.8rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center; /* Alinea los elementos en el centro */
+    grid-column: 1 / span 1; /* Ocupa una columna */
+    position: sticky;
+    top: 0; /* Se fija en la parte superior del aside */
+    height: 70vh; /* Ocupa toda la altura del viewport */
+    padding-right: 0.6rem;
+}
+
+.form-container{
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    align-items: flex-end;
+}
+
+.sidebar h3 {
+    text-align: center;
+    color: #ffffff; /* Cambio de color del texto */
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    background-color: #333; /* Color del encabezado */
+    padding: 1rem;
+    width: 90%;
+}
+
+.filter-form {
+    background-color: #f9f9f9; /* Cambio de color de fondo */
+    padding: 1rem;
+    border-radius: 0 0 10px 10px; /* Aumento del radio de borde */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra suave */
+    width: 90%; /* Ajusta el ancho del formulario */
+    height: 100%;
+}
+
+.filter-form .form-group {
+    margin-bottom: 1rem; /* Ajuste del espacio entre grupos de formulario */
+}
+
+.filter-form label {
+    color: #333; /* Cambio de color del texto del label */
+    font-weight: bold; /* Hace que el texto del label sea más visible */
+}
+
+.filter-form input[type="text"],
+.filter-form select {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    margin-top: 0.5rem; /* Ajuste de espacio entre elementos */
+}
+
+.filter-form button[type="submit"] {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    background-color: #007bffa6;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 1rem; /* Ajuste de espacio entre elementos */
+}
+
+.filter-form button[type="submit"]:hover {
+    background-color: #0056b3; /* Cambio de color al pasar el mouse */
+}
+
 .products-list {
     list-style: none;
     margin-left: 4rem;
     margin-right: 4rem;
     padding: 0;
+    padding-top: 1rem;
     display: grid;
-    grid-template-columns: repeat(4, minmax(300px, 1fr)); /* Define columnas automáticas con tamaño mínimo de 250px */
+    grid-template-columns: repeat(3, minmax(250px, 1fr)); /* Define columnas automáticas con tamaño mínimo de 250px */
     gap: 20px; /* Espacio entre elementos */
+    grid-column: 2 / span 1;
 }
 
 .products-list li {
-    background-color: rgba(222, 222, 222, 0.479);
-    border: 3px solid #ddd;
+    background-color: rgb(255, 255, 255);
+    border: 1px solid #ddd;
     border-radius: 20px;
-    padding: 10px;
+    padding: 1.7rem;
     margin: 10px 0;
     text-align: center;
-    height: 32rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.product-header {
+    display: flex;
 }
 
-.product-img{
+.favorite-button{
+    border: 0;
+    background-color: rgba(255, 255, 255, 0);
+    cursor:pointer;
+}
+/* Agrega las transiciones a la imagen de favorito */
+.favorite-button img {
+    transition: transform 0.3s ease-in-out;
+}
+
+/* Define la transformación al hacer hover sobre el botón de favorito */
+.favorite-button:hover img {
+    transform: scale(1.2);
+}
+
+.like_img{
+    width: 2rem;
+}
+.product-img {
     width: 100%;
     aspect-ratio: 3/2;
     object-fit: contain;
@@ -142,21 +321,23 @@ body{
     margin: 5px 0;
 }
 
-.add-to-cart-btn{
-    margin-top: 0.5rem;
-    background-color: rgb(16, 185, 69);
+.add-to-cart-btn {
+    background-color: #f01945;
     color: white;
     padding: 10px 20px;
     border: none;
     border-radius: 5px;
     cursor: pointer;
     font-size: 1rem;
-    margin-top: 1.5rem;
 }
 
-.products-list li a{
-    margin-top: 0.5rem;
-    background-color: rgb(145, 185, 16);
+.add-to-cart-btn:hover{
+    
+    background-color: #f01944b2;
+    
+}
+.products-list li a {
+    background-color: #d24858;
     color: white;
     padding: 10px 20px;
     border: none;
@@ -164,9 +345,47 @@ body{
     cursor: pointer;
     font-size: 1rem;
     text-decoration: none;
-    
+}
+.products-list li a:hover{
+
+    background-color: #d24858b4; 
+}
+.products-list .product-item .product-footer{
+    display: flex;
+    justify-content: center;
 }
 
+.products-list .product-item .product-footer form{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.product-info {
+    display: flex;
+    flex-direction: column;
+}
+.stock-and-name {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.stock-status {
+    font-family: Arial, sans-serif;
+    font-weight: 700;
+    color: green;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.stock-status.out-of-stock {
+    color: red;
+}
+
+.product-price {
+    font-family: Arial, sans-serif;
+}
 
 .pagination {
     display: flex;

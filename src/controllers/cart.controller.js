@@ -2,12 +2,16 @@ import * as cartService from "../services/cart.service.js";
 import * as productService from "../services/product.service.js";
 import moment from 'moment';
 import * as userService from "../services/user.service.js";
+import * as ticketService from "../services/ticket.service.js";
 import { createTicket } from "./ticket.controller.js";
 import url from 'url';
 import { sendMailWithPdf } from "./mail.controller.js";
-import { io } from '../app.js'
-import { calculateTotalPrice } from "../utils.js";
+import { calculateTotalPrice, obtenerTokenDeCookie } from "../utils.js";
+import config from '../config/server.config.js'
+import jwt from 'jsonwebtoken';
 
+
+const PRIVATE_KEY = config.tokenKey;
 
 
 
@@ -29,6 +33,32 @@ export const getCarts = async (req, res) => {
         res.sendServerError(error);
     }
 };
+
+export const getCurrentCart = async (req, res) => {
+    try {
+        console.log('ENTRE A CURRRENT')
+        const reqLogger = req.logger;
+        const token = obtenerTokenDeCookie(req.headers.cookie);
+        const decoded = jwt.verify(token, PRIVATE_KEY);
+        const user = decoded.user
+        if (!user) {
+            req.logger.warn("cart.controller.js: getCurrentCart - Usuario no Logeado");
+            return res.sendNotFound('Usuario no Logeado');
+        }
+        const userId = user._id;
+        const cart = await cartService.getCartByUserId(userId, reqLogger);
+        if (!cart) {
+            req.logger.warn("cart.controller.js: getCurrentCart - Carrito no encontrado con el id: ", userId);
+            return res.sendNotFound('Carrito no encontrado');
+        }
+        req.logger.debug("cart.controller.js: getCurrentCart - Carrito encontrado con el id: ", userId);
+        res.sendSuccess(cart.payload);
+    } catch (error) {
+        req.logger.error("cart.controller.js: getCurrentCart - Error al obtener el carrito:", error);
+        res.sendServerError(error);
+    }
+}
+
 
 //! Vista de carrito
 export const getCartView = async (req, res) => {
@@ -140,11 +170,14 @@ export const addProductToCart = async (req, res) => {
 };
 
 export const addToCurrentCart = async (req, res) => {
-    if(!req.user){
+    const token = obtenerTokenDeCookie(req.headers.cookie);
+    const decoded = jwt.verify(token, PRIVATE_KEY);
+    const user = decoded.user
+    if(!user){
         req.logger.warn("cart.controller.js: addToCurrentCart - El usuario no está autenticado");
         return res.sendUnauthorized('El usuario no está autenticado');
     }
-    const userId = req.user._id;
+    const userId = user._id;
     const reqLogger = req.logger; 
     try {
         const productId = req.params.pid;
@@ -169,7 +202,9 @@ export const changeQuantity = async (req, res) => {
     const reqLogger = req.logger;
     
     try {
-        
+        console.log('llega el id del carrito: ', cartId)
+        console.log('llega el id de producto: ', productId)
+        console.log('llega la cantidad nueva: ', quantity)
         const updatedCart = await cartService.changeProductQuantity(cartId, productId, quantity, reqLogger);
         
         if (!updatedCart) {
@@ -196,7 +231,6 @@ export const deleteProductFromCart = async (req, res) => {
             return res.sendNotFound('Carrito no encontrado o producto no encontrado en el carrito');
         }
         // Emite un evento a todos los clientes conectados para actualizar la vista del carrito
-        io.emit('updateCart', { cartId, productId });
         req.logger.debug("cart.controller.js: deleteProductFromCart - Carrito actualizado después de eliminar un producto");
         res.sendSuccess(updatedCart);
     } catch (error) {
@@ -217,7 +251,7 @@ export const deleteAllProducts = async (req, res) => {
             return res.sendNotFound('Carrito no encontrado');
         }
         req.logger.debug("cart.controller.js: deleteAllProducts - Carrito actualizado después de eliminar todos los productos.");
-        io.emit('updateAllCart', { cartId });
+        
         res.sendSuccess(updatedCart);
     } catch (error) {
         req.logger.error("cart.controller.js: deleteAllProducts - Error en deleteAllProducts:", error);
@@ -250,8 +284,10 @@ export const purchaseCart = async (req, res) => {
     const reqLogger = req.logger;
     let updatedCart;
     try {
-        // Obtener el carrito por id //
-        if(!req.user){
+        const token = obtenerTokenDeCookie(req.headers.cookie);
+        const decoded = jwt.verify(token, PRIVATE_KEY);
+        const userToken = decoded.user
+        if(!userToken){
             req.logger.warn("cart.controller.js: purchaseCart - El usuario no está autenticado");
             return res.sendUnauthorized('El usuario no está autenticado');
         }
@@ -275,7 +311,7 @@ export const purchaseCart = async (req, res) => {
 
         // Enviar el ticket por correo electrónico //
         await sendMailWithPdf({
-            to: req.user.email, 
+            to: user.email, 
             subject: 'Confirmación de compra',
             message: 'Gracias por tu compra. Adjunto encontrarás el ticket de la transacción.',
             ticket,
@@ -346,3 +382,26 @@ export const getCartSummary = async (req, res) => {
         res.sendServerError(error.message);
     }
 };
+
+export const getUserTicket = async (req, res) => {
+    try {
+        const reqLogger = req.logger;
+        const token = obtenerTokenDeCookie(req.headers.cookie);
+        const decoded = jwt.verify(token, PRIVATE_KEY);
+        const userToken = decoded.user
+        if (!userToken) {
+            req.logger.warn("cart.controller.js: getLastTicket - El usuario no está autenticado");
+            return res.sendServerError('El usuario no está autenticado');
+        }
+        console.log('hasta aca si')
+        // Llama a la capa de servicio para obtener el último ticket
+        const lastTicket = await ticketService.getUserTicket(userToken._id, reqLogger)
+
+        // Devuelve los datos del último ticket al cliente
+        req.logger.debug("cart.controller.js: getLastTicket - Tickets Obtenidos.");
+        res.sendSuccess(lastTicket);
+    } catch (error) {
+        req.logger.error("cart.controller.js: getLastTicket - Error al obtener los Tickets", error);
+        res.sendServerError(error.message);
+    }
+}

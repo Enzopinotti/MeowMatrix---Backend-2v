@@ -14,7 +14,7 @@ import { baseRouterInstance } from './routes/index.js';
 import compression from 'express-compression'
 import ErrorHandler from './middlewares/error/handler.error.js';
 import { addLogger } from './middlewares/log/handler.log.js';
-import { capitalize, formatDate, formatTime, isAdmin, isNotPremium, isPremium } from './utils/handlebarsHelpers.util.js'
+import { capitalize, checkStock, formatDate, formatPrice, formatTime, isAdmin, isLiked, isNotPremium, isPremium } from './utils/handlebarsHelpers.util.js'
 
 
 const app = express();
@@ -29,7 +29,10 @@ const hbs = handlebars.create({
     isPremium: isPremium,
     capitalize: capitalize,
     formatDate: formatDate,
-    formatTime: formatTime
+    formatTime: formatTime,
+    checkStock: checkStock,
+    formatPrice: formatPrice,
+    isLiked: isLiked
   }
 });
 
@@ -51,7 +54,14 @@ app.use(compression({
 app.use(express.json())
 app.use(express.static(__dirname +'/public'));
 app.use(express.urlencoded( { extended:true } ))
-app.use(cors());
+
+const corsOptions = {
+  origin: 'http://localhost:3000', // Cambia esto al dominio de tu aplicación React
+  credentials: true, // Permite el envío de cookies de origen cruzado
+};
+
+
+app.use(cors(corsOptions));
 app.use(addLogger);
 
 //middleware para utilizar sesiones

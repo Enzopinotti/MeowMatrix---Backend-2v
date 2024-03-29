@@ -155,9 +155,9 @@ export default class CartManager {
         if (result.nModified === 0) {
           throw new Error('No se encontró el carrito o el producto en el carrito.');
         }
-  
+        const newCart = await cartModel.findOne({ _id: id });
         reqLogger.debug(`En cart.mongodb.js: updateProductQuantity - Cantidad de producto en el carrito modificada. Resultado:`, result);
-        return result;
+        return newCart;
       } catch (error) {
         reqLogger.error(`En cart.mongodb.js: updateProductQuantity - Error con id: ${id}, productId: ${productId}`, error);
         throw error;

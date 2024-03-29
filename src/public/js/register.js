@@ -13,8 +13,15 @@ document.getElementById('registerForm').addEventListener('submit', function(even
             'Content-Type': 'application/json'
         }
     })
-    .then(result => result.json())
+    .then(result => {
+        console.log('result: ', result)
+
+        return result.json();
+
+        
+    })
     .then(data => {
+        
         if (data.status === 'success') {
             window.location.href = '/login';
         } else if (data.status === 'userError') {

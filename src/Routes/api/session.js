@@ -1,5 +1,5 @@
 import BaseRouter from '../../routes/router.js';
-import { loginUser, logoutUser, recoveryPassword, registerUser, resetPassword } from '../../controllers/session.controller.js';
+import { getUserByToken, loginUser, logoutUser, recoveryPassword, registerUser, resetPassword, verifyPassword } from '../../controllers/session.controller.js';
 import { showProfile } from '../../controllers/user.controller.js';
 import passport from 'passport';
 
@@ -25,7 +25,17 @@ export default class SessionRouter extends BaseRouter {
 
     this.router.post(
       '/register',
-      passport.authenticate('register'),
+      (req, res, next) => {
+        passport.authenticate('register', (err, user, info) => {
+          if (err) {
+            return next(err);
+          }
+          if (!user) {
+            return res.status(401).json({ status: 'userError', error: info.error });
+          }
+          return res.status(200).json({ status: 'success' });
+        })(req, res, next);
+      },
       registerUser
     );
     //this.router.post('/register-admin', registerAdminUser);
@@ -36,6 +46,8 @@ export default class SessionRouter extends BaseRouter {
       loginUser
     );
 
+    this.router.get('/user-by-token', getUserByToken);
+
     this.router.get('/logout', logoutUser);
 
     this.router.post('/profile', showProfile);
@@ -43,6 +55,8 @@ export default class SessionRouter extends BaseRouter {
     this.router.post('/recoveryPass', recoveryPassword);
       
     this.router.post('/resetPassword', resetPassword);
+
+    this.router.post('/verify-password', verifyPassword);
 
   }
 }

@@ -1,6 +1,4 @@
 import categoryModel from "../daos/mongo/models/category.model.js";
-import { io } from '../app.js';
-
 import * as realTimeProductsServices from '../services/realTimeProducts.service.js';
 
 
@@ -32,7 +30,6 @@ export const postRealTimeProduct = async (req, res) => {
     productData.thumbnails = thumbnails;
     const addedProduct = await realTimeProductsServices.postRealTimeProduct(productData, reqLogger);
     req.logger.debug("En realTimeProducts.controller.js: postRealTimeProduct - Producto añadido en tiempo real. Resultado:", addedProduct);
-    io.emit('product-added', addedProduct);
   } catch (error) {
     req.logger.error("En realTimeProducts.controller.js: postRealTimeProduct - Error:", error);
     res.sendServerError(error);

@@ -11,6 +11,14 @@ export default class ProductManager {
             return { status: "error", error: error.message }
         }
     }
+    getByUserId = async (userId) => {
+        try {
+            const tickets = await ticketModel.find({ purchaser:userId });
+            return tickets;
+        } catch (error) {
+            return { status: "error", error: error.message }
+        }
+    }
     getByCode = async (code) => {
         try {
             const ticket = await ticketModel.findOne({ code });

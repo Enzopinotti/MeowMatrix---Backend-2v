@@ -1,9 +1,45 @@
-<header>
+<header class="header">
 
+    <article class="img-container">
+        <img src="./img/logo_ecommerce.png" alt="logo">
+        <h1 class="nombre-marca">Meow <br>
+        Matrix</h1>
+    </article>
 
-    <h1>Perfil de Usuario</h1>
+    
+    <section class="buttom-primary">
+        {{#if user}}
+            {{#isAdmin user}}
+                <a href="/adminView" class="admin-btn">
+                    <ion-icon name="settings-outline"></ion-icon>
+                    <p>Ventana de Administrador</p>
+                </a>
+            {{/isAdmin}}
 
-    <a href="javascript:history.back()" class="back-btn"><ion-icon name="arrow-back-outline"></ion-icon> Volver </a>
+            {{#isPremium user}}
+                <a href="/myProducts" class="admin-btn">
+                    <ion-icon name="settings-outline"></ion-icon>
+                    <p>Mis Productos</p>
+                </a>
+            {{/isPremium}}
+
+            {{#isNotPremium user}}
+                <a class="premium-btn" onclick="upgradeToPremium(event, {{user._id}})">
+                    <ion-icon name="star-outline"></ion-icon>
+                    <p>Solicitar Premium</p>
+                </a>
+            {{/isNotPremium}}
+        {{/if}}
+
+        <a href="/api/sessions/logout" id="logout-btn">
+            <ion-icon name="log-out-outline"></ion-icon> 
+            <p>Cerrar sesión</p>
+        </a>
+        <a href="javascript:history.back()" class="back-btn">
+        <ion-icon name="arrow-back-outline"></ion-icon> 
+        <p>Volver</p>
+        </a>
+    </section>
 
     
 
@@ -14,13 +50,13 @@
         {{#if user.avatar}}
             <img src="{{ user.avatar }}" alt="Avatar">
         {{else}}
-            <img src="/img/default.jpg" alt="Avatar por defecto">
+            <img src="/img/default2.png" alt="Avatar por defecto">
         {{/if}}
         <div>
             <h2>Información de Perfil</h2>
-            <p><strong>Nombre:</strong> {{ user.name }} {{ user.lastName }}</p>
-            <p><strong>Email:</strong> {{ user.email }}</p>
-            <p><strong>Rol:</strong> {{ user.rol }}</p>
+            <p><strong>Nombre:</strong><br> {{ user.name }} {{ user.lastName }}</p>
+            <p><strong>Email:</strong><br> {{ user.email }}</p>
+            <p><strong>Rol:</strong><br> {{ user.rol }}</p>
         </div>
         <!-- Formulario para cargar el avatar -->
         <form action="/api/users/upload-avatar" method="POST" enctype="multipart/form-data">
@@ -28,10 +64,13 @@
                 <input type="file" id="avatar" name="avatar">
                 <label for="avatar" class="file-input-label">Seleccionar Imagen</label>
             </div>
-            <button type="submit">Subir Avatar</button>
+            <div class="submit-container">
+                <button type="submit">Subir Avatar</button>
+            </div>
+            
         </form>
     </section>
-
+    <br>
     <section>
         <h2>Documentación Para Ser Premium</h2>
         <form action="/api/users/{{ user._id }}/documents" method="POST" enctype="multipart/form-data">
@@ -49,6 +88,17 @@
             </div>
             <button type="submit">Subir Documentos</button>
         </form>
+    </section>
+    <section class="uploaded-documents">
+        <h2 class="section-title">Documentación Cargada</h2>
+        <ul class="document-list">
+            {{#each user.documents}}
+                <li class="document-item">
+                    <strong class="document-reason">{{capitalize this.reason}}:</strong>
+                    <a href="{{this.reference}}" target="_blank" class="view-document-link">Ver documento</a>
+                </li>
+            {{/each}}
+        </ul>
     </section>
 
 </main>

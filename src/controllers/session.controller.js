@@ -1,10 +1,14 @@
-import { comparePasswords, hashPassword, validatePassword } from "../utils.js";
+import { comparePasswords, hashPassword, obtenerTokenDeCookie, validatePassword } from "../utils.js";
 import { generateToken } from "../utils.js";
 import * as sessionServices from '../services/session.service.js';
 import * as userService from '../services/user.service.js';
 import { v4 as uuidv4 } from 'uuid';
 import { sendRecoveryEmail } from "./mail.controller.js";
 import { format } from "morgan";
+import config from '../config/server.config.js'
+import jwt from 'jsonwebtoken';
+
+const PRIVATE_KEY = config.tokenKey;
 
 export const showLogin = (req, res) => {
     console.log('atendido por el worker: ', process.pid)
@@ -67,12 +71,14 @@ export const showReset = async (req, res) => {
 
 export const loginUser = async (req, res) => {
     try {
+        console.log('entré')
         let user = req.user;
         delete user.password;
         await userService.updateLastConnection(user._id);
         const token = generateToken(user);
+        // Devuelve la información del usuario junto con el token de acceso
         res.cookie('access_token', token, { maxAge: 3600000, httpOnly: true, rolling: true });
-        res.sendSuccess('Login successful');
+        res.sendSuccess( user );
     } catch (error) {
         res.sendServerError(error);
     }
@@ -94,13 +100,31 @@ export const logoutUser = async (req, res) => {
     }
 };
 
-export const isAuthenticated = (req, res, next) => {
-    if (req.user) {
-        next();
-    } else {
-        res.sendUnauthorized('Acceso no autorizado');
+export const getUserByToken = async (req, res) => {
+    try {
+
+        const token = obtenerTokenDeCookie(req.headers.cookie);
+        if (!token) {
+            console.log('no encontré el token')
+            throw new Error('Token no encontrado');
+
+        }
+        // Extrae el token del encabezado de autorización
+        const decoded = jwt.verify(token, PRIVATE_KEY);
+        // Decodifica el token JWT
+        const userId = decoded.user._id; // Obtiene la información del usuario utilizando el ID del token
+        const updatedUser = await userService.getUserById(userId, req.logger);
+        if (!updatedUser) {
+            console.log('no encontré el usuario')
+            throw new Error('Usuario no encontrado');
+        }
+        res.sendSuccess(updatedUser); // Envia la información del usuario como respuesta
+    } catch (error) {
+        res.sendUnauthorized(error); // Maneja los errores y envia una respuesta de error
     }
-};
+}
+
+
 
 export const recoveryPassword = async (req, res) => {
     try {
@@ -109,7 +133,6 @@ export const recoveryPassword = async (req, res) => {
 
         // Verificar si el correo electrónico existe en la base de datos
         const user = await userService.getUserByEmail(email, reqLogger);
-        console.log('usuario: ',user);
         if (user == null) {
             // Si el usuario no existe, mostrar un mensaje de error o redirigir a una página de error
             return res.sendNotFound('El usuario no existe');
@@ -121,7 +144,6 @@ export const recoveryPassword = async (req, res) => {
         user.resetPasswordToken = token;
         user.resetPasswordExpires = Date.now() + 3600000; // Token expires in 1 hour
         await user.save();
-        console.log('usuario guardado: ', user)
         // Send recovery email
         await sendRecoveryEmail(email, token);
         req.logger.debug("session.controller.js: recoveryPassword - Email de recuperacion enviado.");
@@ -161,5 +183,24 @@ export const resetPassword = async (req, res) => {
         res.sendSuccess({ message: 'Contraseña actualizada correctamente' });
     } catch (error) {
         res.sendServerError(error);
+    }
+}
+
+export const verifyPassword = async (req, res) => {
+    try {
+        const { userId , password, newPassword } = req.body;
+        console.log('userId: ', userId, 'password: ', password, 'newPassword: ', newPassword)
+        const reqLogger = req.logger;
+        const user = await userService.getUserById(userId, reqLogger);
+        if (!user) {
+            throw new Error('El usuario no existe');
+        }
+        if (await comparePasswords(newPassword, user.password)) {
+            req.logger.error("En session.controller.js: verifyPassword - La contraseña no puede ser igual a la anterior.");
+            throw new Error('La contraseña no puede ser igual a la anterior');
+        }
+        return res.sendSuccess({ passwordMatched: await comparePasswords(password, user.password) }); // Envia la respuesta de validación como respuesta.
+    } catch (error) {
+        res.sendServerError(error.message);
     }
 }

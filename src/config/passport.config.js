@@ -57,20 +57,25 @@ const initializePassport = () => {
     }
   ));
 
-  passport.use( 'login', 
-    new LocalStrategy({usernameField: 'email'}, async (username, password, done) => {
-        try {
-          let user = await userModel.findOne({email: username});
-          if(!user){
+  passport.use('login', new LocalStrategy({ usernameField: 'email' }, async (email, password, done) => {
+    try {
+        // Buscar usuario por correo electrónico
+        let user = await userModel.findOne({ email: email });
+        if (!user) {
+            // Si no se encuentra el usuario, la autenticación falla
             return done(null, false);
-          }
-          return done(null, user);
-        } catch (error) {
-          return done(error);
-        };
-      }
-    )
-  );
+        }
+        // Verificar la contraseña utilizando la función isValidPassword
+        if (!isValidPassword(password, user)) {
+            // Si las contraseñas no coinciden, la autenticación falla
+            return done(null, false);
+        }
+        // Si la contraseña coincide, la autenticación es exitosa
+        return done(null, user);
+    } catch (error) {
+        return done(error);
+    }
+}));
   
   passport.use(
     "github",

@@ -34,6 +34,18 @@ export const getUserById = async (userId, reqLogger) => {
   }
 };
 
+export const getUserByIdWithLikes = async (userId, reqLogger) => {
+  try {
+    console.log("En user.service.js: getUserByIdWithLikes - userId:", userId);
+    const user = await UserDao.getByIdWithLikes(userId);
+    reqLogger.debug("En user.service.js: getUserByIdWithLikes - Usuario obtenido por ID de la base de datos.");
+    return user;
+  } catch (error) {
+    reqLogger.error("En user.service.js: getUserByIdWithLikes - Error al obtener usuario por ID:", error);
+    throw error;
+  }
+}
+
 export const getUserByEmail = async (email, reqLogger) => {
   try {
     const user = await UserDao.getByEmail(email, reqLogger);
@@ -99,6 +111,7 @@ export const updateUser = async (userId, userData, reqLogger) => {
   try {
       const userDTO = new UserDTO(
           userData.name,
+          userData.lastName,
           userData.email,
           userData.password,
           userData.birthDate,
@@ -108,12 +121,22 @@ export const updateUser = async (userId, userData, reqLogger) => {
 
       userDTO.validate(); // Realiza las validaciones definidas en UserDTO
       const userObject = userDTO.toObject(); // Obtiene el objeto formateado
-
-      const updatedUser = await UserDao.update(userId, userObject, reqLogger);
+        console.log('userObject: ',userObject);
+      const updatedUser = await UserDao.update(userId, userObject);
       reqLogger.debug("En user.service.js: updatedUser - Usuario actualizado.");
       return updatedUser;
   } catch (error) {
       reqLogger.error("En user.service.js: updatedUser - Error al actualizar usuario:", error);
+      throw error;
+  }
+};
+
+export const updateAvatar = async (userId, imagePath, reqLogger) => {
+  try {
+    await UserDao.updateAvatar(userId, imagePath, reqLogger);
+    reqLogger.debug(`En user.service.js: updateAvatar - Avatar del usuario con ID ${userId} actualizado.`);
+  } catch (error) {
+    reqLogger.error(`En user.service.js: updateAvatar - Error al actualizar avatar del usuario con ID ${userId}: ${error.message}`);
       throw error;
   }
 };
@@ -131,23 +154,36 @@ export const uploadDocuments = async (userId, files , reqLogger) => {
     }));
     console.log(documentReferences);
 
-    await UserDao.addDocuments(user, documentReferences, reqLogger);
+    const userUpdated = await UserDao.addDocuments(user, documentReferences, reqLogger);
 
     reqLogger.debug(`En user.service.js: uploadDocuments - Documentos cargados para el usuario con ID ${userId}.`);
-
+    return userUpdated;
   } catch (error) {
     reqLogger.error(`En user.service.js: uploadDocuments - Error al cargar documentos para el usuario con ID ${userId}: ${error.message}`);
     throw error;
   }
 };
 
-export const updateAvatar = async (userId, imagePath, reqLogger) => {
+
+
+export const handleLike = async (userId, productId, reqLogger) => {
   try {
-    await UserDao.updateAvatar(userId, imagePath, reqLogger);
-    reqLogger.debug(`En user.service.js: updateAvatar - Avatar del usuario con ID ${userId} actualizado.`);
+    const user = await UserDao.handleLike(userId, productId);
+    return user; // Devolvemos el valor de 'liked' al controlador
   } catch (error) {
-    reqLogger.error(`En user.service.js: updateAvatar - Error al actualizar avatar del usuario con ID ${userId}: ${error.message}`);
-      throw error;
+    reqLogger.error(`En user.service.js: handleLike - Error al manejar el like para el usuario con ID ${userId} y producto con ID ${productId}: ${error.message}`);
+    throw error;
+  }
+}
+
+export const deleteLike = async (userId, productId, logger) => {
+  try {
+      // Lógica para eliminar el like/dislike asociado al producto en la base de datos
+      console.log("userId:", userId);
+      await UserDao.deleteLike(userId, productId);
+  } catch (error) {
+      logger.error("Error en userService.deleteLike:", error.message);
+      throw new Error("Error al eliminar el like/dislike en el servicio");
   }
 };
 

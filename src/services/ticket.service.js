@@ -43,7 +43,7 @@ export const calculateTotalAmount = async (purchasedProducts, reqLogger) => {
     try {
       // Recorre los productos comprados y calcula el monto total
       let totalAmount = 0;
-      reqLogger.debug("Ticket.service.js: calculateTotalAmount - Pasó con: ", purchasedProducts);
+      reqLogger.debug("Ticket.service.js: calculateTotalAmount - Pasó.");
       for (const purchasedProduct of purchasedProducts) {
         // Obtén el producto desde la base de datos
         const product = await ProductDao.getById(purchasedProduct._id, reqLogger);
@@ -54,7 +54,7 @@ export const calculateTotalAmount = async (purchasedProducts, reqLogger) => {
           totalAmount += productAmount;
         }
       }
-      reqLogger.debug("Ticket.service.js: calculateTotalAmount - terminó con : ", totalAmount);
+      reqLogger.debug("Ticket.service.js: calculateTotalAmount - terminó.");
       return totalAmount;
     } catch (error) {
       throw new Error('Error calculating total amount');
@@ -81,6 +81,17 @@ export const createTicket = async (ticketData) => {
       throw new Error('Error creating ticket');
     }
 };
+
+export const getUserTicket = async (userId, reqLogger) => {
+  try {
+      const userTicket = await TicketDao.getByUserId(userId);
+      reqLogger.debug("Ticket.service.js: getUserTicket - Pasó. ");
+      return userTicket;
+  } catch (error) {
+      throw new Error('Error al obtener el ticket del usuario');
+  }
+}
+
 
 export const getLatestTicket = async (reqLogger) => {
   try {
