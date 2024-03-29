@@ -9,7 +9,6 @@ import session from 'express-session';
 import MongoStore from 'connect-mongo';
 import cookieParser from 'cookie-parser';
 import config from './config/server.config.js';
-import  { routerGeneral, baseRouterInstance } from '../src/routes/'; 
 import { routerGeneral } from './routes/index.js';
 import { baseRouterInstance } from './routes/index.js';
 import compression from 'express-compression'
