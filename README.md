@@ -32,13 +32,13 @@ MongoDB Atlas o una base de datos local configurada.
 
 ### Funcionalidades Principales
 
-Autenticación: Incluye la autenticación local y con GitHub. Las rutas de autenticación se encuentran en el directorio /routes/views.
+Autenticación: Incluye la autenticación local y con GitHub. Las rutas de autenticación se encuentran en el directorio /Routes/views.
 
 Persistencia de Datos: Utiliza MongoDB para almacenar datos. La configuración y la conexión a la base de datos están en el archivo database.js.
 
 Manejo de Sesiones: Se implementa el manejo de sesiones con Express y se utiliza express-session en conjunto con connect-mongo para almacenar las sesiones en MongoDB.
 
-Rutas API: La aplicación cuenta con diversas rutas API para usuarios, productos, categorías, carritos, sesiones y mensajes. Estas rutas se encuentran en el directorio /routes/api.
+Rutas API: La aplicación cuenta con diversas rutas API para usuarios, productos, categorías, carritos, sesiones y mensajes. Estas rutas se encuentran en el directorio /Routes/api.
 
 ### Contribución
 

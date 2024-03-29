@@ -1,4 +1,4 @@
-import BaseRouter from '../../routes/router.js';
+import BaseRouter from '../../Routes/router.js';
 import { getUserByToken, loginUser, logoutUser, recoveryPassword, registerUser, resetPassword, verifyPassword } from '../../controllers/session.controller.js';
 import { showProfile } from '../../controllers/user.controller.js';
 import passport from 'passport';
