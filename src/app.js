@@ -1,7 +1,6 @@
 import http from 'http';
 import dotenv from 'dotenv';
 import config from './config/server.config.js';
-import productModel from './daos/mongo/models/product.model.js';
 import app from './index.js';
 import cluster from 'cluster';
 import { cpus } from 'os'; 
@@ -13,8 +12,14 @@ const mode = config.mode;
 
 const server = http.createServer(app);
 
-
-
+if (port) {
+  server.listen(port, () => {
+    console.log(`El servidor está escuchando en el puerto ${port} en modo ${mode}`);
+  });
+} else {
+  console.log("No hay variables de entorno configuradas");
+}
+/*
 if (cluster.isPrimary) {
   console.log(`Primary ${process.pid} is running`);
   const numCPUs = cpus().length;
@@ -32,12 +37,6 @@ if (cluster.isPrimary) {
 
 } else {
   console.log(`Soy el worker ${process.pid} y te hablo desde el servidor`)
-  if (port) {
-    server.listen(port, () => {
-      console.log(`El servidor está escuchando en el puerto ${port} en modo ${mode}`);
-    });
-  } else {
-    console.log("No hay variables de entorno configuradas");
-  }
   
-}
+  
+}*/
