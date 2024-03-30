@@ -79,7 +79,6 @@ export const sendRecoveryEmail = async (email, token) => {
                 <p>Atentamente,<br>El equipo de Meow Matrix</p>
             `,
         };
-
         const result = await transport.sendMail(mailOptions);
         return result;
     } catch (error) {
