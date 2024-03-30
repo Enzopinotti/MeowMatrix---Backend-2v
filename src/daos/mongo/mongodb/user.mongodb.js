@@ -90,6 +90,31 @@ export default class UserManager {
         }
     }
 
+     deleteInactive = async (reqLogger) => {
+        try {
+            const twoDaysAgo = new Date();
+            twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+    
+            // Obtener usuarios inactivos
+            const inactiveUsers = await userModel.find({ last_connection: { $lt: twoDaysAgo } });
+    
+            // Guardar los usuarios inactivos en una variable
+            const usersToDelete = inactiveUsers.map(user => user._id);
+    
+            // Puedes imprimir los usuarios inactivos aquí para verificar antes de eliminarlos
+            console.log('Usuarios inactivos:', inactiveUsers);
+    
+            // Eliminar usuarios inactivos
+            // const result = await userModel.deleteMany({ _id: { $in: usersToDelete } });
+            // return result;
+    
+            // Temporalmente devolvemos los usuarios inactivos para verificación
+            return inactiveUsers;
+        } catch (error) {
+            reqLogger.error("En user.mongodb.js: deleteInactive - Error al eliminar usuarios inactivos:", error.message);
+            throw error;
+        }
+    };
     getByEmail = async (email) => {
         try {
             const user = await userModel.findOne({ email });

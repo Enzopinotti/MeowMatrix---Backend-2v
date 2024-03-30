@@ -2,7 +2,7 @@ import { registerUser } from '../controllers/session.controller.js';
 import { 
   UploadDocuments,
   deleteLike,
-  deleteUser, getUserByEmail, getUserById, getUsers, handleLike, obtenerFavoritos, postUser, updateUser, requestPremium, uploadAvatar, handlePremium 
+  deleteUser, getUserByEmail, getUserById, getUsers, handleLike, obtenerFavoritos, postUser, updateUser, requestPremium, uploadAvatar, handlePremium, handleDeleteInactiveUsers 
 } from '../controllers/user.controller.js';
 import { authorization, uploader } from '../utils.js';
 import BaseRouter from './router.js';
@@ -15,6 +15,7 @@ export default class UserRouter extends BaseRouter {
     this.router.get('/likes', obtenerFavoritos )
     this.router.get('/email/:userEmail', getUserByEmail);
     this.router.get('/:userId', getUserById);
+    this.router.delete('/inactive', handleDeleteInactiveUsers);
     this.router.delete('/:userId', deleteUser);
     this.router.put('/premium', requestPremium);
     this.router.post('/premium/:userId', handlePremium)

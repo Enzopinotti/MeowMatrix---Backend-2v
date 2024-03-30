@@ -107,6 +107,15 @@ export const deleteUser = async (userId, reqLogger) => {
   }
 };
 
+export const deleteInactiveUsers = async (reqLogger) => {
+  try {
+      const result = await UserDao.deleteInactive(reqLogger);
+      return result;
+  } catch (error) {
+      throw new Error('Error al eliminar usuarios inactivos.');
+  }
+};
+
 export const updateUser = async (userId, userData, reqLogger) => {
   try {
       const userDTO = new UserDTO(

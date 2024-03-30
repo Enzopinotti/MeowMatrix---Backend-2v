@@ -1,8 +1,6 @@
 import { comparePasswords, hashPassword, obtenerTokenDeCookie, validatePassword } from "../utils.js";
 import { generateToken } from "../utils.js";
-import * as sessionServices from '../services/session.service.js';
 import * as userService from '../services/user.service.js';
-import { v4 as uuidv4 } from 'uuid';
 import { sendRecoveryEmail } from "./mail.controller.js";
 import { format } from "morgan";
 import config from '../config/server.config.js'
@@ -131,14 +129,12 @@ export const recoveryPassword = async (req, res) => {
         const { email } = req.body;
         const reqLogger = req.logger;
 
-        // Verificar si el correo electrónico existe en la base de datos
+        
         const user = await userService.getUserByEmail(email, reqLogger);
         if (user == null) {
-            // Si el usuario no existe, mostrar un mensaje de error o redirigir a una página de error
             return res.sendNotFound('El usuario no existe');
         }
         req.logger.debug("session.controller.js: recoveryPassword - Usuario encontrado.");
-        // Generar un token único para el usuario (puedes usar una biblioteca como `uuid` para esto)
         const token = generateToken(user);
         req.logger.debug("session.controller.js: recoveryPassword - Token Generado.");
         user.resetPasswordToken = token;

@@ -1,8 +1,7 @@
-import { v4 as uuidv4 } from 'uuid';
 import { TicketDao } from '../daos/factory.js';
 import { ProductDao } from '../daos/factory.js';
-import { CartDao } from '../daos/factory.js';
 import  TicketDto  from '../daos/DTOs/ticket.dto.js';
+import { generateToken } from '../utils.js';
 
 
 export const getTickets = async () => {
@@ -28,7 +27,7 @@ export const getTicketByCode = async (ticketCode) => {
 export const generateUniqueTicketCode = async () => {
     try {
         
-        const ticketCode = uuidv4();
+        const ticketCode = generateToken();
         const ticket = await TicketDao.getByCode(ticketCode);
         if (ticket) {
             return generateUniqueTicketCode();

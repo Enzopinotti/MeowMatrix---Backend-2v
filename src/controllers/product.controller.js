@@ -5,7 +5,6 @@ export const getProducts = async (req, res) => {
     try {
         const { page = 1, limit = 6, sort, query } = req.query;
         const reqLogger = req.logger;
-        console.log('page: ', page)
         const { products, totalDocs } = await productServices.getProductsView(page, limit, sort, query, reqLogger);
         
         reqLogger.debug("product.controller.js: getProducts - productos obtenidos correctamente");

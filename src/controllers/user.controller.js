@@ -6,6 +6,7 @@ import jwt from 'jsonwebtoken';
 import fs from 'fs';
 import path from 'path';
 import { __dirname } from '../utils.js';
+import { sendInactiveAccountEmail } from './mail.controller.js';
 
 const PRIVATE_KEY = config.tokenKey;
 
@@ -51,15 +52,22 @@ export const showAdminView = async (req, res) => {
 }
 
 
-
 export const getUsers = async (req, res) => {
-  console.log(req.query.page)
   const { page = 1, limit = 7 } = req.query;
   const reqLogger = req.logger;
+  
   try {
-    const { users, totalDocs } = await userService.getUsersView(page, limit, reqLogger);  
-    res.sendSuccess({ users, totalDocs })
+    const { users, totalDocs } = await userService.getUsersView(page, limit, reqLogger);
 
+    // Crear una nueva lista de usuarios sin incluir la contraseña
+    const simplifiedUsers = users.docs.map(doc => {
+      const user = doc.toObject(); // Convertir el documento a un objeto plano
+      const { password, ...simplifiedUser } = user;
+      return simplifiedUser;
+    });
+
+    // Envía la respuesta sin incluir la contraseña
+    res.sendSuccess({ users: { docs: simplifiedUsers }, totalDocs });
   } catch (error) {
     req.logger.error("En user.controller.js: getUsers -  Error al obtener usuarios:", error.message);
     res.sendServerError(error.message);
@@ -166,6 +174,25 @@ export const deleteUser = async (req, res) => {
     res.sendServerError(error.message);
   }
 };
+
+export const handleDeleteInactiveUsers = async (req, res) => {
+  const reqLogger = req.logger;
+  try {
+      const deletedUsers = await userService.deleteInactiveUsers(reqLogger);
+      reqLogger.debug("En user.controller.js: handleDeleteInactiveUsers - Usuarios inactivos eliminados con éxito:", deletedUsers);
+
+      // Envía un correo electrónico a cada usuario eliminado
+      for (const user of deletedUsers) {
+        await sendInactiveAccountEmail(user.email, user.name);
+      }
+
+      res.sendSuccess(deletedUsers);
+  } catch (error) {
+      reqLogger.error("En user.controller.js: handleDeleteInactiveUsers - Error al eliminar usuarios inactivos:", error.message);
+      res.sendServerError(error.message);
+  }
+};
+
 
 export const updateUser = async (req, res) => {
   try {

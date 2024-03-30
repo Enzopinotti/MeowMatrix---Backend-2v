@@ -22,7 +22,6 @@ export default class ProductManager {
                 sort: sort,
             };
             const result = await productModel.paginate(query, options);
-            console.log('Result: ',result);
             reqLogger.debug("En product.mongodb.js: getView - Vista de productos obtenida");
             return result;
         } catch (error) {
