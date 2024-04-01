@@ -6,7 +6,6 @@ import {
 } from '../controllers/user.controller.js';
 import { authorization, uploader } from '../utils.js';
 import BaseRouter from './router.js';
-import passport from 'passport';
 
 export default class UserRouter extends BaseRouter {
   init() {

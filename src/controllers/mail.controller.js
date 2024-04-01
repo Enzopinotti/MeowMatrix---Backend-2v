@@ -86,3 +86,92 @@ export const sendRecoveryEmail = async (email, token) => {
         return error;
     }
 };
+
+export const sendPremiumAcceptanceEmail = async (to, userName) => {
+    try {
+        const mailOptions = {
+            from: emailConfig.emailUser,
+            to,
+            subject: '¡Tu solicitud de Premium ha sido aceptada!',
+            html: `
+                <p>Hola ${userName},</p>
+                <p>¡Felicitaciones! Tu solicitud de Premium ha sido aceptada.</p>
+                <p>A partir de ahora, disfrutarás de todos los beneficios y características premium que ofrecemos. ¡Gracias por tu confianza en nosotros!</p>
+                <p>Si tienes alguna pregunta o necesitas asistencia, no dudes en ponerte en contacto con nuestro equipo de soporte.</p>
+                <p>¡Esperamos que disfrutes de tu experiencia premium!</p>
+                <p>Atentamente,<br>El equipo de Meow Matrix</p>
+            `,
+        };
+        const result = await transport.sendMail(mailOptions);
+        return result;
+    } catch (error) {
+        console.error('Error al enviar el correo electrónico de aceptación de premium:', error);
+        throw error;
+    }
+};
+
+export const sendPremiumRejectionEmail = async (to, userName) => {
+    try {
+        const mailOptions = {
+            from: emailConfig.emailUser,
+            to,
+            subject: 'Tu solicitud de Premium ha sido rechazada',
+            html: `
+                <p>Hola ${userName},</p>
+                <p>Lamentablemente, tu solicitud de Premium ha sido rechazada.</p>
+                <p>Si tienes alguna pregunta o necesitas más información sobre por qué se rechazó tu solicitud, no dudes en ponerte en contacto con nuestro equipo de soporte. Estamos aquí para ayudarte.</p>
+                <p>Gracias por tu interés en nuestros servicios.</p>
+                <p>Atentamente,<br>El equipo de Meow Matrix</p>
+            `,
+        };
+        const result = await transport.sendMail(mailOptions);
+        return result;
+    } catch (error) {
+        console.error('Error al enviar el correo electrónico de rechazo de premium:', error);
+        throw error;
+    }
+};
+
+export const sendUserDeletionEmail = async (to, userName) => {
+    try {
+        const mailOptions = {
+            from: emailConfig.emailUser,
+            to,
+            subject: 'Tu cuenta ha sido eliminada',
+            html: `
+                <p>Hola ${userName},</p>
+                <p>Queríamos informarte que tu cuenta ha sido eliminada.</p>
+                <p>Si tienes alguna pregunta o necesitas más información sobre esta acción, no dudes en ponerte en contacto con nuestro equipo de soporte. Estamos aquí para ayudarte.</p>
+                <p>Gracias por tu comprensión.</p>
+                <p>Atentamente,<br>El equipo de Meow Matrix</p>
+            `,
+        };
+        const result = await transport.sendMail(mailOptions);
+        return result;
+    } catch (error) {
+        console.error('Error al enviar el correo electrónico de eliminación de usuario:', error);
+        throw error;
+    }
+};
+
+export const sendProductDeletionEmail = async (to, productName) => {
+    try {
+        const mailOptions = {
+            from: emailConfig.emailUser,
+            to,
+            subject: 'Tu producto ha sido eliminado',
+            html: `
+                <p>Hola,</p>
+                <p>Queríamos informarte que tu producto "${productName}" ha sido eliminado.</p>
+                <p>Si tienes alguna pregunta o necesitas más información sobre esta acción, no dudes en ponerte en contacto con nuestro equipo de soporte. Estamos aquí para ayudarte.</p>
+                <p>Gracias por tu comprensión.</p>
+                <p>Atentamente,<br>El equipo de Meow Matrix</p>
+            `,
+        };
+        const result = await transport.sendMail(mailOptions);
+        return result;
+    } catch (error) {
+        console.error('Error al enviar el correo electrónico de eliminación de producto:', error);
+        throw error;
+    }
+};

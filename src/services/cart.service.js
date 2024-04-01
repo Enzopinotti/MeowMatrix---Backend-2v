@@ -49,10 +49,19 @@ export const addToCurrentCart = async (userId, productId, reqLogger) => {
     const existingCart = await CartDao.getByUserId(userId, reqLogger);
     const product = await ProductDao.getById(productId, reqLogger);
     const user = await UserDao.getById(userId, reqLogger);
-    if( product.owner === user.email){
+
+    // Verifica si el usuario es un administrador
+    if (user.rol === 'admin') {
+      reqLogger.error("En cart.service.js: addToCurrentCart - Error: Los administradores no pueden agregar productos al carrito.");
+      throw new Error("Los administradores no pueden agregar productos al carrito.");
+    }
+
+    // Verifica si el producto pertenece al usuario actual
+    if (product.owner === user.email) {
       reqLogger.error("En cart.service.js: addToCurrentCart - Error: El producto es propio del usuario.");
       throw new Error("El producto es propio del usuario.");
     }
+
     if (existingCart.status === 'success') {
       // Si el usuario tiene un carrito existente, agrega el producto al carrito actual
       const result = await CartDao.addProduct(existingCart.payload._id, product, reqLogger);
@@ -70,6 +79,7 @@ export const addToCurrentCart = async (userId, productId, reqLogger) => {
     throw error;
   }
 };
+
 
 export const addProductToCart = async (cartId, productId, reqLogger) => {
   try {

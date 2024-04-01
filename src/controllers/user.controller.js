@@ -6,7 +6,7 @@ import jwt from 'jsonwebtoken';
 import fs from 'fs';
 import path from 'path';
 import { __dirname } from '../utils.js';
-import { sendInactiveAccountEmail } from './mail.controller.js';
+import { sendInactiveAccountEmail, sendPremiumAcceptanceEmail, sendPremiumRejectionEmail, sendUserDeletionEmail } from './mail.controller.js';
 
 const PRIVATE_KEY = config.tokenKey;
 
@@ -166,12 +166,16 @@ export const deleteUser = async (req, res) => {
   const userId = req.params.userId;
   const reqLogger = req.logger;
   try {
-    const result = await userService.deleteUser(userId, reqLogger);
-    req.logger.debug("En user.controller.js: deleteUser -  Usuario eliminado con éxito:", result);
-    res.sendSuccess(result);
+      const user = await userService.deleteUser(userId, reqLogger);
+
+      // Envía un correo electrónico de notificación de eliminación de usuario
+      await sendUserDeletionEmail(user.email, user.name);
+
+      reqLogger.debug("En user.controller.js: deleteUser -  Usuario eliminado con éxito:", user);
+      res.sendSuccess(user);
   } catch (error) {
-    req.logger.error("En user.controller.js: deleteUser - Error al eliminar usuario:", error.message);
-    res.sendServerError(error.message);
+      reqLogger.error("En user.controller.js: deleteUser - Error al eliminar usuario:", error.message);
+      res.sendServerError(error.message);
   }
 };
 
@@ -342,33 +346,36 @@ export const requestPremium = async (req, res) => {
 };
 
 export const handlePremium = async (req, res) => {
-
   const reqLogger = req.logger;
   const { userId }= req.params;
   const { action } = req.body;
   
-  try{
-    const user = await userService.getUserById(userId, reqLogger);
-    if(!user){
-      return res.sendNotFound('Usuario no encontrado');
-    }
-    if(action === 'accept'){
-      user.rol = 'premium';
-      user.wantPremium = false;
-      await user.save();
-      return res.sendSuccess(user);
-    }else if(action === 'reject'){
-      user.rol = 'usuario';
-      user.wantPremium = false;
-      await user.save();
-      return res.sendSuccess(user);
-    }else{
-      return res.sendServerError('Acción no válida');
-    }
-  } catch(error){
-    console.error('Error al actualizar el rol del usuario:', error);
-    return res.sendServerError('Error al actualizar el rol del usuario.');
-  }
+  try {
+      const user = await userService.getUserById(userId, reqLogger);
+      if (!user) {
+          return res.sendNotFound('Usuario no encontrado');
+      }
+      if (action === 'accept') {
+          user.rol = 'premium';
+          user.wantPremium = false;
+          await user.save();
 
-}
+          // Envía un correo electrónico de aceptación de premium
+          await sendPremiumAcceptanceEmail(user.email, user.name);
+
+          return res.sendSuccess(user);
+      } else if (action === 'reject') {
+          user.rol = 'usuario';
+          user.wantPremium = false;
+          await user.save();
+          await sendPremiumRejectionEmail(user.email, user.name);
+          return res.sendSuccess(user);
+      } else {
+          return res.sendServerError('Acción no válida');
+      }
+  } catch (error) {
+      console.error('Error al actualizar el rol del usuario:', error);
+      return res.sendServerError('Error al actualizar el rol del usuario.');
+  }
+};
 

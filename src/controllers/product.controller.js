@@ -1,5 +1,9 @@
 import * as productServices from "../services/product.service.js";
-import * as categoryServices from '../services/category.service.js'
+import * as categoryServices from '../services/category.service.js';
+import config from '../config/server.config.js';
+import jwt from 'jsonwebtoken';
+
+const PRIVATE_KEY = config.tokenKey;
 
 export const getProducts = async (req, res) => {
     try {
@@ -140,6 +144,22 @@ export const getProductCreateView = async (req, res) => {
     }
 
 }
+
+export const getMyProducts = async (req, res) => {
+    const reqLogger = req.logger;
+    const token = obtenerTokenDeCookie(req.headers.cookie);
+    const decoded = jwt.verify(token, PRIVATE_KEY);
+    const user = decoded.user
+    try {
+        const products = await productServices.getMyProducts(user.email, reqLogger);
+        req.logger.debug("product.controller.js: getMyProducts - Productos obtenidos por usuario");
+        res.sendSuccess(products);
+    } catch (error) {
+        req.logger.error("product.controller.js: getMyProducts - Error al obtener productos por usuario:", error);
+        res.sendServerError(error.message);
+    }
+}
+
 export const getProductById  = async (req, res) => {
     const productId = req.params.productId;
     const reqLogger = req.logger;
@@ -191,18 +211,27 @@ export const updateProduct = async (req, res) => {
 export const deleteProduct = async (req, res) => {
     const productId = req.params.pid;
     const reqLogger = req.logger;
+    
     try {
-        const productEliminated = await productServices.deleteProduct(productId, reqLogger);
+        const product = await productServices.getProductsByIds(productId, reqLogger);
 
-        if (!productEliminated) {
-            req.logger.warn("product.controller.js: deleteProduct - Producto no encontrado para eliminar con ID:", productId);
+        if (!product) {
+            reqLogger.warn("product.controller.js: deleteProduct - Producto no encontrado para eliminar con ID:", productId);
             return res.sendNotFound({ message: 'Producto no encontrado' });
         }
 
-        req.logger.debug("product.controller.js: deleteProduct - Producto eliminado con exito.");
+        // Verificar si el producto pertenece a un usuario premium
+        if (product.owner !== 'admin') {
+            // Producto pertenece a un usuario, enviar correo electrónico al usuario premium
+            await sendProductDeletionEmail(product.owner, product.name);
+        }
+
+        const productEliminated = await productServices.deleteProduct(productId, reqLogger);
+
+        reqLogger.debug("product.controller.js: deleteProduct - Producto eliminado con exito.");
         res.sendSuccess(productEliminated);
     } catch (error) {
-        req.logger.error("product.controller.js: deleteProduct - Error al eliminar producto:", error);
+        reqLogger.error("product.controller.js: deleteProduct - Error al eliminar producto:", error);
         res.sendServerError(error.message);
     }
 };
