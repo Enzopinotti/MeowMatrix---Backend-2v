@@ -70,7 +70,6 @@ export const routerGeneral = (app)=> {
     app.use('/api/products', productRouter);
     app.use('/api/categories', categoryRouter);
     app.use('/api/sessions', sessionRouter);
-    app.use('/', viewsRouter);
     app.use('/api/mail', mailRouter);
     app.use('/api/mock', mockRouter);
     app.use('/api/tests', testRouter);

@@ -1,5 +1,4 @@
 import express from 'express';
-import handlebars from 'express-handlebars';
 import  initializePassport  from './config/passport.config.js';
 import cors from 'cors';
 import "./daos/factory.js"
@@ -14,36 +13,13 @@ import { baseRouterInstance } from './Routes/index.js';
 import compression from 'express-compression'
 import ErrorHandler from './middlewares/error/handler.error.js';
 import { addLogger } from './middlewares/log/handler.log.js';
-import { capitalize, checkStock, formatDate, formatPrice, formatTime, isAdmin, isLiked, isNotPremium, isPremium } from './utils/handlebarsHelpers.util.js'
+import path from 'path';
+
+
 
 
 const app = express();
-const hbs = handlebars.create({
-  runtimeOptions: {
-    allowProtoPropertiesByDefault: true,
-    allowProtoMethodsByDefault: true,
-  },
-  helpers: {
-    isAdmin: isAdmin,
-    isNotPremium: isNotPremium,
-    isPremium: isPremium,
-    capitalize: capitalize,
-    formatDate: formatDate,
-    formatTime: formatTime,
-    checkStock: checkStock,
-    formatPrice: formatPrice,
-    isLiked: isLiked
-  }
-});
 
-
-
-
-//Inicializo el motor de plantillas handlebars 
-app.engine('handlebars', hbs.engine);
-app.set('views', __dirname + '/views');
-//luego de indicar donde estarán las vistas, se indica el motor de plantillas a utilizar
-app.set('view engine', 'handlebars');
 
 app.use(compression({
     brotli: {
@@ -52,7 +28,6 @@ app.use(compression({
     },
 }));
 app.use(express.json())
-app.use(express.static(__dirname +'/public'));
 app.use(express.urlencoded( { extended:true } ))
 
 const corsOptions = {
@@ -86,7 +61,7 @@ app.use(
 
 initializePassport();
 app.use(passport.initialize());
-
+app.use(express.static(__dirname +'/public'));
 app.use(passport.session());
 
 //middleware para manejo de errores

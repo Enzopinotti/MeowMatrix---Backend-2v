@@ -323,7 +323,7 @@ export const purchaseCart = async (req, res) => {
             host: req.get('host'),
         });
         req.logger.debug("cart.controller.js: purchaseCart - Compra realizada con exito.");
-        res.redirect(`${serverUrl}/ticket`);
+        res.sendSuccess()
     } catch (error) {
         req.logger.error("cart.controller.js: purchaseCart - Error en purchaseCart:", error);
         res.sendServerError({ status: 'error', message: error.message });
