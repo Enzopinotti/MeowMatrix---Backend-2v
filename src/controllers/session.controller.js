@@ -73,9 +73,10 @@ export const loginUser = async (req, res) => {
         let user = req.user;
         delete user.password;
         await userService.updateLastConnection(user._id);
-        const token = generateToken(user);
+        const token = generateToken(user)
         // Devuelve la información del usuario junto con el token de acceso
         res.cookie('access_token', token, { maxAge: 3600000, httpOnly: true, rolling: true });
+
         res.sendSuccess( user );
     } catch (error) {
         res.sendServerError(error);
