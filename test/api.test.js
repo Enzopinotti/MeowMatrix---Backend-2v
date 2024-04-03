@@ -6,7 +6,7 @@ await connectDB()
 
 const expect = chai.expect;
 
-const requester = supertest('http://localhost:8080');
+const requester = supertest('https://meowmatrix-backend-2v-production.up.railway.app');
 
 describe('Testing de la API Ecommerce', ()=>{
     

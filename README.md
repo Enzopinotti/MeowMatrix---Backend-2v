@@ -28,7 +28,7 @@ MongoDB Atlas o una base de datos local configurada.
 ## Uso
 
 1. Inicia la aplicación: npm start
-2. Accede a [LocalHost](http://localhost:8080) en tu navegador.
+2. Accede a [LocalHost](https://meowmatrix-backend-2v-production.up.railway.app) en tu navegador.
 
 ### Funcionalidades Principales
 
