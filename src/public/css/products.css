@@ -284,6 +284,7 @@ body{
 }
 .product-header {
     display: flex;
+    width: 100%;
 }
 
 .favorite-button{

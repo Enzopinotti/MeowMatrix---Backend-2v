@@ -2,12 +2,16 @@ import * as productServices from "../services/product.service.js";
 import * as categoryServices from '../services/category.service.js';
 import config from '../config/server.config.js';
 import jwt from 'jsonwebtoken';
+import { obtenerTokenDeCookie } from "../utils.js";
+import fs from 'fs';
+import path from 'path';
+
 
 const PRIVATE_KEY = config.tokenKey;
 
 export const getProducts = async (req, res) => {
     try {
-        const { page = 1, limit = 6, sort, query } = req.query;
+        const { page = 1, limit = 12, sort, query } = req.query;
         const reqLogger = req.logger;
         const { products, totalDocs } = await productServices.getProductsView(page, limit, sort, query, reqLogger);
         
@@ -163,6 +167,7 @@ export const getMyProducts = async (req, res) => {
 export const getProductById  = async (req, res) => {
     const productId = req.params.productId;
     const reqLogger = req.logger;
+    
     try {
         const product = await productServices.getProductsByIds(productId, reqLogger);
         if (!product) {
@@ -178,8 +183,30 @@ export const getProductById  = async (req, res) => {
 }
 
 export const createProduct = async (req, res) => {
+    console.log('entre')
     const productData = req.body;
     const reqLogger = req.logger;
+    const token = obtenerTokenDeCookie(req.headers.cookie);
+    const decoded = jwt.verify(token, PRIVATE_KEY);
+    const user = decoded.user
+
+    if (!req.file) {
+        req.logger.error("En user.controller.js: uploadAvatar - No se ha seleccionado ningún archivo al subir el avatar");
+        return res.sendUserError('No se ha seleccionado ningún archivo.');
+    }
+    if(user.rol = 'admin'){
+        productData.owner = 'admin';
+    }else{
+        productData.owner = user.email;
+    }
+    console.log('files: ', req.file)
+    const productImg = `/img/products/${req.file.filename}`;
+
+    if (!productData.thumbnails) {
+        productData.thumbnails = [productImg];
+    } else {
+        productData.thumbnails.push(productImg);
+    }
     try {
         const addedProduct = await productServices.createProduct(productData, reqLogger);
         req.logger.debug("product.controller.js: createProduct - Producto creado con exito.");

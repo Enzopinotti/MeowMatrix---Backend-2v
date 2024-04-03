@@ -13,6 +13,20 @@ export default class CategoryManager {
             throw error;
         }
     }
+    getView = async (page, limit, reqLogger) => {
+        try {
+          const options = {
+            page: parseInt(page),
+            limit: parseInt(limit),
+          };
+          const result = await categoryModel.paginate({}, options); 
+          reqLogger.debug("En category.mongodb.js: getView - Vista de categorías obtenida.");
+          return result;
+        } catch (error) {
+          reqLogger.error("En category.mongodb.js: getView - Error al obtener vista de categorías:", error.message);
+          throw error;
+        }
+      };
 
     getById = async (id, reqLogger) => {
         try {
@@ -31,6 +45,7 @@ export default class CategoryManager {
 
     add = async (category, reqLogger) => {
         try {
+            console.log('categoría antes de create: ', category)
             const newCategory = await categoryModel.create(category);
             reqLogger.debug("En category.mongodb.js: add - Nueva categoría creada:", newCategory);
             return { status: "success", payload: newCategory };
@@ -51,6 +66,20 @@ export default class CategoryManager {
             return { status: "success", payload: updatedCategory };
         } catch (error) {
             reqLogger.error("En category.mongodb.js: update - Error al actualizar categoría:", error);
+            throw error;
+        }
+    }
+    delete = async (id, reqLogger) => {
+        try {
+            const deletedCategory = await categoryModel.findByIdAndDelete(id);
+            if (!deletedCategory) {
+                reqLogger.error("En category.mongodb.js: delete - Categoría no encontrada al intentar eliminar:", id);
+                return { status: "error", error: "Category not found" };
+            }
+            reqLogger.debug("En category.mongodb.js: delete - Categoría eliminada:", deletedCategory);
+            return { status: "success", payload: deletedCategory };
+        } catch (error) {
+            reqLogger.error("En category.mongodb.js: delete - Error al eliminar categoría:", error);
             throw error;
         }
     }

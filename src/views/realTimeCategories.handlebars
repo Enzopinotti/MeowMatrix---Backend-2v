@@ -1,0 +1,44 @@
+<header class="header">
+    <a href="/profile" class="profile-btn">
+        {{#if user.avatar}}
+            <img src="{{user.avatar}}" alt="Perfil" class="profile-img">
+        {{else}}
+            <img src="/img/default.jpg" alt="">
+        {{/if}}Perfil
+    </a>
+    <a href="javascript:history.back()" class="back-btn"><ion-icon name="arrow-back-outline"></ion-icon> Volver </a>
+    <h1 class="tituloHome">Lista de Categorias en tiempo real</h1>
+    <a href="/api/sessions/logout" id="logout-btn">
+        <ion-icon name="log-out-outline"></ion-icon> Cerrar sesión
+    </a>
+</header>
+
+
+<main>
+    <a href="/realTimeProducts" class="botonNavegacion">Administrar Productos</a>
+    <form class="formulario" id="addProductForm" action="/realTimeCategories" method="post" enctype="multipart/form-data">
+        <h2 class="title-form"> Ingrese los datos de la Categoría</h2>
+        <br>
+        <input type="text" id="nameCategory" name="nameCategory" placeholder="Nombre de la Categoría">
+        <br>
+        <div class="isVisible">
+            <label for="isVisible">Seleccionar Si Será Visible</label>
+            <input type="checkbox" id="isVisible" name="isVisible" value="true">
+        </div>
+        <br>
+        <input type="text" id="description" name="description" placeholder="Descripción de la Categoría">
+    </form>
+
+    <ul class="realTimeCategories" id="categoryList">
+        {{#each categories}}
+            <li data-product-id="{{_id}}">
+                <h2>{{nameCategory}}</h2>
+                <p><strong>Descripción :</strong>{{description}}</p>
+
+                <!-- Agrega un botón para eliminar law categoria -->
+                <button class="botonDelete" data-product-id="{{_id}}">Eliminar</button>
+            </li>
+        {{/each}}
+    </ul>
+
+</main>

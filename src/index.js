@@ -31,7 +31,7 @@ app.use(express.json())
 app.use(express.urlencoded( { extended:true } ))
 
 const corsOptions = {
-  origin:'https://meow-matrix-frontend-production.up.railway.app', // Cambia esto al dominio de tu aplicación React
+  origin:'http://localhost:3000', // Cambia esto al dominio de tu aplicación React
   credentials: true, // Permite el envío de cookies de origen cruzado
 };
 

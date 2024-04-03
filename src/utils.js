@@ -26,6 +26,7 @@ const storage = multer.diskStorage({
         if (file.fieldname === 'avatar') {
             cb(null, path.join(__dirname, 'public', 'img', 'profiles')); // Ruta para las imágenes de usuarios
         } else if (file.fieldname === 'productImage') {
+            console.log('Entre a productImage')
             cb(null, path.join(__dirname, 'public', 'img', 'products')); // Ruta para las imágenes de productos
         } else if(file.fieldname === 'identification' || file.fieldname === 'address' || file.fieldname === 'bankStatement') {
             const token = obtenerTokenDeCookie(req.headers.cookie);
@@ -58,7 +59,7 @@ const storage = multer.diskStorage({
         const decoded = jwt.verify(token, PRIVATE_KEY);
         const user = decoded.user;
         const userId = user._id;
-        
+         
         if(file.fieldname === 'identification'){
             cb(null, file.fieldname +'-'+ userId + path.extname(file.originalname));
         } else if (file.fieldname === 'address'){
@@ -66,7 +67,7 @@ const storage = multer.diskStorage({
         } else if (file.fieldname === 'bankStatement') {
             cb(null, file.fieldname +'-'+ userId + path.extname(file.originalname));
         }else{
-            cb(null, file.originalname.replace(/\.[^.]+$/, '') + '-' + uniqueSuffix + path.extname(file.originalname));
+            cb(null, file.originalname.replace(/\.[^.]+$/, '') + '-'+ userId + path.extname(file.originalname));
         }
             
          // Nombre del archivo

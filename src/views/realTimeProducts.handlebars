@@ -1,0 +1,61 @@
+<header class="header">
+    <a href="/profile" class="profile-btn">
+        {{#if user.avatar}}
+            <img src="{{user.avatar}}" alt="Perfil" class="profile-img">
+        {{else}}
+            <img src="/img/default.jpg" alt="">
+        {{/if}}Perfil
+    </a>
+    <a href="javascript:history.back()" class="back-btn"><ion-icon name="arrow-back-outline"></ion-icon> Volver </a>
+    <h1 class="tituloHome">Lista de productos en tiempo real</h1>
+    <a href="/api/sessions/logout" id="logout-btn">
+        <ion-icon name="log-out-outline"></ion-icon> Cerrar sesión
+    </a>
+</header>
+
+<main>
+    
+    <a href="/realTimeCategories" class="botonNavegacion">Administrar Categorías</a>
+    <form class="formulario" id="addProductForm" action="/realTimeProducts" method="post" enctype="multipart/form-data">
+       <h2 class="title-form"> Ingrese los datos del Producto</h2>
+       <br>
+        <input type="text" id="productName" name="productName" placeholder="Nombre del producto">
+        <input type="text" id="productDescription" name="productDescription" placeholder="Descripción del producto">
+        <input type="number" id="productPrice" name="productPrice" placeholder="Precio">
+        <input type="text" id="productCode" name="productCode" placeholder="Código del producto">
+        <input type="number" id="productStock" name="productStock" placeholder="Stock">
+        <select id="productCategory" name="productCategory">
+            <!-- A continuación, generas las opciones basadas en tus categorías existentes -->
+            {{#each categories}}
+                <option value="{{_id}}">{{nameCategory}}</option>
+            {{/each}}
+        </select>
+        <!-- Campo de entrada para cargar la imagen -->
+        <div class="contenedorArchivos">
+            <label for="productImage">Cargar Imagen del Producto</label>
+            <input type="file" id="productImage" name="productImage">
+        </div>
+        <button type="submit" id="addProductButton">
+            Agregar Producto
+        </button>
+    </form>
+
+    <ul class="realTimeProducts" id="productList">
+        {{#each products}}
+            <li data-product-id="{{_id}}">
+                <h2>{{name}}</h2>
+                <img src="img/{{thumbnails}}" alt="{{name}}" class="imgProduct">
+                <p>{{description}}</p>
+                <p><strong>Precio:</strong> ${{price}}</p>
+                <p><strong>Stock:</strong> {{stock}} unidades</p>
+                <p><strong>Categoría:</strong> {{category.nameCategory}}</p>
+                
+                
+                <!-- Agrega un botón para eliminar el producto -->
+                <button class="botonDelete" data-product-id="{{_id}}">Eliminar</button>
+            </li>
+        {{/each}}
+    </ul>
+
+</main>
+

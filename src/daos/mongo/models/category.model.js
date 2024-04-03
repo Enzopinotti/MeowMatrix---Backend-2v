@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-
+import mongoosePaginate from 'mongoose-paginate-v2';
 
 const { Schema, model } = mongoose;
 
@@ -11,6 +11,7 @@ const categorySchema = new Schema({
     description: {type: String, required: true},
 
 });
+categorySchema.plugin(mongoosePaginate);
 const categoryModel = model(categoryCollection, categorySchema);
 
 export default categoryModel;

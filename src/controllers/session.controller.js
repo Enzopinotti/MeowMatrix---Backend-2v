@@ -85,13 +85,16 @@ export const loginUser = async (req, res) => {
 
 export const logoutUser = async (req, res) => {
     try {
-        let user = req.user;
-        if (!user) {
-            res.redirect('/login');
+        const token = obtenerTokenDeCookie(req.headers.cookie);
+        if (!token) {
+            throw Error('Usuario no encontrado');
         }else{
-            await userService.updateLastConnection(user._id);
+            const decoded = jwt.verify(token, PRIVATE_KEY);
+            // Decodifica el token JWT
+            const userId = decoded.user._id;
+            await userService.updateLastConnection(userId);
             res.clearCookie('access_token');
-            res.redirect('/login'); // Redirección directa en el lado del servidor
+            res.sendSuccess('Sesión cerrada correctamente'); // Redirección directa en el lado del servidor
         }
         
     } catch (error) {

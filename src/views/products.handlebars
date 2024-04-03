@@ -1,0 +1,146 @@
+
+<header class="header">
+
+    <article class="img-container">
+        <img src="./img/logo_ecommerce.png" alt="logo">
+        <h1 class="nombre-marca">Meow <br>
+        Matrix</h1>
+    </article>
+    
+    <section class="buttom-primary">
+        {{#if user}}
+            {{#isAdmin user}}
+                <a href="/adminView" class="admin-btn">
+                    <ion-icon name="settings-outline"></ion-icon>
+                    <p>Ventana de Administrador</p>
+                </a>
+            {{/isAdmin}}
+
+            {{#isPremium user}}
+                <a href="/myProducts" class="admin-btn">
+                    <ion-icon name="settings-outline"></ion-icon>
+                    <p>Mis Productos</p>
+                </a>
+            {{/isPremium}}
+
+            {{#isNotPremium user}}
+                <a class="premium-btn" onclick="upgradeToPremium(event, {{user._id}})">
+                    <ion-icon name="star-outline"></ion-icon>
+                    <p>Solicitar Premium</p>
+                </a>
+            {{/isNotPremium}}
+        {{/if}}
+
+        <a href="/carts" class="cart-btn">
+            <ion-icon name="cart-outline"></ion-icon>
+            <p>Carrito</p> 
+        </a>
+        <a href="/api/sessions/logout" id="logout-btn">
+            <ion-icon name="log-out-outline"></ion-icon> 
+            <p>Cerrar sesión</p>
+        </a>
+    </section>
+    <a href="/profile" class="profile-btn">
+        {{#if user.avatar}}
+            <img src="{{user.avatar}}" alt="Perfil" class="profile-img">
+        {{else}}
+            <img src="/img/default2.png" alt="">
+        {{/if}}
+    </a>
+    
+</header>
+
+<main class="central-section">
+    <aside class="sidebar">
+        <div class="form-container">
+            <h3>Filtrar productos</h3>
+            <form action="/products" method="GET" class="filter-form">
+                <article class="inputs">
+                    <div class="form-group">
+                        <label for="sort">Ordenar por:</label>
+                        <select name="sort" id="sort">
+                            <option value="price">Precio</option>
+                            <option value="date">Fecha</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="query">Buscar:</label>
+                        <input type="text" name="query" id="query" placeholder="Nombre del producto">
+                    </div>
+                </article>
+                
+                <button type="submit" class="btn btn-primary">Aplicar filtros</button>
+            </form>
+        </div>
+        
+    </aside>
+
+    <ul class="products-list">
+
+        {{#each products}}
+            <li class="product-item">
+                <header class="product-header">
+                    <button id="favoriteButton-{{this._id}}" class="favorite-button" aria-label="Marcar como favorito" data-product-id="{{this._id}}">
+                    {{#if (isLiked ../user this._id)}}
+                        <img src="./img/like_relleno.png" alt="like_relleno" class="like_img">
+                    {{else}}
+                        <img src="./img/like_sin_relleno.png" alt="like_sin_relleno" class="like_img">
+                    {{/if}}
+                </button>
+                </header>
+                <section class="product-info">
+                    <img src="img/{{thumbnails}}" alt="{{name}}" class="product-img">
+                    {{#checkStock this.stock}}
+                        <span class="stock-status">En Stock</span>
+                    {{else}}
+                        <span class="stock-status out-of-stock">Sin Stock</span>
+                    {{/checkStock}}
+                    <h2 class="product-name">{{this.name}}</h2>
+                    <div class="price-info"></div>
+                        <p class="product-price">${{formatPrice this.price}}</p>
+                    </div>
+                   
+                </section>
+                
+                <footer class="product-footer">
+                    <!--<a href="/products/{{this._id}}" class="details-btn">Ver Detalles</a>-->
+                    <form action="/api/carts/current/product/{{this._id}}" method="POST" class="add-to-cart-form" onsubmit="addToCart(event, '{{this._id}}')">
+                        <input type="hidden" name="productId" value="{{this._id}}">
+                        <button type="submit" class="add-to-cart-btn">
+                            Agregar al carrito
+                        </button>
+                    </form>
+                </footer>
+               
+            </li>
+        {{/each}}
+
+
+    </ul>
+
+    <!-- Paginación -->
+    <div class="pagination">
+        <p class="current-page">Página actual: {{currentPage}}</p>
+
+        <section class="controls">
+            {{#if hasPrevPage}}
+            <a href="{{prevLink}}" class="prev-page">Página anterior</a>
+            {{else}}
+                <span class="no-prev-page">No hay página anterior</span>
+            {{/if}}
+
+            {{#if hasNextPage}}
+                <a href="{{nextLink}}" class="next-page">Página siguiente</a>
+            {{else}}
+                <span class="no-next-page">No hay página siguiente</span>
+            {{/if}}
+        </section>
+
+        <p class="total-pages">Total de páginas: {{totalPages}}</p>
+    </div> 
+
+</main>
+
+
+
+<script src="/js/product.js"></script>

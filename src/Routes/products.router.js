@@ -11,6 +11,6 @@ export default class ProductRouter extends BaseRouter{
     this.router.get('/:productId', getProductById);
     this.router.put('/:pid', updateProduct);
     this.router.delete('/:pid', deleteProduct);
-    this.router.post('/', uploader.single('image') , createProduct);
+    this.router.post('/', uploader.single('productImage') , createProduct);
   }
 };
