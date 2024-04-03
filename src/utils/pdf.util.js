@@ -4,7 +4,7 @@ export const generatePdf = async (ticket, user, products) => {
     const pdfDoc = await PDFDocument.create();
     const page = pdfDoc.addPage();
 
-    const { width, height } = page.getSize();
+    const {  height } = page.getSize();
     const fontSize = 12;
     const margin = 50;
     const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
@@ -18,7 +18,6 @@ export const generatePdf = async (ticket, user, products) => {
         Productos: ${products.map(p => p.name).join(', ')}
     `;
 
-    // Dividir el contenido del ticket en líneas
     const lines = ticketContent.split('\n');
 
     // Calcular la altura total del texto
