@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import type { UserDto } from "../src/api/contracts.js";
-import { ApiError } from "../src/api/errors.js";
+import type { ApiError } from "../src/api/errors.js";
 import {
   createPrivateFileService,
   type PrivateBlobStorage,
