@@ -4,6 +4,10 @@ import {
   type ApiErrorDetail,
   type ErrorEnvelope,
 } from "./contracts.js";
+import {
+  getResponseRequestId,
+  type RuntimeLogSink,
+} from "../runtime/observability.js";
 
 export class ApiError extends Error {
   readonly status: number;
@@ -46,30 +50,41 @@ export function errorEnvelope(
     : { error: { code, message, details } };
 }
 
-export const apiErrorHandler: ErrorRequestHandler = (
-  error,
-  _request,
-  response,
-  _next,
-) => {
-  if (error instanceof ContractValidationError) {
-    response
-      .status(400)
-      .json(errorEnvelope("VALIDATION_ERROR", error.message, error.details));
-    return;
-  }
+export function createApiErrorHandler(
+  runtimeLogSink?: RuntimeLogSink,
+): ErrorRequestHandler {
+  return (error, _request, response, _next) => {
+    if (error instanceof ContractValidationError) {
+      response
+        .status(400)
+        .json(errorEnvelope("VALIDATION_ERROR", error.message, error.details));
+      return;
+    }
 
-  if (error instanceof ApiError) {
-    response
-      .status(error.status)
-      .json(errorEnvelope(error.code, error.message, error.details));
-    return;
-  }
+    if (error instanceof ApiError) {
+      response
+        .status(error.status)
+        .json(errorEnvelope(error.code, error.message, error.details));
+      return;
+    }
 
-  console.error("Unhandled request error", {
-    name: error instanceof Error ? error.name : "UnknownError",
-  });
-  response
-    .status(500)
-    .json(errorEnvelope("INTERNAL_ERROR", "Internal server error"));
-};
+    const record = {
+      level: "error" as const,
+      event: "http.request.unhandled_error",
+      requestId: getResponseRequestId(response),
+      errorName: error instanceof Error ? error.name : "UnknownError",
+    };
+
+    if (runtimeLogSink) {
+      runtimeLogSink(record);
+    } else {
+      console.error("Unhandled request error", { name: record.errorName });
+    }
+
+    response
+      .status(500)
+      .json(errorEnvelope("INTERNAL_ERROR", "Internal server error"));
+  };
+}
+
+export const apiErrorHandler = createApiErrorHandler();
