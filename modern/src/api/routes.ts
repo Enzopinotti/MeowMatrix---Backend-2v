@@ -10,7 +10,7 @@ import {
 import { createAuthRouter } from "./auth-routes.js";
 import { createCommerceRouter } from "./commerce-routes.js";
 import { ApiError } from "./errors.js";
-import { openApiDocument } from "./openapi.js";
+import { openApiDocumentB4 } from "./openapi-b4.js";
 import type { AuthService } from "../domain/auth.js";
 import type { CatalogService } from "../domain/catalog.js";
 import type { CommerceService } from "../domain/commerce.js";
@@ -60,7 +60,7 @@ export function createApiV1Router(options: ApiV1Options) {
   });
 
   router.get("/openapi.json", (_request, response) => {
-    response.status(200).json(openApiDocument);
+    response.status(200).json(openApiDocumentB4);
   });
 
   router.use(
