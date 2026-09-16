@@ -70,16 +70,11 @@ class TestCatalogService implements CatalogService {
 let server: Server | undefined;
 
 afterEach(async () => {
-  if (!server) {
-    return;
-  }
+  if (!server) return;
   await new Promise<void>((resolve, reject) => {
     server?.close((error) => {
       server = undefined;
-      if (error) {
-        reject(error);
-        return;
-      }
+      if (error) return reject(error);
       resolve();
     });
   });
@@ -95,14 +90,14 @@ async function startApp(catalogService?: CatalogService) {
 }
 
 describe("API v1 contract", () => {
-  it("publishes B4 metadata while preserving all prior domain schemas", async () => {
+  it("publishes B5 metadata while preserving all prior domain schemas", async () => {
     const origin = await startApp(new TestCatalogService());
     const metadataResponse = await fetch(`${origin}/api/v1/`);
     expect(metadataResponse.status).toBe(200);
     expect(await metadataResponse.json()).toMatchObject({
       data: {
         version: "v1",
-        contract: "2026-b4",
+        contract: "2026-b5",
         implementedResources: expect.arrayContaining([
           "products",
           "categories",
@@ -110,15 +105,19 @@ describe("API v1 contract", () => {
           "cart",
           "checkout",
           "orders",
+          "private-files",
         ]),
       },
     });
 
     const openApiResponse = await fetch(`${origin}/api/v1/openapi.json`);
     const openApi = (await openApiResponse.json()) as {
+      info: { version: string };
       components: { schemas: Record<string, unknown> };
+      paths: Record<string, unknown>;
     };
     expect(openApiResponse.status).toBe(200);
+    expect(openApi.info.version).toBe("1.0.0-b5");
     expect(Object.keys(openApi.components.schemas)).toEqual(
       expect.arrayContaining([
         "Product",
@@ -132,6 +131,19 @@ describe("API v1 contract", () => {
         "CartView",
         "CheckoutResult",
         "OrderList",
+        "PrivateFile",
+        "PrivateFileList",
+      ]),
+    );
+    expect(Object.keys(openApi.paths)).toEqual(
+      expect.arrayContaining([
+        "/cart",
+        "/checkout",
+        "/orders",
+        "/files",
+        "/files/{purpose}",
+        "/files/{fileId}",
+        "/files/{fileId}/content",
       ]),
     );
     expect(JSON.stringify(openApi.components.schemas.User)).not.toContain(
@@ -139,6 +151,9 @@ describe("API v1 contract", () => {
     );
     expect(JSON.stringify(openApi.components.schemas.User)).not.toContain(
       "resetPassword",
+    );
+    expect(JSON.stringify(openApi.components.schemas.PrivateFile)).not.toContain(
+      "storageKey",
     );
   });
 
