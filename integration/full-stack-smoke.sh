@@ -12,7 +12,7 @@ cookies="$runtime/cookies.txt"
 rm -f "$cookies"
 
 stage() {
-  printf 'B6 smoke: %s\n' "$1"
+  printf 'B6/B7 smoke: %s\n' "$1"
 }
 
 json_expr() {
@@ -41,6 +41,23 @@ wait_http "$api_origin/readyz" "API readiness"
 wait_http "$web_origin/healthz" "frontend health"
 wait_http "$mailpit_origin/api/v1/messages" "Mailpit API"
 
+stage "server-owned request correlation"
+request_headers="$runtime/request-headers.txt"
+curl --fail --silent --show-error \
+  -D "$request_headers" -o /dev/null \
+  -H 'X-Request-ID: attacker-controlled-request-id' \
+  "$api_origin/api/v1/"
+request_id="$(awk -F': ' 'tolower($1)=="x-request-id" {gsub("\r", "", $2); print $2}' "$request_headers" | tail -1)"
+test -n "$request_id"
+test "$request_id" != "attacker-controlled-request-id"
+[[ "$request_id" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$ ]]
+api_logs="$("${compose[@]}" logs --no-color api)"
+printf '%s' "$api_logs" | grep -Fq "\"requestId\":\"$request_id\""
+if printf '%s' "$api_logs" | grep -Fq 'attacker-controlled-request-id'; then
+  echo "Inbound request id leaked into authoritative runtime logs" >&2
+  exit 1
+fi
+
 stage "non-root runtime users"
 api_uid="$("${compose[@]}" exec -T api id -u)"
 test "$api_uid" != "0"
@@ -62,18 +79,18 @@ const id = ObjectId('$product_id');
 const now = new Date();
 const result = db.products.updateOne(
   {_id:id},
-  {\$set:{name:'B6 Transaction Product',description:'Full-stack transaction smoke',price:1250,code:'B6-SMOKE-001',stock:5,category:null,thumbnails:[],status:true,isVisible:true,tags:['b6'],createdAt:now,updatedAt:now}},
+  {\$set:{name:'B7 Transaction Product',description:'Full-stack transaction smoke',price:1250,code:'B7-SMOKE-001',stock:5,category:null,thumbnails:[],status:true,isVisible:true,tags:['b7'],createdAt:now,updatedAt:now}},
   {upsert:true}
 );
 if (result.acknowledged !== true) { quit(1); }
 " >/dev/null
 
 run_token="${GITHUB_RUN_ID:-local}-$(date +%s)"
-email="b6-${run_token}@example.test"
-password='B6-Smoke-Password-2026!'
+email="b7-${run_token}@example.test"
+password='B7-Smoke-Password-2026!'
 
 stage "auth registration and cookie login"
-register_body="$(printf '{"name":"B6","lastName":"Smoke","email":"%s","password":"%s"}' "$email" "$password")"
+register_body="$(printf '{"name":"B7","lastName":"Smoke","email":"%s","password":"%s"}' "$email" "$password")"
 curl --fail-with-body --silent --show-error \
   -H 'Content-Type: application/json' \
   -H "Origin: $web_origin" \
@@ -116,7 +133,7 @@ checkout_ready="$(printf '%s' "$cart" | json_expr 'j.data.checkoutReady')"
 test "$checkout_ready" = "true"
 
 stage "transactional checkout"
-idempotency_key="checkout:b6:${run_token}"
+idempotency_key="checkout:b7:${run_token}"
 checkout="$(curl --fail-with-body --silent --show-error \
   -b "$cookies" \
   -X POST \
@@ -166,7 +183,7 @@ done
 stage "private file upload and authenticated download"
 private_source="$runtime/avatar.png"
 private_download="$runtime/avatar.downloaded.png"
-printf '\x89PNG\r\n\x1a\nB6-private-persistence' > "$private_source"
+printf '\x89PNG\r\n\x1a\nB7-private-persistence' > "$private_source"
 
 upload="$(curl --fail-with-body --silent --show-error \
   -b "$cookies" \
@@ -179,6 +196,15 @@ curl --fail-with-body --silent --show-error -b "$cookies" \
   "$api_origin/api/v1/files/$file_id/content" \
   --output "$private_download"
 cmp "$private_source" "$private_download"
+
+stage "read-only cutover data preflight"
+data_preflight="$("${compose[@]}" exec -T api node dist/data-preflight.js)"
+preflight_ok="$(printf '%s' "$data_preflight" | json_expr 'j.ok')"
+test "$preflight_ok" = "true"
+if printf '%s' "$data_preflight" | grep -Fq "$email"; then
+  echo "Data preflight leaked user PII" >&2
+  exit 1
+fi
 
 stage "API restart preserves private blob"
 "${compose[@]}" restart api >/dev/null
@@ -197,6 +223,9 @@ persisted_order="$(curl --fail-with-body --silent --show-error -b "$cookies" "$a
 persisted_order_id="$(printf '%s' "$persisted_order" | json_expr 'j.data.id')"
 test "$persisted_order_id" = "$order_id"
 
+stage "isolated backup and restore rehearsal"
+bash "$repo_root/integration/backup-restore-rehearsal.sh" "$order_id" "$file_id"
+
 stage "private file deletion"
 curl --fail-with-body --silent --show-error \
   -b "$cookies" \
@@ -211,4 +240,4 @@ stage "final stock invariant"
 final_stock="$(curl --fail-with-body --silent --show-error "$api_origin/api/v1/products/$product_id" | json_expr 'j.data.stock')"
 test "$final_stock" = "3"
 
-printf 'B6 full-stack smoke passed: order=%s product_stock=%s private_file=%s\n' "$order_id" "$final_stock" "$file_id"
+printf 'B6/B7 full-stack smoke passed: order=%s product_stock=%s private_file=%s request_id=%s\n' "$order_id" "$final_stock" "$file_id" "$request_id"
