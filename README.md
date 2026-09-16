@@ -1,55 +1,37 @@
-# Ecommerce
+# Meow Matrix — backend
 
-Asegúrate de tener instalado Node.js en tu sistema. Si no lo tienes instalado, puedes descargarlo desde el sitio web oficial: [Node.js](https://nodejs.org/).
-MongoDB Atlas o una base de datos local configurada.
+Este repositorio preserva la evolución backend del proyecto iniciado en 2023 y emparejado luego con el frontend Meow Matrix.
 
-## Instalación
+## Historia y rollback
 
-1. Clona este repositorio: git clone 'URL_DEL_REPOSITORIO'.
+Baseline histórico pre-remediation:
 
-2. Ingresa al directorio del proyecto: cd 'NOMBRE_DEL_DIRECTORIO'.
+```text
+9cd1b87e69b6455487c64d7fdbe6ef0c90b73f88
+```
 
-3. Ejecuta el siguiente comando para instalar las dependencias:
+Security baseline 2026:
 
-   ```bash
-   npm install
+```text
+73ba6f1a9b470140630d5143f258bd50742c8b0f
+```
 
-4. Crea un archivo .env en la raíz del proyecto y agrega las siguientes variables:
+`Proyecto_Backend` comparte commits con este repositorio y se conserva como ancestor/sibling histórico. La autoridad backend mantenida se desarrolla acá para evitar dos líneas modernas divergentes.
 
-   ```bash
-   mongo=URL_DE_CONEXION_A_MONGODB
-   hash=SECRETO_PARA_SESIONES
-   tokenkey=SECRETO_PARA_JWT
-   jwtsecret=SECRETO_PARA_JWT
-   gitclientid=ID_DEL_CLIENTE_GITHUB
-   gitclientsecret=SECRETO_DEL_CLIENTE_GITHUB
-   gitcallbackurl=URL_DE_RETORNO_DE_GITHUB_AUTH
+## Autoridad 2026
 
-## Uso
+La nueva API vive en `modern/` y comienza con un objetivo deliberadamente pequeño:
 
-1. Inicia la aplicación: npm start
-2. Accede a [LocalHost](https://meowmatrix-backend-2v-production.up.railway.app) en tu navegador.
+- Node 24 + npm explícitos;
+- Express + TypeScript strict;
+- `createApp()` separado de `server.ts`;
+- `/healthz` sin Mongo ni secretos;
+- configuración validada antes de abrir el listener;
+- respuesta 404 consistente;
+- tests herméticos sin tocar servicios externos;
+- CI read-only para lint, format, types, tests y build.
 
-### Funcionalidades Principales
+Mongo, auth, products, categories, cart, tickets/orders y uploads se migrarán por bloques después de fijar sus contratos. El backend histórico sigue disponible por SHA y no se reescribe para aparentar una arquitectura que no tenía.
 
-Autenticación: Incluye la autenticación local y con GitHub. Las rutas de autenticación se encuentran en el directorio /Routes/views.
-
-Persistencia de Datos: Utiliza MongoDB para almacenar datos. La configuración y la conexión a la base de datos están en el archivo database.js.
-
-Manejo de Sesiones: Se implementa el manejo de sesiones con Express y se utiliza express-session en conjunto con connect-mongo para almacenar las sesiones en MongoDB.
-
-Rutas API: La aplicación cuenta con diversas rutas API para usuarios, productos, categorías, carritos, sesiones y mensajes. Estas rutas se encuentran en el directorio /Routes/api.
-
-### Contribución
-
-Si quieres contribuir a este proyecto, por favor, sigue estos pasos:
-
-1. Haz un fork del proyecto.
-2. Crea una nueva rama (git checkout -b feature/nueva-funcionalidad).
-3. Realiza cambios y commitea tus mejoras (git commit -am 'Agrega nueva funcionalidad').
-4. Sube tus cambios al repositorio (git push origin feature/nueva-funcionalidad).
-5. Crea un pull request.
-
-### Autor
-
-Enzo Daniel Pinotti.
+Security blocker externo/histórico: issue #1.
+Modernización full-stack: issue #3.

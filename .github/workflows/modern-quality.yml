@@ -1,0 +1,69 @@
+name: Meow modern backend quality
+
+on:
+  pull_request:
+    paths:
+      - "modern/**"
+      - "docs/modernization-2026/**"
+      - ".nvmrc"
+      - ".gitignore"
+      - "README.md"
+      - ".github/workflows/modern-quality.yml"
+  push:
+    branches:
+      - main
+    paths:
+      - "modern/**"
+      - "docs/modernization-2026/**"
+      - ".nvmrc"
+      - ".gitignore"
+      - "README.md"
+      - ".github/workflows/modern-quality.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    defaults:
+      run:
+        working-directory: modern
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: modern/package-lock.json
+
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Run maintained quality contract
+        run: npm run check
+
+      - name: Smoke compiled health endpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          PORT=18080 NODE_ENV=test node dist/server.js >/tmp/meow-modern-api.log 2>&1 &
+          pid=$!
+          trap 'kill "$pid" >/dev/null 2>&1 || true' EXIT
+
+          for attempt in $(seq 1 20); do
+            if curl -fsS http://127.0.0.1:18080/healthz >/tmp/health.json; then
+              grep -Fq '"status":"ok"' /tmp/health.json
+              grep -Fq '"service":"meow-api"' /tmp/health.json
+              exit 0
+            fi
+            sleep 1
+          done
+
+          cat /tmp/meow-modern-api.log
+          exit 1
