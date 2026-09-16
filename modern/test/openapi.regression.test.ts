@@ -35,7 +35,9 @@ describe("OpenAPI B3 regressions", () => {
     expect(Object.keys(openApiDocument.components.securitySchemes)).toEqual([
       "cookieSession",
     ]);
-    expect(openApiDocument.components.securitySchemes.cookieSession).toMatchObject({
+    expect(
+      openApiDocument.components.securitySchemes.cookieSession,
+    ).toMatchObject({
       type: "apiKey",
       in: "cookie",
       name: "meow_session",
