@@ -27,17 +27,8 @@ jobs:
         working-directory: modern
         run: npm install --save-exact bcryptjs@3.0.3 mongodb@7.6.0 nodemailer@10.0.10
 
-      - name: Restore B2 Product response schema
-        working-directory: modern
-        run: python3 -c 'from pathlib import Path; p=Path("src/api/openapi.ts"); s=p.read_text(); old="          \"200\": { description: \"Product\" },"; new="          \"200\": {\n            description: \"Product\",\n            content: {\n              \"application/json\": {\n                schema: {\n                  type: \"object\",\n                  required: [\"data\"],\n                  properties: { data: { \$ref: \"#/components/schemas/Product\" } },\n                },\n              },\n            },\n          },"; assert old in s; p.write_text(s.replace(old,new,1))'
-
-      - name: Align login OpenAPI with legacy-compatible parser
-        working-directory: modern
-        run: python3 -c 'from pathlib import Path; p=Path("src/api/openapi.ts"); s=p.read_text(); a=s.index("      LoginRequest: {"); b=s.index("      PasswordResetRequest: {",a); block=s[a:b]; old="            minLength: 12,\n            maxLength: 128,"; new="            minLength: 1,\n            maxLength: 4096,"; assert old in block; p.write_text(s[:a]+block.replace(old,new,1)+s[b:])'
-
-      - name: Remove secret-discard lint ambiguity
-        working-directory: modern
-        run: python3 -c 'from pathlib import Path; p=Path("src/domain/auth.ts"); s=p.read_text(); old="function publicUser(user: AuthUserRecord): UserDto {\n  const { passwordHash: _passwordHash, ...safeUser } = user;\n  return safeUser;\n}"; new="function publicUser(user: AuthUserRecord): UserDto {\n  return {\n    id: user.id,\n    name: user.name,\n    lastName: user.lastName,\n    email: user.email,\n    role: user.role,\n    avatarUrl: user.avatarUrl,\n  };\n}"; assert old in s; p.write_text(s.replace(old,new,1))'
+      - name: Apply deterministic B3 finalization
+        run: node .github/scripts/tmp-b3-finalize.mjs
 
       - name: Format maintained authority
         working-directory: modern
