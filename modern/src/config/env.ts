@@ -21,6 +21,12 @@ export type AppConfig = {
   smtpPassword: string | null;
   smtpFrom: string | null;
   passwordResetUrl: string | null;
+  privateStorageRoot: string | null;
+  outboxPollMs: number;
+  outboxLeaseMs: number;
+  outboxMaxAttempts: number;
+  fileCleanupPollMs: number;
+  fileStagingRecoveryMs: number;
 };
 
 function parsePort(value: string | undefined): number {
@@ -72,6 +78,21 @@ function parseDurationSeconds(
     throw new Error(
       `${field} must be an integer between ${minimum} and ${maximum}`,
     );
+  }
+  return parsed;
+}
+
+function parseInteger(
+  value: string | undefined,
+  fallback: number,
+  field: string,
+  minimum: number,
+  maximum: number,
+): number {
+  if (value === undefined) return fallback;
+  const parsed = Number(value);
+  if (!Number.isSafeInteger(parsed) || parsed < minimum || parsed > maximum) {
+    throw new Error(`${field} must be an integer between ${minimum} and ${maximum}`);
   }
   return parsed;
 }
@@ -209,6 +230,24 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
       env.PASSWORD_RESET_URL,
       "PASSWORD_RESET_URL",
       nodeEnv,
+    ),
+    privateStorageRoot: nonEmpty(env.PRIVATE_STORAGE_ROOT),
+    outboxPollMs: parseInteger(env.OUTBOX_POLL_MS, 5_000, "OUTBOX_POLL_MS", 100, 300_000),
+    outboxLeaseMs: parseInteger(env.OUTBOX_LEASE_MS, 30_000, "OUTBOX_LEASE_MS", 1_000, 15 * 60_000),
+    outboxMaxAttempts: parseInteger(env.OUTBOX_MAX_ATTEMPTS, 6, "OUTBOX_MAX_ATTEMPTS", 1, 50),
+    fileCleanupPollMs: parseInteger(
+      env.FILE_CLEANUP_POLL_MS,
+      60_000,
+      "FILE_CLEANUP_POLL_MS",
+      1_000,
+      60 * 60_000,
+    ),
+    fileStagingRecoveryMs: parseInteger(
+      env.FILE_STAGING_RECOVERY_MS,
+      10 * 60_000,
+      "FILE_STAGING_RECOVERY_MS",
+      10_000,
+      24 * 60 * 60_000,
     ),
   };
 
