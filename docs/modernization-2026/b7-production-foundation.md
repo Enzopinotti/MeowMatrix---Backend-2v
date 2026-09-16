@@ -22,6 +22,7 @@ It does **not** choose or provision the final production provider/domain. Those 
 - every production frontend origin uses HTTPS;
 - `TRUST_PROXY_HOPS` is an explicit integer from 1 to 10;
 - `MONGO_URL` is configured;
+- `RATE_LIMIT_HMAC_SECRET` is configured with at least 32 UTF-8 bytes whenever Mongo-backed auth throttling is active;
 - `PRIVATE_STORAGE_ROOT` is configured for the currently implemented private filesystem adapter;
 - the existing Mongo auth mail boundary remains complete: `SMTP_HOST`, `SMTP_FROM` and `PASSWORD_RESET_URL`;
 - `PASSWORD_RESET_URL` itself is HTTPS and its origin is one of the exact production frontend origins.
@@ -51,7 +52,7 @@ The B3 limiter was intentionally bounded but process-local. That is insufficient
 
 B7 introduces `RateLimitStore` as the persistence boundary. The auth routes retain the same policies and public response contract but can now delegate counters to a shared store.
 
-When Mongo is configured, server startup now creates `MongoRateLimitStore` and the auth scopes are:
+When Mongo is configured, server startup creates `MongoRateLimitStore` and the auth scopes are:
 
 - `auth:login`;
 - `auth:register`;
@@ -61,7 +62,11 @@ When Mongo is absent in test/local fallback mode, the previous bounded in-memory
 
 ### Privacy
 
-The Mongo store does not persist the raw client IP. It stores a SHA-256 `keyHash` and a scoped `_id`. The collection is `auth_rate_limits`.
+The Mongo store never persists the raw client IP. It derives `keyHash` with HMAC-SHA-256 using `RATE_LIMIT_HMAC_SECRET`, authenticating both the limiter scope and client key. Including the scope means the same IP does not receive the same digest across login/register/reset buckets, while the keyed digest prevents an observer with read access to `auth_rate_limits` from validating guessed IPv4 addresses without the secret.
+
+`RATE_LIMIT_HMAC_SECRET` is an operational secret: inject it through the deployment secret manager, never source-control or log it, and rotate it independently from session/password-reset secrets. Rotation intentionally starts fresh throttle buckets; it does not invalidate sessions or mutate business data.
+
+The collection is `auth_rate_limits`.
 
 ### Atomicity and expiry
 
@@ -82,9 +87,10 @@ The command calls the same `loadConfig()` used by the server, requires `NODE_ENV
 - frontend origins;
 - trusted proxy hop count;
 - cookie security flags;
+- whether the shared rate-limit HMAC secret is configured;
 - whether Mongo/private storage/SMTP/reset configuration is present.
 
-It never prints the Mongo connection string, SMTP password or any secret value.
+It never prints the HMAC secret, Mongo connection string, SMTP password or any secret value.
 
 The permanent backend quality workflow runs this preflight with synthetic safe values after the full maintained quality contract.
 
@@ -96,6 +102,7 @@ Unit/integration tests cover:
 - HTTPS frontend/reset boundaries;
 - exact reset-origin allow-listing;
 - explicit trusted proxy hop requirement;
+- minimum HMAC-secret requirement for Mongo-backed throttling;
 - shared-store rate-limit delegation and stable 429 contract;
 - store failure fails closed;
 - `X-Forwarded-For` affects the client key only when proxy trust is explicitly enabled.
@@ -103,7 +110,7 @@ Unit/integration tests cover:
 The permanent B6 full-stack smoke is extended to prove the real Mongo adapter after register/login:
 
 - `auth:register` and `auth:login` shared buckets exist;
-- stored keys are 64-character lowercase SHA-256 hashes;
+- persisted `keyHash` values are 64-character lowercase HMAC-SHA-256 digests;
 - no raw `key` field is persisted;
 - the TTL index exists with `expireAfterSeconds: 0`.
 
@@ -116,7 +123,7 @@ This carrier does not close B7. Remaining provider/cutover work includes:
 - canonical production frontend/API domains and DNS;
 - TLS termination and HTTPS ingress implementation;
 - production Mongo provider/topology, migration preflight and backup/restore rehearsal;
-- final private storage strategy (the current production contract still requires the filesystem adapter path); object storage may replace it behind the existing `PrivateBlobStorage` boundary;
+- final private storage strategy; object storage may replace the current filesystem adapter behind the existing `PrivateBlobStorage` boundary;
 - production SMTP provider and delivery observability;
 - structured request correlation/logging without PII or secrets;
 - exact image/artifact promotion rather than branch rebuilds;
