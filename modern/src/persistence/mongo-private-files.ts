@@ -5,7 +5,10 @@ import type {
   ReservePrivateFile,
 } from "../domain/private-files.js";
 import { ApiError } from "../api/errors.js";
-import type { PrivateFilePurpose, PrivateFileStatus } from "../api/file-contracts.js";
+import type {
+  PrivateFilePurpose,
+  PrivateFileStatus,
+} from "../api/file-contracts.js";
 
 type PrivateFileDocument = {
   _id: ObjectId;
@@ -174,7 +177,10 @@ export class MongoPrivateFileRepository implements PrivateFileRepository {
       .find({
         $or: [
           { status: "deleting" },
-          { status: "staging", createdAt: { $lte: new Date(staleStagingBefore) } },
+          {
+            status: "staging",
+            createdAt: { $lte: new Date(staleStagingBefore) },
+          },
         ],
       })
       .sort({ createdAt: 1 })

@@ -208,12 +208,7 @@ export const openApiDocumentB5 = {
           originalName: { type: "string", minLength: 1, maxLength: 120 },
           mediaType: {
             type: "string",
-            enum: [
-              "image/jpeg",
-              "image/png",
-              "image/webp",
-              "application/pdf",
-            ],
+            enum: ["image/jpeg", "image/png", "image/webp", "application/pdf"],
           },
           bytes: { type: "integer", minimum: 1, maximum: 5_242_880 },
           sha256: { type: "string", pattern: "^[a-f0-9]{64}$" },

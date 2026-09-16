@@ -87,7 +87,9 @@ class MemoryFiles implements PrivateFileRepository {
 
   async listActive(ownerId: string): Promise<readonly PrivateFileRecord[]> {
     return [...this.records.values()]
-      .filter((record) => record.ownerId === ownerId && record.status === "active")
+      .filter(
+        (record) => record.ownerId === ownerId && record.status === "active",
+      )
       .map((record) => structuredClone(record));
   }
 
@@ -119,7 +121,8 @@ class MemoryFiles implements PrivateFileRepository {
       .filter(
         (record) =>
           record.status === "deleting" ||
-          (record.status === "staging" && record.createdAt <= staleStagingBefore),
+          (record.status === "staging" &&
+            record.createdAt <= staleStagingBefore),
       )
       .map((record) => structuredClone(record));
   }
@@ -169,10 +172,12 @@ const servers: Server[] = [];
 
 afterEach(async () => {
   await Promise.all(
-    servers.splice(0).map(
-      (server) =>
-        new Promise<void>((resolve) => server.close(() => resolve())),
-    ),
+    servers
+      .splice(0)
+      .map(
+        (server) =>
+          new Promise<void>((resolve) => server.close(() => resolve())),
+      ),
   );
 });
 
@@ -198,7 +203,12 @@ async function harness() {
   servers.push(server);
   await new Promise<void>((resolve) => server.once("listening", resolve));
   const address = server.address() as AddressInfo;
-  return { repository, storage, files, base: `http://127.0.0.1:${address.port}` };
+  return {
+    repository,
+    storage,
+    files,
+    base: `http://127.0.0.1:${address.port}`,
+  };
 }
 
 function session(token: string, mutate = false): HeadersInit {
@@ -241,7 +251,13 @@ describe("B5 private files", () => {
 
   it("uploads verified media and never exposes the storage key", async () => {
     const { base } = await harness();
-    const response = await upload(base, "avatar", png, "image/png", "avatar.png");
+    const response = await upload(
+      base,
+      "avatar",
+      png,
+      "image/png",
+      "avatar.png",
+    );
     expect(response.status).toBe(201);
     const body = (await response.json()) as { data: Record<string, unknown> };
     expect(body.data.ownerId).toBe(owner.id);
@@ -252,11 +268,17 @@ describe("B5 private files", () => {
 
   it("rejects spoofed MIME/content, bad extensions, and oversized avatar bodies", async () => {
     const { base } = await harness();
-    const spoofed = await upload(base, "avatar", jpeg, "image/png", "avatar.png");
-    expect(spoofed.status).toBe(415);
-    expect(((await spoofed.json()) as { error: { code: string } }).error.code).toBe(
-      "FILE_TYPE_MISMATCH",
+    const spoofed = await upload(
+      base,
+      "avatar",
+      jpeg,
+      "image/png",
+      "avatar.png",
     );
+    expect(spoofed.status).toBe(415);
+    expect(
+      ((await spoofed.json()) as { error: { code: string } }).error.code,
+    ).toBe("FILE_TYPE_MISMATCH");
 
     const wrongExtension = await upload(
       base,
@@ -280,9 +302,9 @@ describe("B5 private files", () => {
       "large.png",
     );
     expect(tooLarge.status).toBe(413);
-    expect(((await tooLarge.json()) as { error: { code: string } }).error.code).toBe(
-      "FILE_TOO_LARGE",
-    );
+    expect(
+      ((await tooLarge.json()) as { error: { code: string } }).error.code,
+    ).toBe("FILE_TOO_LARGE");
   });
 
   it("enforces authenticated exact-origin mutation boundaries", async () => {
@@ -314,19 +336,25 @@ describe("B5 private files", () => {
 
   it("returns 409 rather than overwriting an existing current-purpose file", async () => {
     const { base } = await harness();
-    expect((await upload(base, "avatar", png, "image/png", "one.png")).status).toBe(
-      201,
-    );
+    expect(
+      (await upload(base, "avatar", png, "image/png", "one.png")).status,
+    ).toBe(201);
     const duplicate = await upload(base, "avatar", png, "image/png", "two.png");
     expect(duplicate.status).toBe(409);
-    expect(((await duplicate.json()) as { error: { code: string } }).error.code).toBe(
-      "FILE_PURPOSE_ALREADY_EXISTS",
-    );
+    expect(
+      ((await duplicate.json()) as { error: { code: string } }).error.code,
+    ).toBe("FILE_PURPOSE_ALREADY_EXISTS");
   });
 
   it("returns 404 rather than leaking another user's private file", async () => {
     const { base } = await harness();
-    const created = await upload(base, "avatar", png, "image/png", "avatar.png");
+    const created = await upload(
+      base,
+      "avatar",
+      png,
+      "image/png",
+      "avatar.png",
+    );
     const createdBody = (await created.json()) as { data: { id: string } };
     const foreign = await fetch(`${base}/api/v1/files/${createdBody.data.id}`, {
       headers: session("other-token"),
@@ -352,7 +380,9 @@ describe("B5 private files", () => {
     expect(download.headers.get("cache-control")).toBe("private, no-store");
     expect(download.headers.get("x-content-type-options")).toBe("nosniff");
     expect(download.headers.get("content-disposition")).toContain("attachment");
-    expect(download.headers.get("content-disposition")).toContain("identidad.png");
+    expect(download.headers.get("content-disposition")).toContain(
+      "identidad.png",
+    );
     expect(Buffer.from(await download.arrayBuffer())).toEqual(png);
 
     const deleted = await fetch(`${base}/api/v1/files/${data.id}`, {

@@ -45,17 +45,23 @@ function repositoryHarness(initial = record()) {
   const reserve = vi.fn(
     async (_input: ReservePrivateFile): Promise<PrivateFileRecord> => initial,
   );
-  const activate = vi.fn(
-    async (_id: string): Promise<PrivateFileRecord> => ({
-      ...initial,
-      status: "active",
-      activatedAt: 2_000,
-    }),
+  const activate = vi.fn(async (_id: string): Promise<PrivateFileRecord> => ({
+    ...initial,
+    status: "active",
+    activatedAt: 2_000,
+  }));
+  const releaseReservation = vi.fn(
+    async (_id: string): Promise<void> => undefined,
   );
-  const releaseReservation = vi.fn(async (_id: string): Promise<void> => undefined);
-  const listActive = vi.fn(async (_ownerId: string) => [] as PrivateFileRecord[]);
-  const findById = vi.fn(async (_id: string): Promise<PrivateFileRecord | null> => initial);
-  const beginDelete = vi.fn(async (_id: string): Promise<PrivateFileRecord | null> => initial);
+  const listActive = vi.fn(
+    async (_ownerId: string) => [] as PrivateFileRecord[],
+  );
+  const findById = vi.fn(
+    async (_id: string): Promise<PrivateFileRecord | null> => initial,
+  );
+  const beginDelete = vi.fn(
+    async (_id: string): Promise<PrivateFileRecord | null> => initial,
+  );
   const markDeleted = vi.fn(async (_id: string): Promise<void> => undefined);
   const findRecoverable = vi.fn(
     async (
@@ -85,8 +91,12 @@ function repositoryHarness(initial = record()) {
 }
 
 function storageHarness() {
-  const put = vi.fn(async (_key: string, _content: Buffer): Promise<void> => undefined);
-  const read = vi.fn(async (_key: string): Promise<Buffer | null> => Buffer.from(png));
+  const put = vi.fn(
+    async (_key: string, _content: Buffer): Promise<void> => undefined,
+  );
+  const read = vi.fn(async (_key: string): Promise<Buffer | null> =>
+    Buffer.from(png),
+  );
   const remove = vi.fn(async (_key: string): Promise<void> => undefined);
   const storage: PrivateBlobStorage = { put, read, delete: remove };
   return { storage, put, read, remove };
@@ -96,7 +106,9 @@ describe("B5 private file domain invariants", () => {
   it("keeps staging metadata recoverable when compensating blob deletion fails", async () => {
     const repo = repositoryHarness();
     const blobs = storageHarness();
-    repo.activate.mockRejectedValueOnce(new Error("metadata activation failed"));
+    repo.activate.mockRejectedValueOnce(
+      new Error("metadata activation failed"),
+    );
     blobs.remove.mockRejectedValueOnce(new Error("filesystem unavailable"));
     const service = createPrivateFileService({
       repository: repo.repository,
@@ -118,7 +130,9 @@ describe("B5 private file domain invariants", () => {
   it("releases staging metadata after successful compensation", async () => {
     const repo = repositoryHarness();
     const blobs = storageHarness();
-    repo.activate.mockRejectedValueOnce(new Error("metadata activation failed"));
+    repo.activate.mockRejectedValueOnce(
+      new Error("metadata activation failed"),
+    );
     const service = createPrivateFileService({
       repository: repo.repository,
       storage: blobs.storage,

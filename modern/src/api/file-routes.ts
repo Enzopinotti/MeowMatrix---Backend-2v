@@ -111,8 +111,9 @@ async function currentUser(
 }
 
 function encodedFilename(name: string): string {
-  return encodeURIComponent(name).replace(/[!'()*]/g, (character) =>
-    `%${character.charCodeAt(0).toString(16).toUpperCase()}`,
+  return encodeURIComponent(name).replace(
+    /[!'()*]/g,
+    (character) => `%${character.charCodeAt(0).toString(16).toUpperCase()}`,
   );
 }
 
@@ -174,7 +175,10 @@ export function createPrivateFileRouter(options: PrivateFileRouterOptions) {
     asyncHandler(async (request, response) => {
       const user = await currentUser(request, options.authService);
       const fileId = parsePrivateFileId(request.params.fileId);
-      const metadata = await options.privateFileService.getMetadata(user, fileId);
+      const metadata = await options.privateFileService.getMetadata(
+        user,
+        fileId,
+      );
       if (metadata === null) {
         throw ApiError.notFound("FILE_NOT_FOUND", "Private file was not found");
       }

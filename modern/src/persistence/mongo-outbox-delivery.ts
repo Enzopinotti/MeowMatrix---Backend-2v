@@ -115,7 +115,11 @@ export class MongoOutboxDeliveryRepository implements OutboxDeliveryRepository {
     return document === null ? null : mapClaim(document);
   }
 
-  async complete(eventId: string, workerId: string, now: number): Promise<void> {
+  async complete(
+    eventId: string,
+    workerId: string,
+    now: number,
+  ): Promise<void> {
     if (!ObjectId.isValid(eventId)) {
       throw new Error("Outbox event id is invalid");
     }
@@ -160,7 +164,9 @@ export class MongoOutboxDeliveryRepository implements OutboxDeliveryRepository {
       },
     );
     if (result.matchedCount !== 1) {
-      throw new Error("Outbox delivery lease was lost before failure state persisted");
+      throw new Error(
+        "Outbox delivery lease was lost before failure state persisted",
+      );
     }
   }
 }

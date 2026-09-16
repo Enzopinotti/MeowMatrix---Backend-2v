@@ -39,7 +39,10 @@ export interface PrivateFileRepository {
   findById(id: string): Promise<PrivateFileRecord | null>;
   beginDelete(id: string): Promise<PrivateFileRecord | null>;
   markDeleted(id: string): Promise<void>;
-  findRecoverable(now: number, staleStagingBefore: number): Promise<readonly PrivateFileRecord[]>;
+  findRecoverable(
+    now: number,
+    staleStagingBefore: number,
+  ): Promise<readonly PrivateFileRecord[]>;
 }
 
 export interface PrivateBlobStorage {
@@ -65,7 +68,10 @@ export interface PrivateFileService {
     purpose: PrivateFilePurpose,
     upload: PrivateFileUpload,
   ): Promise<PrivateFileDto>;
-  list(user: UserDto, ownerId: string | null): Promise<readonly PrivateFileDto[]>;
+  list(
+    user: UserDto,
+    ownerId: string | null,
+  ): Promise<readonly PrivateFileDto[]>;
   getMetadata(user: UserDto, fileId: string): Promise<PrivateFileDto | null>;
   download(user: UserDto, fileId: string): Promise<PrivateFileDownload | null>;
   delete(user: UserDto, fileId: string): Promise<boolean>;
@@ -98,7 +104,9 @@ export const purposePolicies: Readonly<
   },
 };
 
-const extensionsByMediaType: Readonly<Record<VerifiedMediaType, readonly string[]>> = {
+const extensionsByMediaType: Readonly<
+  Record<VerifiedMediaType, readonly string[]>
+> = {
   "image/jpeg": [".jpg", ".jpeg"],
   "image/png": [".png"],
   "image/webp": [".webp"],
@@ -109,7 +117,9 @@ function startsWithBytes(buffer: Buffer, bytes: readonly number[]): boolean {
   return bytes.every((byte, index) => buffer[index] === byte);
 }
 
-export function detectVerifiedMediaType(buffer: Buffer): VerifiedMediaType | null {
+export function detectVerifiedMediaType(
+  buffer: Buffer,
+): VerifiedMediaType | null {
   if (buffer.length >= 3 && startsWithBytes(buffer, [0xff, 0xd8, 0xff])) {
     return "image/jpeg";
   }
@@ -126,7 +136,10 @@ export function detectVerifiedMediaType(buffer: Buffer): VerifiedMediaType | nul
   ) {
     return "image/webp";
   }
-  if (buffer.length >= 5 && buffer.subarray(0, 5).toString("ascii") === "%PDF-") {
+  if (
+    buffer.length >= 5 &&
+    buffer.subarray(0, 5).toString("ascii") === "%PDF-"
+  ) {
     return "application/pdf";
   }
   return null;
@@ -255,14 +268,24 @@ export function createPrivateFileService(options: {
     async list(user, ownerId) {
       const targetOwnerId = ownerId ?? user.id;
       if (targetOwnerId !== user.id && user.role !== "admin") {
-        throw new ApiError(403, "FILE_SCOPE_FORBIDDEN", "File scope is forbidden");
+        throw new ApiError(
+          403,
+          "FILE_SCOPE_FORBIDDEN",
+          "File scope is forbidden",
+        );
       }
-      return (await options.repository.listActive(targetOwnerId)).map(privateFileDto);
+      return (await options.repository.listActive(targetOwnerId)).map(
+        privateFileDto,
+      );
     },
 
     async getMetadata(user, fileId) {
       const record = await options.repository.findById(fileId);
-      if (record === null || record.status !== "active" || !canRead(user, record)) {
+      if (
+        record === null ||
+        record.status !== "active" ||
+        !canRead(user, record)
+      ) {
         return null;
       }
       return privateFileDto(record);
@@ -270,7 +293,11 @@ export function createPrivateFileService(options: {
 
     async download(user, fileId) {
       const record = await options.repository.findById(fileId);
-      if (record === null || record.status !== "active" || !canRead(user, record)) {
+      if (
+        record === null ||
+        record.status !== "active" ||
+        !canRead(user, record)
+      ) {
         return null;
       }
       const content = await options.storage.read(record.storageKey);
@@ -292,7 +319,11 @@ export function createPrivateFileService(options: {
 
     async delete(user, fileId) {
       const record = await options.repository.findById(fileId);
-      if (record === null || record.status !== "active" || !canRead(user, record)) {
+      if (
+        record === null ||
+        record.status !== "active" ||
+        !canRead(user, record)
+      ) {
         return false;
       }
       const deleting = await options.repository.beginDelete(fileId);

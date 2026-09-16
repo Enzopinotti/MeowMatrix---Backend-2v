@@ -29,7 +29,9 @@ const confirmation: OrderConfirmation = {
   },
 };
 
-function event(overrides: Partial<ClaimedOutboxEvent> = {}): ClaimedOutboxEvent {
+function event(
+  overrides: Partial<ClaimedOutboxEvent> = {},
+): ClaimedOutboxEvent {
   return {
     id: "dddddddddddddddddddddddd",
     type: "order.confirmed",
@@ -42,14 +44,12 @@ function event(overrides: Partial<ClaimedOutboxEvent> = {}): ClaimedOutboxEvent 
 
 function harness(claimed: ClaimedOutboxEvent | null = event()) {
   const claim = vi.fn(
-    async (_options: Parameters<OutboxDeliveryRepository["claim"]>[0]) => claimed,
+    async (_options: Parameters<OutboxDeliveryRepository["claim"]>[0]) =>
+      claimed,
   );
   const complete = vi.fn(
-    async (
-      _eventId: string,
-      _workerId: string,
-      _now: number,
-    ): Promise<void> => undefined,
+    async (_eventId: string, _workerId: string, _now: number): Promise<void> =>
+      undefined,
   );
   const fail = vi.fn(
     async (
@@ -64,7 +64,9 @@ function harness(claimed: ClaimedOutboxEvent | null = event()) {
     ): Promise<OrderConfirmation | null> => confirmation,
   );
   const source: OrderConfirmationSource = { load };
-  const send = vi.fn(async (_input: OrderConfirmation): Promise<void> => undefined);
+  const send = vi.fn(
+    async (_input: OrderConfirmation): Promise<void> => undefined,
+  );
   const service = createOutboxDeliveryService({
     repository,
     orderSource: source,
@@ -78,7 +80,9 @@ function harness(claimed: ClaimedOutboxEvent | null = event()) {
 describe("B5 outbox delivery", () => {
   it("marks a confirmed order delivered only after notifier success", async () => {
     const { service, send, complete, fail } = harness();
-    await expect(service.deliverNext("worker-a", 1_000)).resolves.toBe("delivered");
+    await expect(service.deliverNext("worker-a", 1_000)).resolves.toBe(
+      "delivered",
+    );
     expect(send).toHaveBeenCalledWith(confirmation);
     expect(complete).toHaveBeenCalledWith(
       "dddddddddddddddddddddddd",
@@ -96,7 +100,9 @@ describe("B5 outbox delivery", () => {
       }),
     );
 
-    await expect(service.deliverNext("worker-a", 10_000)).resolves.toBe("retry");
+    await expect(service.deliverNext("worker-a", 10_000)).resolves.toBe(
+      "retry",
+    );
     expect(fail).toHaveBeenCalledTimes(1);
     const call = fail.mock.calls[0]?.[0];
     expect(call).toBeDefined();
@@ -109,12 +115,15 @@ describe("B5 outbox delivery", () => {
 
   it("dead-letters poison events and missing aggregate sources", async () => {
     const unsupported = harness(event({ type: "unknown.event" }));
-    await expect(unsupported.service.deliverNext("worker-a", 1_000)).resolves.toBe(
-      "dead-letter",
-    );
+    await expect(
+      unsupported.service.deliverNext("worker-a", 1_000),
+    ).resolves.toBe("dead-letter");
     expect(unsupported.send).not.toHaveBeenCalled();
     expect(unsupported.fail).toHaveBeenCalledWith(
-      expect.objectContaining({ terminal: true, errorCode: "UnsupportedEventType" }),
+      expect.objectContaining({
+        terminal: true,
+        errorCode: "UnsupportedEventType",
+      }),
     );
 
     const missing = harness();
@@ -134,8 +143,12 @@ describe("B5 outbox delivery", () => {
   it("dead-letters the final configured delivery attempt", async () => {
     const { service, send, fail } = harness(event({ attempts: 6 }));
     send.mockRejectedValueOnce(new Error("temporary"));
-    await expect(service.deliverNext("worker-a", 1_000)).resolves.toBe("dead-letter");
-    expect(fail).toHaveBeenCalledWith(expect.objectContaining({ terminal: true }));
+    await expect(service.deliverNext("worker-a", 1_000)).resolves.toBe(
+      "dead-letter",
+    );
+    expect(fail).toHaveBeenCalledWith(
+      expect.objectContaining({ terminal: true }),
+    );
   });
 
   it("propagates lease persistence loss instead of falsely reporting delivery", async () => {

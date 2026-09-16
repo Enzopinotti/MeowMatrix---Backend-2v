@@ -41,7 +41,10 @@ export interface OrderConfirmationNotifier {
 }
 
 export type OutboxDeliveryService = {
-  deliverNext(workerId: string, now?: number): Promise<"idle" | "delivered" | "retry" | "dead-letter">;
+  deliverNext(
+    workerId: string,
+    now?: number,
+  ): Promise<"idle" | "delivered" | "retry" | "dead-letter">;
 };
 
 function retryDelayMs(attempts: number): number {

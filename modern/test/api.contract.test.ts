@@ -152,9 +152,9 @@ describe("API v1 contract", () => {
     expect(JSON.stringify(openApi.components.schemas.User)).not.toContain(
       "resetPassword",
     );
-    expect(JSON.stringify(openApi.components.schemas.PrivateFile)).not.toContain(
-      "storageKey",
-    );
+    expect(
+      JSON.stringify(openApi.components.schemas.PrivateFile),
+    ).not.toContain("storageKey");
   });
 
   it("validates list queries and returns a typed success envelope", async () => {

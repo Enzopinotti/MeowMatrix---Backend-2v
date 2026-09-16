@@ -117,7 +117,9 @@ if (config.mongoUrl !== null) {
   });
 
   if (config.privateStorageRoot !== null) {
-    privateStorage = new FileSystemPrivateBlobStorage(config.privateStorageRoot);
+    privateStorage = new FileSystemPrivateBlobStorage(
+      config.privateStorageRoot,
+    );
     await privateStorage.initialize();
     privateFileService = createPrivateFileService({
       repository: new MongoPrivateFileRepository(persistence.db),
@@ -143,7 +145,9 @@ const readinessProbe = async (): Promise<ReadinessSnapshot> => {
 
   if (mongoClient !== null) {
     try {
-      await mongoClient.db(config.mongoDbName ?? undefined).command({ ping: 1 });
+      await mongoClient
+        .db(config.mongoDbName ?? undefined)
+        .command({ ping: 1 });
       database = "ok";
     } catch {
       database = "degraded";
@@ -213,7 +217,9 @@ const server = app.listen(config.port, () => {
     authPersistence: authService ? "mongo" : "unavailable",
     catalogPersistence: catalogService ? "mongo" : "unavailable",
     commercePersistence: commerceService ? "mongo" : "unavailable",
-    privateFilePersistence: privateFileService ? "mongo+filesystem" : "unavailable",
+    privateFilePersistence: privateFileService
+      ? "mongo+filesystem"
+      : "unavailable",
     outboxDelivery: outboxWorker ? "worker" : "unavailable",
   });
 });
