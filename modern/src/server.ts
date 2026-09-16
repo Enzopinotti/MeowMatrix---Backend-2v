@@ -2,7 +2,14 @@ import { createApp } from "./app.js";
 import { loadConfig } from "./config/env.js";
 
 const config = loadConfig();
-const app = createApp();
+const app = createApp({
+  allowedOrigins: config.frontendOrigins,
+  sessionCookieOptions: {
+    secure: config.sessionCookieSecure,
+    sameSite: config.sessionCookieSameSite,
+    maxAgeSeconds: config.sessionTtlSeconds,
+  },
+});
 
 const server = app.listen(config.port, () => {
   console.log("Meow API listening", {
