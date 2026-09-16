@@ -1,0 +1,46 @@
+name: Temporary B5 qualification
+
+on:
+  push:
+    branches:
+      - feat/modern-b5-private-files-delivery
+    paths:
+      - ".github/workflows/tmp-b5-qualify.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          ref: feat/modern-b5-private-files-delivery
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: modern/package-lock.json
+      - name: Install locked dependencies
+        working-directory: modern
+        run: npm ci --ignore-scripts
+      - name: Format and qualify B5 backend
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd modern
+          npx --no-install prettier --write src test package.json
+          npm audit --omit=dev --audit-level=high
+          npm run check
+          cd ..
+          git rm .github/workflows/tmp-b5-qualify.yml
+          if git diff --quiet; then
+            exit 0
+          fi
+          git config user.name "Enzo Pinotti"
+          git config user.email "enzopinottii@gmail.com"
+          git add modern/src modern/test modern/package.json modern/package-lock.json .github/workflows/tmp-b5-qualify.yml
+          git commit -m "style(b5): canonicalize qualified backend"
+          git push origin HEAD:feat/modern-b5-private-files-delivery
