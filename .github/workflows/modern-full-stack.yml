@@ -62,6 +62,16 @@ jobs:
       - name: Run transactional and persistence smoke
         run: bash integration/full-stack-smoke.sh
 
+      - name: Run target data preflight
+        run: docker compose -f integration/compose.b6.yml exec -T -e DATA_PREFLIGHT_MODE=target api node dist/data-preflight.js
+
+      - name: Exercise public smoke contract against local topology
+        env:
+          MEOW_PUBLIC_WEB_ORIGIN: http://127.0.0.1:14173
+          MEOW_PUBLIC_API_ORIGIN: http://127.0.0.1:18080
+          MEOW_PUBLIC_ALLOW_HTTP: "true"
+        run: bash integration/public-smoke.sh
+
       - name: Print release candidate evidence
         if: always()
         run: |
