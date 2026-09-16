@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { loadConfig } from "../src/config/env.js";
 
+const testRateLimitHmacSecret = "test-only-rate-limit-hmac-secret-32-bytes";
+
 function productionEnv(overrides: NodeJS.ProcessEnv = {}): NodeJS.ProcessEnv {
   return {
     NODE_ENV: "production",
     FRONTEND_ORIGINS: "https://app.example.com",
     TRUST_PROXY_HOPS: "1",
+    RATE_LIMIT_HMAC_SECRET: testRateLimitHmacSecret,
     MONGO_URL: "mongodb://mongo:27017/meow?replicaSet=rs0",
     MONGO_DB_NAME: "meow",
     SMTP_HOST: "smtp.example.com",
@@ -22,6 +25,7 @@ describe("loadConfig", () => {
       port: 8080,
       nodeEnv: "development",
       trustProxyHops: 0,
+      rateLimitHmacSecret: null,
       frontendOrigins: [],
       sessionCookieSecure: false,
       sessionCookieSameSite: "lax",
@@ -49,6 +53,7 @@ describe("loadConfig", () => {
     expect(loadConfig(productionEnv())).toMatchObject({
       nodeEnv: "production",
       trustProxyHops: 1,
+      rateLimitHmacSecret: testRateLimitHmacSecret,
       frontendOrigins: ["https://app.example.com"],
       sessionCookieSecure: true,
       sessionCookieSameSite: "lax",
@@ -96,6 +101,7 @@ describe("loadConfig", () => {
     expect(
       loadConfig({
         MONGO_URL: "mongodb://localhost:27017/meow",
+        RATE_LIMIT_HMAC_SECRET: testRateLimitHmacSecret,
         SMTP_HOST: "smtp.example.com",
         SMTP_FROM: "Meow <no-reply@example.com>",
         PASSWORD_RESET_URL: "http://localhost:5173/reset-password",
@@ -105,6 +111,24 @@ describe("loadConfig", () => {
       smtpHost: "smtp.example.com",
       passwordResetUrl: "http://localhost:5173/reset-password",
     });
+  });
+
+  it("requires a strong HMAC secret for Mongo-backed auth throttling", () => {
+    const runtime = {
+      MONGO_URL: "mongodb://localhost:27017/meow",
+      SMTP_HOST: "smtp.example.com",
+      SMTP_FROM: "Meow <no-reply@example.com>",
+      PASSWORD_RESET_URL: "http://localhost:5173/reset-password",
+    };
+
+    expect(() => loadConfig(runtime)).toThrow(
+      "MONGO_URL auth runtime requires RATE_LIMIT_HMAC_SECRET with at least 32 UTF-8 bytes",
+    );
+    expect(() =>
+      loadConfig({ ...runtime, RATE_LIMIT_HMAC_SECRET: "too-short" }),
+    ).toThrow(
+      "MONGO_URL auth runtime requires RATE_LIMIT_HMAC_SECRET with at least 32 UTF-8 bytes",
+    );
   });
 
   it("parses private storage, trusted proxy hops and bounded worker settings", () => {
