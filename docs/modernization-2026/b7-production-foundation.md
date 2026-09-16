@@ -66,6 +66,8 @@ The Mongo store never persists the raw client IP. It derives `keyHash` with HMAC
 
 `RATE_LIMIT_HMAC_SECRET` is an operational secret: inject it through the deployment secret manager, never source-control or log it, and rotate it independently from session/password-reset secrets. Rotation intentionally starts fresh throttle buckets; it does not invalidate sessions or mutate business data.
 
+The fixed value present in the B6 Compose and the synthetic value used by CI are test-only fixtures. They are intentionally non-production and must never be promoted or reused as production secret material.
+
 The collection is `auth_rate_limits`.
 
 ### Atomicity and expiry
