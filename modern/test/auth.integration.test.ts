@@ -21,9 +21,7 @@ class MemoryUsers implements AuthUserRepository {
   private nextId = 1;
 
   async findByEmail(email: string) {
-    return (
-      [...this.byId.values()].find((user) => user.email === email) ?? null
-    );
+    return [...this.byId.values()].find((user) => user.email === email) ?? null;
   }
 
   async findById(id: string) {
@@ -176,7 +174,10 @@ describe("B3 auth lifecycle", () => {
 
     const loginResponse = await fetch(
       `${origin}/api/v1/auth/login`,
-      jsonRequest({ email: registration.email, password: registration.password }),
+      jsonRequest({
+        email: registration.email,
+        password: registration.password,
+      }),
     );
     expect(loginResponse.status).toBe(200);
     const setCookie = loginResponse.headers.get("set-cookie");
@@ -222,9 +223,13 @@ describe("B3 auth lifecycle", () => {
 
     const loginResponse = await fetch(
       `${origin}/api/v1/auth/login`,
-      jsonRequest({ email: registration.email, password: registration.password }),
+      jsonRequest({
+        email: registration.email,
+        password: registration.password,
+      }),
     );
-    const oldCookie = loginResponse.headers.get("set-cookie")?.split(";")[0] ?? "";
+    const oldCookie =
+      loginResponse.headers.get("set-cookie")?.split(";")[0] ?? "";
 
     const knownResponse = await fetch(
       `${origin}/api/v1/auth/password-reset/request`,

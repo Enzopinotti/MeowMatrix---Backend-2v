@@ -51,10 +51,7 @@ export function createCorsMiddleware(
     response.setHeader("Access-Control-Allow-Origin", origin);
     response.setHeader("Access-Control-Allow-Credentials", "true");
     if (request.method === "OPTIONS") {
-      response.setHeader(
-        "Access-Control-Allow-Methods",
-        "GET,POST,OPTIONS",
-      );
+      response.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
       response.setHeader("Access-Control-Allow-Headers", "Content-Type");
       response.status(204).end();
       return;
@@ -70,7 +67,9 @@ export function createOriginGuard(
   return (request, _response, next) => {
     const origin = request.get("origin");
     if (origin && !allowed.has(origin)) {
-      next(new ApiError(403, "ORIGIN_FORBIDDEN", "Request origin is not allowed"));
+      next(
+        new ApiError(403, "ORIGIN_FORBIDDEN", "Request origin is not allowed"),
+      );
       return;
     }
     next();
@@ -110,7 +109,9 @@ export function expiredSessionCookie(options: SessionCookieOptions): string {
   ].join("; ");
 }
 
-export function readSessionCookie(cookieHeader: string | undefined): string | null {
+export function readSessionCookie(
+  cookieHeader: string | undefined,
+): string | null {
   if (!cookieHeader) return null;
   for (const entry of cookieHeader.split(";")) {
     const separator = entry.indexOf("=");

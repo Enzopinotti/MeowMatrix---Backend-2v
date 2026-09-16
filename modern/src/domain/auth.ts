@@ -13,10 +13,7 @@ export type AuthUserRecord = UserDto & {
   passwordHash: string;
 };
 
-export type CreateAuthUser = Omit<
-  AuthUserRecord,
-  "id" | "role" | "avatarUrl"
->;
+export type CreateAuthUser = Omit<AuthUserRecord, "id" | "role" | "avatarUrl">;
 
 export interface AuthUserRepository {
   findByEmail(email: string): Promise<AuthUserRecord | null>;
@@ -50,7 +47,11 @@ export interface PasswordResetStore {
 }
 
 export interface PasswordResetNotifier {
-  send(input: { email: string; token: string; expiresAt: number }): Promise<void>;
+  send(input: {
+    email: string;
+    token: string;
+    expiresAt: number;
+  }): Promise<void>;
 }
 
 export type AuthSession = {

@@ -55,12 +55,10 @@ function parseDurationSeconds(
 ): number {
   if (value === undefined) return fallback;
   const parsed = Number(value);
-  if (
-    !Number.isSafeInteger(parsed) ||
-    parsed < minimum ||
-    parsed > maximum
-  ) {
-    throw new Error(`${field} must be an integer between ${minimum} and ${maximum}`);
+  if (!Number.isSafeInteger(parsed) || parsed < minimum || parsed > maximum) {
+    throw new Error(
+      `${field} must be an integer between ${minimum} and ${maximum}`,
+    );
   }
   return parsed;
 }
@@ -77,7 +75,11 @@ function parseOrigins(value: string | undefined): readonly string[] {
     } catch {
       throw new Error("FRONTEND_ORIGINS must contain valid absolute URLs");
     }
-    if (!(["http:", "https:"] as const).includes(url.protocol as "http:" | "https:")) {
+    if (
+      !(["http:", "https:"] as const).includes(
+        url.protocol as "http:" | "https:",
+      )
+    ) {
       throw new Error("FRONTEND_ORIGINS only supports http and https origins");
     }
     if (
@@ -87,7 +89,9 @@ function parseOrigins(value: string | undefined): readonly string[] {
       url.search ||
       url.hash
     ) {
-      throw new Error("FRONTEND_ORIGINS entries must be origins without paths or credentials");
+      throw new Error(
+        "FRONTEND_ORIGINS entries must be origins without paths or credentials",
+      );
     }
     unique.add(url.origin);
   }
@@ -102,7 +106,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
   );
   const sessionCookieSameSite = parseSameSite(env.SESSION_COOKIE_SAME_SITE);
   if (sessionCookieSameSite === "none" && !sessionCookieSecure) {
-    throw new Error("SESSION_COOKIE_SAME_SITE=none requires SESSION_COOKIE_SECURE=true");
+    throw new Error(
+      "SESSION_COOKIE_SAME_SITE=none requires SESSION_COOKIE_SECURE=true",
+    );
   }
 
   return {

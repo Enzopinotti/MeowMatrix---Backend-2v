@@ -46,7 +46,9 @@ export function createRateLimiter(
       response.setHeader("Retry-After", String(retryAfterSeconds));
       response
         .status(429)
-        .json(errorEnvelope("RATE_LIMITED", "Too many authentication attempts"));
+        .json(
+          errorEnvelope("RATE_LIMITED", "Too many authentication attempts"),
+        );
       return;
     }
 

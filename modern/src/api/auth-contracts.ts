@@ -95,7 +95,9 @@ export function parseRegisterRequest(value: unknown): RegisterRequest {
   };
 }
 
-export function parsePasswordResetRequest(value: unknown): PasswordResetRequest {
+export function parsePasswordResetRequest(
+  value: unknown,
+): PasswordResetRequest {
   const input = record(value);
   return { email: emailField(input) };
 }

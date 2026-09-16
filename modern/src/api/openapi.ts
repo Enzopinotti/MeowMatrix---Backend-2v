@@ -74,7 +74,8 @@ export const openApiDocument = {
         },
         responses: {
           "200": {
-            description: "Authenticated session; raw session identifier is returned only as an HttpOnly cookie",
+            description:
+              "Authenticated session; raw session identifier is returned only as an HttpOnly cookie",
             headers: {
               "Set-Cookie": {
                 schema: { type: "string" },
@@ -182,11 +183,35 @@ export const openApiDocument = {
       get: {
         summary: "List products",
         parameters: [
-          { name: "limit", in: "query", schema: { type: "integer", minimum: 1, maximum: 100, default: 20 } },
-          { name: "offset", in: "query", schema: { type: "integer", minimum: 0, default: 0 } },
-          { name: "q", in: "query", schema: { type: "string", maxLength: 120 } },
-          { name: "categoryId", in: "query", schema: { type: "string", maxLength: 128 } },
-          { name: "sort", in: "query", schema: { type: "string", enum: ["newest", "price_asc", "price_desc"], default: "newest" } },
+          {
+            name: "limit",
+            in: "query",
+            schema: { type: "integer", minimum: 1, maximum: 100, default: 20 },
+          },
+          {
+            name: "offset",
+            in: "query",
+            schema: { type: "integer", minimum: 0, default: 0 },
+          },
+          {
+            name: "q",
+            in: "query",
+            schema: { type: "string", maxLength: 120 },
+          },
+          {
+            name: "categoryId",
+            in: "query",
+            schema: { type: "string", maxLength: 128 },
+          },
+          {
+            name: "sort",
+            in: "query",
+            schema: {
+              type: "string",
+              enum: ["newest", "price_asc", "price_desc"],
+              default: "newest",
+            },
+          },
         ],
         responses: {
           "200": {
@@ -196,7 +221,9 @@ export const openApiDocument = {
                 schema: {
                   type: "object",
                   required: ["data"],
-                  properties: { data: { $ref: "#/components/schemas/ProductList" } },
+                  properties: {
+                    data: { $ref: "#/components/schemas/ProductList" },
+                  },
                 },
               },
             },
@@ -210,7 +237,12 @@ export const openApiDocument = {
       get: {
         summary: "Read a product",
         parameters: [
-          { name: "productId", in: "path", required: true, schema: { type: "string", minLength: 1, maxLength: 128 } },
+          {
+            name: "productId",
+            in: "path",
+            required: true,
+            schema: { type: "string", minLength: 1, maxLength: 128 },
+          },
         ],
         responses: {
           "200": { description: "Product" },
@@ -234,7 +266,12 @@ export const openApiDocument = {
       get: {
         summary: "Read a category",
         parameters: [
-          { name: "categoryId", in: "path", required: true, schema: { type: "string", minLength: 1, maxLength: 128 } },
+          {
+            name: "categoryId",
+            in: "path",
+            required: true,
+            schema: { type: "string", minLength: 1, maxLength: 128 },
+          },
         ],
         responses: {
           "200": { description: "Category" },
@@ -252,7 +289,8 @@ export const openApiDocument = {
         type: "apiKey",
         in: "cookie",
         name: "meow_session",
-        description: "Opaque session identifier. Browser JavaScript must not read or persist it.",
+        description:
+          "Opaque session identifier. Browser JavaScript must not read or persist it.",
       },
     },
     schemas: {
@@ -264,7 +302,12 @@ export const openApiDocument = {
           name: { type: "string", minLength: 1, maxLength: 80 },
           lastName: { type: "string", minLength: 1, maxLength: 80 },
           email: { type: "string", format: "email", maxLength: 254 },
-          password: { type: "string", minLength: 12, maxLength: 128, writeOnly: true },
+          password: {
+            type: "string",
+            minLength: 12,
+            maxLength: 128,
+            writeOnly: true,
+          },
         },
       },
       LoginRequest: {
@@ -273,22 +316,39 @@ export const openApiDocument = {
         required: ["email", "password"],
         properties: {
           email: { type: "string", format: "email", maxLength: 254 },
-          password: { type: "string", minLength: 12, maxLength: 128, writeOnly: true },
+          password: {
+            type: "string",
+            minLength: 12,
+            maxLength: 128,
+            writeOnly: true,
+          },
         },
       },
       PasswordResetRequest: {
         type: "object",
         additionalProperties: false,
         required: ["email"],
-        properties: { email: { type: "string", format: "email", maxLength: 254 } },
+        properties: {
+          email: { type: "string", format: "email", maxLength: 254 },
+        },
       },
       PasswordResetConfirmRequest: {
         type: "object",
         additionalProperties: false,
         required: ["token", "password"],
         properties: {
-          token: { type: "string", minLength: 40, maxLength: 128, writeOnly: true },
-          password: { type: "string", minLength: 12, maxLength: 128, writeOnly: true },
+          token: {
+            type: "string",
+            minLength: 40,
+            maxLength: 128,
+            writeOnly: true,
+          },
+          password: {
+            type: "string",
+            minLength: 12,
+            maxLength: 128,
+            writeOnly: true,
+          },
         },
       },
       AuthSession: {
@@ -315,7 +375,21 @@ export const openApiDocument = {
       Product: {
         type: "object",
         additionalProperties: false,
-        required: ["id", "name", "description", "price", "code", "stock", "categoryId", "thumbnailUrls", "status", "isVisible", "tags", "createdAt", "updatedAt"],
+        required: [
+          "id",
+          "name",
+          "description",
+          "price",
+          "code",
+          "stock",
+          "categoryId",
+          "thumbnailUrls",
+          "status",
+          "isVisible",
+          "tags",
+          "createdAt",
+          "updatedAt",
+        ],
         properties: {
           id: { type: "string" },
           name: { type: "string" },
@@ -337,7 +411,10 @@ export const openApiDocument = {
         additionalProperties: false,
         required: ["items", "total", "limit", "offset"],
         properties: {
-          items: { type: "array", items: { $ref: "#/components/schemas/Product" } },
+          items: {
+            type: "array",
+            items: { $ref: "#/components/schemas/Product" },
+          },
           total: { type: "integer", minimum: 0 },
           limit: { type: "integer", minimum: 1, maximum: 100 },
           offset: { type: "integer", minimum: 0 },
@@ -360,7 +437,10 @@ export const openApiDocument = {
         properties: {
           id: { type: "string" },
           userId: { type: "string" },
-          lines: { type: "array", items: { $ref: "#/components/schemas/CartLine" } },
+          lines: {
+            type: "array",
+            items: { $ref: "#/components/schemas/CartLine" },
+          },
         },
       },
       User: {
@@ -403,13 +483,27 @@ export const openApiDocument = {
       Order: {
         type: "object",
         additionalProperties: false,
-        required: ["id", "code", "purchaserId", "status", "lines", "total", "createdAt"],
+        required: [
+          "id",
+          "code",
+          "purchaserId",
+          "status",
+          "lines",
+          "total",
+          "createdAt",
+        ],
         properties: {
           id: { type: "string" },
           code: { type: "string" },
           purchaserId: { type: "string" },
-          status: { type: "string", enum: ["draft", "confirmed", "partially_fulfilled", "cancelled"] },
-          lines: { type: "array", items: { $ref: "#/components/schemas/OrderLine" } },
+          status: {
+            type: "string",
+            enum: ["draft", "confirmed", "partially_fulfilled", "cancelled"],
+          },
+          lines: {
+            type: "array",
+            items: { $ref: "#/components/schemas/OrderLine" },
+          },
           total: { type: "number", minimum: 0 },
           createdAt: { type: "string", format: "date-time" },
         },
@@ -429,7 +523,10 @@ export const openApiDocument = {
             properties: {
               code: { type: "string" },
               message: { type: "string" },
-              details: { type: "array", items: { $ref: "#/components/schemas/ApiErrorDetail" } },
+              details: {
+                type: "array",
+                items: { $ref: "#/components/schemas/ApiErrorDetail" },
+              },
             },
           },
         },
@@ -438,11 +535,17 @@ export const openApiDocument = {
     responses: {
       ValidationError: errorResponse("Request failed runtime validation"),
       Unauthorized: errorResponse("Authentication is missing or invalid"),
-      Forbidden: errorResponse("Browser origin or authorization policy rejected the request"),
+      Forbidden: errorResponse(
+        "Browser origin or authorization policy rejected the request",
+      ),
       NotFound: errorResponse("Requested resource does not exist"),
       Conflict: errorResponse("Request conflicts with current resource state"),
-      TooManyRequests: errorResponse("Authentication abuse boundary was exceeded"),
-      ServiceUnavailable: errorResponse("Required persistence adapter is not connected"),
+      TooManyRequests: errorResponse(
+        "Authentication abuse boundary was exceeded",
+      ),
+      ServiceUnavailable: errorResponse(
+        "Required persistence adapter is not connected",
+      ),
     },
   },
 } as const;

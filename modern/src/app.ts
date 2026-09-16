@@ -1,10 +1,7 @@
 import express, { type RequestHandler } from "express";
 import { apiErrorHandler, errorEnvelope } from "./api/errors.js";
 import { createApiV1Router } from "./api/routes.js";
-import {
-  unavailableAuthService,
-  type AuthService,
-} from "./domain/auth.js";
+import { unavailableAuthService, type AuthService } from "./domain/auth.js";
 import {
   unavailableCatalogService,
   type CatalogService,
