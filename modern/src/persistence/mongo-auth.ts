@@ -232,6 +232,7 @@ export async function connectMongoAuthPersistence(input: {
 
   return {
     client,
+    db,
     users: new MongoAuthUsers(db.collection("users")),
     sessions: new MongoSessions(
       db.collection<SessionDocument>("auth_sessions"),
