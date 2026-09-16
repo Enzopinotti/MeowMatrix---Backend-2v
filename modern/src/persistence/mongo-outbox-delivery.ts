@@ -116,14 +116,19 @@ export class MongoOutboxDeliveryRepository implements OutboxDeliveryRepository {
   }
 
   async complete(eventId: string, workerId: string, now: number): Promise<void> {
-    if (!ObjectId.isValid(eventId)) return;
-    await this.events.updateOne(
+    if (!ObjectId.isValid(eventId)) {
+      throw new Error("Outbox event id is invalid");
+    }
+    const result = await this.events.updateOne(
       { _id: new ObjectId(eventId), leaseOwner: workerId, processedAt: null },
       {
         $set: { processedAt: new Date(now) },
         $unset: { leaseOwner: "", leaseExpiresAt: "", lastErrorCode: "" },
       },
     );
+    if (result.matchedCount !== 1) {
+      throw new Error("Outbox delivery lease was lost before completion");
+    }
   }
 
   async fail(options: {
@@ -134,14 +139,16 @@ export class MongoOutboxDeliveryRepository implements OutboxDeliveryRepository {
     terminal: boolean;
     errorCode: string;
   }): Promise<void> {
-    if (!ObjectId.isValid(options.eventId)) return;
+    if (!ObjectId.isValid(options.eventId)) {
+      throw new Error("Outbox event id is invalid");
+    }
     const terminalFields = options.terminal
       ? { failedAt: new Date(options.now), lastErrorCode: options.errorCode }
       : {
           availableAt: new Date(options.nextAvailableAt),
           lastErrorCode: options.errorCode,
         };
-    await this.events.updateOne(
+    const result = await this.events.updateOne(
       {
         _id: new ObjectId(options.eventId),
         leaseOwner: options.workerId,
@@ -152,6 +159,9 @@ export class MongoOutboxDeliveryRepository implements OutboxDeliveryRepository {
         $unset: { leaseOwner: "", leaseExpiresAt: "" },
       },
     );
+    if (result.matchedCount !== 1) {
+      throw new Error("Outbox delivery lease was lost before failure state persisted");
+    }
   }
 }
 
