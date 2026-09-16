@@ -11,6 +11,15 @@ describe("loadConfig", () => {
       sessionCookieSameSite: "lax",
       sessionTtlSeconds: 28_800,
       resetTtlSeconds: 1_800,
+      mongoUrl: null,
+      mongoDbName: null,
+      smtpHost: null,
+      smtpPort: 587,
+      smtpSecure: false,
+      smtpUser: null,
+      smtpPassword: null,
+      smtpFrom: null,
+      passwordResetUrl: null,
     });
   });
 
@@ -47,6 +56,37 @@ describe("loadConfig", () => {
     ).toThrow(
       "SESSION_COOKIE_SAME_SITE=none requires SESSION_COOKIE_SECURE=true",
     );
+  });
+
+  it("requires the complete reset-mail boundary when Mongo auth is enabled", () => {
+    expect(() => loadConfig({ MONGO_URL: "mongodb://localhost:27017/meow" })).toThrow(
+      "MONGO_URL auth runtime requires SMTP_HOST, SMTP_FROM and PASSWORD_RESET_URL",
+    );
+
+    expect(
+      loadConfig({
+        MONGO_URL: "mongodb://localhost:27017/meow",
+        SMTP_HOST: "smtp.example.com",
+        SMTP_FROM: "Meow <no-reply@example.com>",
+        PASSWORD_RESET_URL: "http://localhost:5173/reset-password",
+      }),
+    ).toMatchObject({
+      mongoUrl: "mongodb://localhost:27017/meow",
+      smtpHost: "smtp.example.com",
+      passwordResetUrl: "http://localhost:5173/reset-password",
+    });
+  });
+
+  it("requires HTTPS reset links in production", () => {
+    expect(() =>
+      loadConfig({
+        NODE_ENV: "production",
+        MONGO_URL: "mongodb://localhost:27017/meow",
+        SMTP_HOST: "smtp.example.com",
+        SMTP_FROM: "Meow <no-reply@example.com>",
+        PASSWORD_RESET_URL: "http://app.example.com/reset-password",
+      }),
+    ).toThrow("PASSWORD_RESET_URL must use https in production");
   });
 
   it("validates the listener port", () => {
