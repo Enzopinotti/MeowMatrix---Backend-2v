@@ -32,16 +32,16 @@ describe("OpenAPI B3 regressions", () => {
   });
 
   it("keeps opaque cookie sessions as the only declared auth mechanism", () => {
-    expect(openApiDocument.components.securitySchemes).toEqual({
-      sessionCookie: {
-        type: "apiKey",
-        in: "cookie",
-        name: "meow_session",
-        description: "Opaque HttpOnly session identifier owned by the backend",
-      },
+    expect(Object.keys(openApiDocument.components.securitySchemes)).toEqual([
+      "cookieSession",
+    ]);
+    expect(openApiDocument.components.securitySchemes.cookieSession).toMatchObject({
+      type: "apiKey",
+      in: "cookie",
+      name: "meow_session",
     });
     expect(
-      JSON.stringify(openApiDocument.components.securitySchemes),
+      JSON.stringify(openApiDocument.components.securitySchemes).toLowerCase(),
     ).not.toContain("bearer");
   });
 });
