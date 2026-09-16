@@ -26,7 +26,7 @@ jobs:
       - name: Install locked dependencies
         working-directory: modern
         run: npm ci --ignore-scripts
-      - name: Format and qualify final B5 backend
+      - name: Format and qualify final B5 backend after lint fix
         shell: bash
         run: |
           set -euo pipefail
