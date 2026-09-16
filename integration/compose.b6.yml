@@ -66,6 +66,7 @@ services:
       SESSION_COOKIE_SAME_SITE: lax
       SESSION_TTL_SECONDS: "28800"
       RESET_TTL_SECONDS: "1800"
+      RATE_LIMIT_HMAC_SECRET: "b6-ci-only-rate-limit-hmac-secret-32-bytes"
       MONGO_URL: "mongodb://mongo:27017/meow_matrix?replicaSet=rs0"
       MONGO_DB_NAME: meow_matrix
       SMTP_HOST: mailpit
