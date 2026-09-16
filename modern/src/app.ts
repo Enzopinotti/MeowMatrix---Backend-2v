@@ -31,7 +31,12 @@ export function createApp(options: AppOptions = {}) {
     });
   };
 
-  const errorHandler: ErrorRequestHandler = (error, _request, response, _next) => {
+  const errorHandler: ErrorRequestHandler = (
+    error,
+    _request,
+    response,
+    _next,
+  ) => {
     console.error("Unhandled request error", {
       name: error instanceof Error ? error.name : "UnknownError",
     });
