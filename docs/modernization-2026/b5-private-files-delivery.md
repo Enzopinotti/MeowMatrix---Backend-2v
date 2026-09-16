@@ -179,3 +179,17 @@ B5 backend is not complete until permanent CI proves:
 - production build and compiled health smoke.
 
 The frontend B5 lane must consume this API without persisting blobs/base64 or internal paths in browser storage.
+
+## Pre-merge qualification evidence
+
+The disposable formatter/qualification workflow completed successfully on 2026-09-16:
+
+- run `35139935449`: success;
+- production audit: 0 vulnerabilities;
+- Prettier + ESLint: success;
+- strict TypeScript: success;
+- Vitest: 59/59 tests passed, including B3/B4 regressions and B5 private-file/outbox failure paths;
+- production build: success;
+- the temporary workflow removed itself after qualification.
+
+This one-shot run is supporting evidence only. The merge authority remains the permanent repository quality workflow executed on the final PR head, followed by a post-merge `main` run.
