@@ -1,0 +1,115 @@
+name: One-shot Meow baseline qualification
+
+on:
+  push:
+    branches:
+      - chore/meow-baseline-qualification-2026
+    paths:
+      - ".github/workflows/baseline-qualification-once.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  qualify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [20, 22, 24]
+        target:
+          - name: frontend-historical
+            repository: Enzopinotti/Meow-Matrix---Frontend
+            ref: 452ca67fe3fe494ad7caa731c944d352973276d9
+            kind: frontend
+          - name: backend-historical
+            repository: Enzopinotti/MeowMatrix---Backend-2v
+            ref: 9cd1b87e69b6455487c64d7fdbe6ef0c90b73f88
+            kind: backend
+          - name: backend-security-baseline
+            repository: Enzopinotti/MeowMatrix---Backend-2v
+            ref: 73ba6f1a9b470140630d5143f258bd50742c8b0f
+            kind: backend
+
+    name: ${{ matrix.target.name }} / Node ${{ matrix.node }}
+
+    steps:
+      - name: Check out exact baseline
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          repository: ${{ matrix.target.repository }}
+          ref: ${{ matrix.target.ref }}
+          path: target
+
+      - name: Set up Node.js
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+          cache-dependency-path: target/package-lock.json
+
+      - name: Qualify frozen baseline
+        working-directory: target
+        env:
+          NPM_CONFIG_AUDIT: "false"
+          NPM_CONFIG_FUND: "false"
+          TARGET_NAME: ${{ matrix.target.name }}
+          TARGET_KIND: ${{ matrix.target.kind }}
+        shell: bash
+        run: |
+          set +e
+
+          echo "=== ${TARGET_NAME} / Node $(node --version) / npm $(npm --version) ==="
+          echo "### ${TARGET_NAME} / Node $(node --version)" >> "$GITHUB_STEP_SUMMARY"
+
+          npm ci --loglevel=warn
+          install_status=$?
+          echo "QUALIFICATION npm_ci=${install_status}"
+          echo "- npm ci: ${install_status}" >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$install_status" -ne 0 ]; then
+            echo "- remaining checks: skipped because frozen install failed" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          if [ "$TARGET_KIND" = "frontend" ]; then
+            test_files=$(find src -type f \( -name '*.test.js' -o -name '*.test.jsx' -o -name '*.spec.js' -o -name '*.spec.jsx' \) | wc -l | tr -d ' ')
+            echo "QUALIFICATION discovered_test_files=${test_files}"
+            echo "- discovered test files: ${test_files}" >> "$GITHUB_STEP_SUMMARY"
+
+            CI=true npm run build
+            build_status=$?
+            echo "QUALIFICATION build=${build_status}"
+            echo "- production build: ${build_status}" >> "$GITHUB_STEP_SUMMARY"
+
+            timeout 180s env CI=true npm test -- --watchAll=false --runInBand --passWithNoTests
+            test_status=$?
+            echo "QUALIFICATION tests=${test_status}"
+            echo "- tests: ${test_status}" >> "$GITHUB_STEP_SUMMARY"
+          else
+            node --check src/app.js
+            app_syntax_status=$?
+            node --check src/index.js
+            index_syntax_status=$?
+            echo "QUALIFICATION syntax_app=${app_syntax_status} syntax_index=${index_syntax_status}"
+            echo "- syntax app/index: ${app_syntax_status}/${index_syntax_status}" >> "$GITHUB_STEP_SUMMARY"
+
+            test_files=$(find test tests src -type f \( -name '*.test.js' -o -name '*.spec.js' -o -name '*.test.mjs' -o -name '*.spec.mjs' \) 2>/dev/null | wc -l | tr -d ' ')
+            echo "QUALIFICATION discovered_test_files=${test_files}"
+            echo "- discovered test files: ${test_files}" >> "$GITHUB_STEP_SUMMARY"
+
+            timeout 180s npm test
+            test_status=$?
+            echo "QUALIFICATION tests=${test_status}"
+            echo "- tests: ${test_status}" >> "$GITHUB_STEP_SUMMARY"
+
+            if [ -f .github/scripts/check-security-hygiene.mjs ]; then
+              node .github/scripts/check-security-hygiene.mjs
+              security_status=$?
+              echo "QUALIFICATION security_hygiene=${security_status}"
+              echo "- security hygiene: ${security_status}" >> "$GITHUB_STEP_SUMMARY"
+            fi
+          fi
+
+          exit 0
