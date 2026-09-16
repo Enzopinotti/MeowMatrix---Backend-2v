@@ -120,7 +120,7 @@ function transactionUnsupported(error: unknown): boolean {
 
 function sessionOptions(
   session?: ClientSession,
-): { session: ClientSession } | {} {
+): Readonly<{ session?: ClientSession }> {
   return session === undefined ? {} : { session };
 }
 
