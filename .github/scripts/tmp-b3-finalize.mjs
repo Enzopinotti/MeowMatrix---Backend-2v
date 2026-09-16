@@ -41,6 +41,30 @@ fs.writeFileSync(openApiPath, source);
 
 const authPath = "modern/src/domain/auth.ts";
 let auth = fs.readFileSync(authPath, "utf8");
+const oldPasswordImport = [
+  "  hashPassword,",
+  "  passwordHashNeedsUpgrade,",
+  "  verifyPassword,",
+].join("\n");
+const newPasswordImport = [
+  "  hashPassword,",
+  "  passwordHashNeedsUpgrade,",
+  "  rehashVerifiedLegacyPassword,",
+  "  verifyPassword,",
+].join("\n");
+if (!auth.includes(oldPasswordImport)) {
+  throw new Error("password import anchor missing");
+}
+auth = auth.replace(oldPasswordImport, newPasswordImport);
+
+const oldUpgrade = "        const upgradedHash = await hashPassword(input.password);";
+const newUpgrade =
+  "        const upgradedHash = await rehashVerifiedLegacyPassword(input.password);";
+if (!auth.includes(oldUpgrade)) {
+  throw new Error("legacy upgrade anchor missing");
+}
+auth = auth.replace(oldUpgrade, newUpgrade);
+
 const oldPublicUser = [
   "function publicUser(user: AuthUserRecord): UserDto {",
   "  const { passwordHash: _passwordHash, ...safeUser } = user;",
