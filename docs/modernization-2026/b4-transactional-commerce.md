@@ -77,6 +77,12 @@ Pre-validation alone is not treated as a lock. Each stock mutation also requires
 
 If another transaction changes stock before this checkout can commit, the operation fails with `409 STOCK_CHANGED`; all writes from this checkout roll back.
 
+## Mongo driver option boundary
+
+The modern TypeScript configuration keeps `exactOptionalPropertyTypes` enabled. Optional Mongo driver options therefore omit `session` when there is no active session instead of passing `session: undefined` or weakening the compiler with broad casts. Transactional calls pass an actual `ClientSession`; non-transactional cart/catalog reads receive an option object without that property.
+
+This is intentionally a strict adapter boundary: driver-version typing changes must fail CI rather than silently widening persistence types.
+
 ## Server-authoritative money
 
 The browser does not submit trusted prices or totals. Order snapshots are built from the fresh product documents loaded by the backend.
