@@ -141,7 +141,7 @@ describe("API v1 contract", () => {
         "/checkout",
         "/orders",
         "/files",
-        "/files/{purpose}",
+        "/files/purposes/{purpose}",
         "/files/{fileId}",
         "/files/{fileId}/content",
       ]),
