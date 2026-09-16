@@ -95,12 +95,23 @@ async function startApp(catalogService?: CatalogService) {
 }
 
 describe("API v1 contract", () => {
-  it("publishes B3 metadata while preserving all domain schemas", async () => {
+  it("publishes B4 metadata while preserving all prior domain schemas", async () => {
     const origin = await startApp(new TestCatalogService());
     const metadataResponse = await fetch(`${origin}/api/v1/`);
     expect(metadataResponse.status).toBe(200);
     expect(await metadataResponse.json()).toMatchObject({
-      data: { version: "v1", contract: "2026-b3" },
+      data: {
+        version: "v1",
+        contract: "2026-b4",
+        implementedResources: expect.arrayContaining([
+          "products",
+          "categories",
+          "auth",
+          "cart",
+          "checkout",
+          "orders",
+        ]),
+      },
     });
 
     const openApiResponse = await fetch(`${origin}/api/v1/openapi.json`);
@@ -117,6 +128,10 @@ describe("API v1 contract", () => {
         "Ticket",
         "Order",
         "ErrorEnvelope",
+        "CartItem",
+        "CartView",
+        "CheckoutResult",
+        "OrderList",
       ]),
     );
     expect(JSON.stringify(openApi.components.schemas.User)).not.toContain(
