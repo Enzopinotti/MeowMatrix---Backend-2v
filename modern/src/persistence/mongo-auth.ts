@@ -1,4 +1,10 @@
-import { MongoClient, ObjectId, type Collection, type Db, type Document } from "mongodb";
+import {
+  MongoClient,
+  ObjectId,
+  type Collection,
+  type Db,
+  type Document,
+} from "mongodb";
 import {
   DuplicateAuthEmailError,
   type AuthUserRecord,
@@ -41,8 +47,7 @@ function mapUser(document: Document): AuthUserRecord {
   return {
     id: String(document._id),
     name: readRequiredString(document, "name"),
-    lastName:
-      typeof document.lastName === "string" ? document.lastName : "",
+    lastName: typeof document.lastName === "string" ? document.lastName : "",
     email: readRequiredString(document, "email").trim().toLowerCase(),
     role:
       document.role === "admin" || document.rol === "admin" ? "admin" : "user",
@@ -106,11 +111,18 @@ class MongoAuthUsers implements AuthUserRepository {
     }
   }
 
-  async updatePasswordHash(userId: string, passwordHash: string): Promise<void> {
+  async updatePasswordHash(
+    userId: string,
+    passwordHash: string,
+  ): Promise<void> {
     const _id = objectId(userId);
     if (_id === null) throw new Error("Auth user id is not a valid ObjectId");
-    const result = await this.users.updateOne({ _id }, { $set: { password: passwordHash } });
-    if (result.matchedCount !== 1) throw new Error("Auth user no longer exists");
+    const result = await this.users.updateOne(
+      { _id },
+      { $set: { password: passwordHash } },
+    );
+    if (result.matchedCount !== 1)
+      throw new Error("Auth user no longer exists");
   }
 }
 
@@ -162,7 +174,10 @@ class MongoPasswordResets implements PasswordResetStore {
     );
   }
 
-  async consume(tokenHash: string, now: number): Promise<PasswordResetRecord | null> {
+  async consume(
+    tokenHash: string,
+    now: number,
+  ): Promise<PasswordResetRecord | null> {
     const record = await this.resets.findOneAndDelete({
       tokenHash,
       expiresAt: { $gt: new Date(now) },
@@ -218,7 +233,9 @@ export async function connectMongoAuthPersistence(input: {
   return {
     client,
     users: new MongoAuthUsers(db.collection("users")),
-    sessions: new MongoSessions(db.collection<SessionDocument>("auth_sessions")),
+    sessions: new MongoSessions(
+      db.collection<SessionDocument>("auth_sessions"),
+    ),
     passwordResets: new MongoPasswordResets(
       db.collection<ResetDocument>("auth_password_resets"),
     ),

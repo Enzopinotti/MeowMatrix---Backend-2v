@@ -59,7 +59,9 @@ describe("loadConfig", () => {
   });
 
   it("requires the complete reset-mail boundary when Mongo auth is enabled", () => {
-    expect(() => loadConfig({ MONGO_URL: "mongodb://localhost:27017/meow" })).toThrow(
+    expect(() =>
+      loadConfig({ MONGO_URL: "mongodb://localhost:27017/meow" }),
+    ).toThrow(
       "MONGO_URL auth runtime requires SMTP_HOST, SMTP_FROM and PASSWORD_RESET_URL",
     );
 

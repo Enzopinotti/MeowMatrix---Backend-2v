@@ -10,6 +10,7 @@ import type { UserDto } from "../api/contracts.js";
 import {
   hashPassword,
   passwordHashNeedsUpgrade,
+  rehashVerifiedLegacyPassword,
   verifyPassword,
 } from "../security/password.js";
 
@@ -91,8 +92,14 @@ export type AuthServiceOptions = {
 };
 
 function publicUser(user: AuthUserRecord): UserDto {
-  const { passwordHash: _passwordHash, ...safeUser } = user;
-  return safeUser;
+  return {
+    id: user.id,
+    name: user.name,
+    lastName: user.lastName,
+    email: user.email,
+    role: user.role,
+    avatarUrl: user.avatarUrl,
+  };
 }
 
 export function tokenDigest(token: string): string {
@@ -163,7 +170,7 @@ export function createAuthService(options: AuthServiceOptions): AuthService {
       }
 
       if (passwordHashNeedsUpgrade(user.passwordHash)) {
-        const upgradedHash = await hashPassword(input.password);
+        const upgradedHash = await rehashVerifiedLegacyPassword(input.password);
         await options.users.updatePasswordHash(user.id, upgradedHash);
         user.passwordHash = upgradedHash;
       }

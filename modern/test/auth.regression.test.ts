@@ -56,11 +56,15 @@ class MemorySessions implements SessionStore {
   }
 
   async get(tokenHash: string) {
-    return this.records.find((record) => record.tokenHash === tokenHash) ?? null;
+    return (
+      this.records.find((record) => record.tokenHash === tokenHash) ?? null
+    );
   }
 
   async delete(tokenHash: string) {
-    this.records = this.records.filter((record) => record.tokenHash !== tokenHash);
+    this.records = this.records.filter(
+      (record) => record.tokenHash !== tokenHash,
+    );
   }
 
   async deleteForUser(userId: string) {
@@ -101,7 +105,9 @@ describe("B3 auth regressions", () => {
       auth.register(registration),
     ]);
 
-    expect(results.filter((result) => result.status === "fulfilled")).toHaveLength(1);
+    expect(
+      results.filter((result) => result.status === "fulfilled"),
+    ).toHaveLength(1);
     const rejected = results.find((result) => result.status === "rejected");
     expect(rejected?.status).toBe("rejected");
     if (rejected?.status !== "rejected") return;
@@ -143,7 +149,9 @@ describe("B3 auth regressions", () => {
   it("keeps unknown-account login failures inside the auth error contract", async () => {
     const auth = serviceWith(new AtomicMemoryUsers());
     await expect(
-      auth.login(parseLoginRequest({ email: "none@example.com", password: "x" })),
+      auth.login(
+        parseLoginRequest({ email: "none@example.com", password: "x" }),
+      ),
     ).rejects.toMatchObject({
       status: 401,
       code: "INVALID_CREDENTIALS",

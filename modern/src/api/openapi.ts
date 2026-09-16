@@ -245,7 +245,20 @@ export const openApiDocument = {
           },
         ],
         responses: {
-          "200": { description: "Product" },
+          "200": {
+            description: "Product",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  required: ["data"],
+                  properties: {
+                    data: { $ref: "#/components/schemas/Product" },
+                  },
+                },
+              },
+            },
+          },
           "400": { $ref: "#/components/responses/ValidationError" },
           "404": { $ref: "#/components/responses/NotFound" },
           "409": { $ref: "#/components/responses/Conflict" },
@@ -318,8 +331,8 @@ export const openApiDocument = {
           email: { type: "string", format: "email", maxLength: 254 },
           password: {
             type: "string",
-            minLength: 12,
-            maxLength: 128,
+            minLength: 1,
+            maxLength: 4096,
             writeOnly: true,
           },
         },

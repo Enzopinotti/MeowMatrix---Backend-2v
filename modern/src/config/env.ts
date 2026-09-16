@@ -129,7 +129,9 @@ function parseOptionalUrl(
   } catch {
     throw new Error(`${field} must be a valid absolute URL`);
   }
-  if (!(["http:", "https:"] as const).includes(url.protocol as "http:" | "https:")) {
+  if (
+    !(["http:", "https:"] as const).includes(url.protocol as "http:" | "https:")
+  ) {
     throw new Error(`${field} must use http or https`);
   }
   if (nodeEnv === "production" && url.protocol !== "https:") {

@@ -56,7 +56,9 @@ export async function rehashVerifiedLegacyPassword(
   password: string,
 ): Promise<string> {
   if (password.length < 1 || password.length > 4096) {
-    throw new Error("Verified legacy password is outside the bounded login contract");
+    throw new Error(
+      "Verified legacy password is outside the bounded login contract",
+    );
   }
   return encodeScryptPassword(password);
 }
