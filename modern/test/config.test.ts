@@ -1,11 +1,31 @@
 import { describe, expect, it } from "vitest";
 import { loadConfig } from "../src/config/env.js";
 
+const testRateLimitHmacSecret = "test-only-rate-limit-hmac-secret-32-bytes";
+
+function productionEnv(overrides: NodeJS.ProcessEnv = {}): NodeJS.ProcessEnv {
+  return {
+    NODE_ENV: "production",
+    FRONTEND_ORIGINS: "https://app.example.com",
+    TRUST_PROXY_HOPS: "1",
+    RATE_LIMIT_HMAC_SECRET: testRateLimitHmacSecret,
+    MONGO_URL: "mongodb://mongo:27017/meow?replicaSet=rs0",
+    MONGO_DB_NAME: "meow",
+    SMTP_HOST: "smtp.example.com",
+    SMTP_FROM: "Meow <no-reply@example.com>",
+    PASSWORD_RESET_URL: "https://app.example.com/reset-password",
+    PRIVATE_STORAGE_ROOT: "/var/lib/meow/private",
+    ...overrides,
+  };
+}
+
 describe("loadConfig", () => {
   it("uses safe local defaults without requiring secrets", () => {
     expect(loadConfig({})).toEqual({
       port: 8080,
       nodeEnv: "development",
+      trustProxyHops: 0,
+      rateLimitHmacSecret: null,
       frontendOrigins: [],
       sessionCookieSecure: false,
       sessionCookieSameSite: "lax",
@@ -29,10 +49,17 @@ describe("loadConfig", () => {
     });
   });
 
-  it("uses Secure cookies by default in production", () => {
-    expect(loadConfig({ NODE_ENV: "production" })).toMatchObject({
+  it("accepts a complete fail-closed production topology", () => {
+    expect(loadConfig(productionEnv())).toMatchObject({
+      nodeEnv: "production",
+      trustProxyHops: 1,
+      rateLimitHmacSecret: testRateLimitHmacSecret,
+      frontendOrigins: ["https://app.example.com"],
       sessionCookieSecure: true,
       sessionCookieSameSite: "lax",
+      mongoUrl: "mongodb://mongo:27017/meow?replicaSet=rs0",
+      privateStorageRoot: "/var/lib/meow/private",
+      passwordResetUrl: "https://app.example.com/reset-password",
     });
   });
 
@@ -74,6 +101,7 @@ describe("loadConfig", () => {
     expect(
       loadConfig({
         MONGO_URL: "mongodb://localhost:27017/meow",
+        RATE_LIMIT_HMAC_SECRET: testRateLimitHmacSecret,
         SMTP_HOST: "smtp.example.com",
         SMTP_FROM: "Meow <no-reply@example.com>",
         PASSWORD_RESET_URL: "http://localhost:5173/reset-password",
@@ -85,9 +113,28 @@ describe("loadConfig", () => {
     });
   });
 
-  it("parses private storage and bounded worker settings", () => {
+  it("requires a strong HMAC secret for Mongo-backed auth throttling", () => {
+    const runtime = {
+      MONGO_URL: "mongodb://localhost:27017/meow",
+      SMTP_HOST: "smtp.example.com",
+      SMTP_FROM: "Meow <no-reply@example.com>",
+      PASSWORD_RESET_URL: "http://localhost:5173/reset-password",
+    };
+
+    expect(() => loadConfig(runtime)).toThrow(
+      "MONGO_URL auth runtime requires RATE_LIMIT_HMAC_SECRET with at least 32 UTF-8 bytes",
+    );
+    expect(() =>
+      loadConfig({ ...runtime, RATE_LIMIT_HMAC_SECRET: "too-short" }),
+    ).toThrow(
+      "MONGO_URL auth runtime requires RATE_LIMIT_HMAC_SECRET with at least 32 UTF-8 bytes",
+    );
+  });
+
+  it("parses private storage, trusted proxy hops and bounded worker settings", () => {
     expect(
       loadConfig({
+        TRUST_PROXY_HOPS: "2",
         PRIVATE_STORAGE_ROOT: " /srv/meow/private ",
         OUTBOX_POLL_MS: "2500",
         OUTBOX_LEASE_MS: "45000",
@@ -96,6 +143,7 @@ describe("loadConfig", () => {
         FILE_STAGING_RECOVERY_MS: "900000",
       }),
     ).toMatchObject({
+      trustProxyHops: 2,
       privateStorageRoot: "/srv/meow/private",
       outboxPollMs: 2500,
       outboxLeaseMs: 45000,
@@ -106,18 +154,66 @@ describe("loadConfig", () => {
     expect(() => loadConfig({ OUTBOX_MAX_ATTEMPTS: "0" })).toThrow(
       "OUTBOX_MAX_ATTEMPTS must be an integer between 1 and 50",
     );
+    expect(() => loadConfig({ TRUST_PROXY_HOPS: "11" })).toThrow(
+      "TRUST_PROXY_HOPS must be an integer between 0 and 10",
+    );
   });
 
   it("requires HTTPS reset links in production", () => {
     expect(() =>
-      loadConfig({
-        NODE_ENV: "production",
-        MONGO_URL: "mongodb://localhost:27017/meow",
-        SMTP_HOST: "smtp.example.com",
-        SMTP_FROM: "Meow <no-reply@example.com>",
-        PASSWORD_RESET_URL: "http://app.example.com/reset-password",
-      }),
+      loadConfig(
+        productionEnv({
+          PASSWORD_RESET_URL: "http://app.example.com/reset-password",
+        }),
+      ),
     ).toThrow("PASSWORD_RESET_URL must use https in production");
+  });
+
+  it("rejects insecure production session cookies", () => {
+    expect(() =>
+      loadConfig(productionEnv({ SESSION_COOKIE_SECURE: "false" })),
+    ).toThrow("Production requires SESSION_COOKIE_SECURE=true");
+  });
+
+  it("rejects non-HTTPS production frontend origins", () => {
+    expect(() =>
+      loadConfig(productionEnv({ FRONTEND_ORIGINS: "http://app.example.com" })),
+    ).toThrow("Production FRONTEND_ORIGINS must use https");
+  });
+
+  it("requires an explicit trusted ingress hop count in production", () => {
+    expect(() => loadConfig(productionEnv({ TRUST_PROXY_HOPS: "0" }))).toThrow(
+      "Production requires TRUST_PROXY_HOPS to match the trusted ingress path",
+    );
+  });
+
+  it("requires Mongo and private storage in production", () => {
+    expect(() =>
+      loadConfig(
+        productionEnv({
+          MONGO_URL: undefined,
+          SMTP_HOST: undefined,
+          SMTP_FROM: undefined,
+          PASSWORD_RESET_URL: undefined,
+        }),
+      ),
+    ).toThrow("Production requires MONGO_URL");
+
+    expect(() =>
+      loadConfig(productionEnv({ PRIVATE_STORAGE_ROOT: undefined })),
+    ).toThrow("Production requires PRIVATE_STORAGE_ROOT");
+  });
+
+  it("requires the production reset URL origin to be allow-listed", () => {
+    expect(() =>
+      loadConfig(
+        productionEnv({
+          PASSWORD_RESET_URL: "https://accounts.example.com/reset-password",
+        }),
+      ),
+    ).toThrow(
+      "PASSWORD_RESET_URL origin must be listed in FRONTEND_ORIGINS in production",
+    );
   });
 
   it("validates the listener port", () => {

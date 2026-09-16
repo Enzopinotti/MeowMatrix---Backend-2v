@@ -15,6 +15,7 @@ import {
   type PrivateFileService,
 } from "./domain/private-files.js";
 import type { SessionCookieOptions } from "./security/http.js";
+import type { RateLimitStore } from "./security/rate-limit.js";
 
 export type ReadinessState = "ok" | "degraded" | "unavailable";
 
@@ -37,6 +38,8 @@ export type AppOptions = {
   readinessProbe?: () => Promise<ReadinessSnapshot>;
   allowedOrigins?: readonly string[];
   sessionCookieOptions?: SessionCookieOptions;
+  rateLimitStore?: RateLimitStore;
+  trustProxyHops?: number;
 };
 
 const defaultSessionCookieOptions: SessionCookieOptions = {
@@ -64,15 +67,17 @@ export function createApp(options: AppOptions = {}) {
   const privateFileService =
     options.privateFileService ?? unavailablePrivateFileService;
   const readinessProbe = options.readinessProbe ?? unavailableReadiness;
+  const trustProxyHops = options.trustProxyHops ?? 0;
 
   app.disable("x-powered-by");
+  app.set("trust proxy", trustProxyHops > 0 ? trustProxyHops : false);
   app.use(express.json({ limit: "1mb" }));
 
   app.get("/healthz", (_request, response) => {
     response.status(200).json({
       status: "ok",
       service: serviceName,
-      version: "2026-b5",
+      version: "2026-b7",
     });
   });
 
@@ -98,6 +103,9 @@ export function createApp(options: AppOptions = {}) {
       allowedOrigins: options.allowedOrigins ?? [],
       sessionCookieOptions:
         options.sessionCookieOptions ?? defaultSessionCookieOptions,
+      ...(options.rateLimitStore
+        ? { rateLimitStore: options.rateLimitStore }
+        : {}),
     }),
   );
 

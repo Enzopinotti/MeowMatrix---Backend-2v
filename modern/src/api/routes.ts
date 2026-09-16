@@ -20,6 +20,7 @@ import type {
   BrowserSecurityOptions,
   SessionCookieOptions,
 } from "../security/http.js";
+import type { RateLimitStore } from "../security/rate-limit.js";
 
 export type ApiV1Options = BrowserSecurityOptions & {
   catalogService: CatalogService;
@@ -27,6 +28,7 @@ export type ApiV1Options = BrowserSecurityOptions & {
   commerceService: CommerceService;
   privateFileService: PrivateFileService;
   sessionCookieOptions: SessionCookieOptions;
+  rateLimitStore?: RateLimitStore;
 };
 
 function asyncHandler(
@@ -73,6 +75,9 @@ export function createApiV1Router(options: ApiV1Options) {
       authService: options.authService,
       allowedOrigins: options.allowedOrigins,
       sessionCookieOptions: options.sessionCookieOptions,
+      ...(options.rateLimitStore
+        ? { rateLimitStore: options.rateLimitStore }
+        : {}),
     }),
   );
 

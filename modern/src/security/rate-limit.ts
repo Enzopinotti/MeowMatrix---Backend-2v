@@ -6,18 +6,94 @@ export type RateLimitPolicy = {
   maxAttempts: number;
 };
 
-type Bucket = { count: number; resetAt: number };
+export type RateLimitBucket = {
+  count: number;
+  resetAt: number;
+};
+
+export type RateLimitStoreIncrement = {
+  scope: string;
+  key: string;
+  policy: RateLimitPolicy;
+  now: number;
+};
+
+export interface RateLimitStore {
+  increment(input: RateLimitStoreIncrement): Promise<RateLimitBucket>;
+}
+
+type Bucket = RateLimitBucket;
 
 const DEFAULT_MAX_BUCKETS = 10_000;
 const SWEEP_INTERVAL = 256;
 
+function requestKey(request: Parameters<RequestHandler>[0]): string {
+  return request.ip ?? request.socket.remoteAddress ?? "unknown";
+}
+
+function applyDecision(
+  bucket: RateLimitBucket,
+  policy: RateLimitPolicy,
+  currentTime: number,
+  response: Parameters<RequestHandler>[1],
+  next: Parameters<RequestHandler>[2],
+) {
+  response.setHeader("X-RateLimit-Limit", String(policy.maxAttempts));
+  response.setHeader(
+    "X-RateLimit-Remaining",
+    String(Math.max(0, policy.maxAttempts - bucket.count)),
+  );
+
+  if (bucket.count > policy.maxAttempts) {
+    response.setHeader(
+      "Retry-After",
+      String(Math.max(1, Math.ceil((bucket.resetAt - currentTime) / 1000))),
+    );
+    next(
+      new ApiError(
+        429,
+        "RATE_LIMITED",
+        "Too many authentication attempts; try again later",
+      ),
+    );
+    return;
+  }
+
+  next();
+}
+
 export function createRateLimiter(
   policy: RateLimitPolicy,
-  options: { maxBuckets?: number; now?: () => number } = {},
+  options: {
+    maxBuckets?: number;
+    now?: () => number;
+    store?: RateLimitStore;
+    scope?: string;
+  } = {},
 ): RequestHandler {
+  const now = options.now ?? Date.now;
+
+  if (options.store !== undefined) {
+    const store = options.store;
+    const scope = options.scope ?? "default";
+    return (request, response, next) => {
+      const currentTime = now();
+      void store
+        .increment({
+          scope,
+          key: requestKey(request),
+          policy,
+          now: currentTime,
+        })
+        .then((bucket) => {
+          applyDecision(bucket, policy, currentTime, response, next);
+        })
+        .catch(next);
+    };
+  }
+
   const buckets = new Map<string, Bucket>();
   const maxBuckets = options.maxBuckets ?? DEFAULT_MAX_BUCKETS;
-  const now = options.now ?? Date.now;
   let requestsSinceSweep = 0;
 
   function sweepExpired(currentTime: number) {
@@ -44,7 +120,7 @@ export function createRateLimiter(
 
   return (request, response, next) => {
     const currentTime = now();
-    const key = request.ip ?? request.socket.remoteAddress ?? "unknown";
+    const key = requestKey(request);
     enforceBound(currentTime, key);
 
     const existing = buckets.get(key);
@@ -55,28 +131,7 @@ export function createRateLimiter(
 
     bucket.count += 1;
     buckets.set(key, bucket);
-    response.setHeader("X-RateLimit-Limit", String(policy.maxAttempts));
-    response.setHeader(
-      "X-RateLimit-Remaining",
-      String(Math.max(0, policy.maxAttempts - bucket.count)),
-    );
-
-    if (bucket.count > policy.maxAttempts) {
-      response.setHeader(
-        "Retry-After",
-        String(Math.max(1, Math.ceil((bucket.resetAt - currentTime) / 1000))),
-      );
-      next(
-        new ApiError(
-          429,
-          "RATE_LIMITED",
-          "Too many authentication attempts; try again later",
-        ),
-      );
-      return;
-    }
-
-    next();
+    applyDecision(bucket, policy, currentTime, response, next);
   };
 }
 
