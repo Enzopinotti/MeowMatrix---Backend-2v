@@ -8,6 +8,7 @@ export type AppConfig = {
   port: number;
   nodeEnv: NodeEnv;
   trustProxyHops: number;
+  rateLimitHmacSecret: string | null;
   frontendOrigins: readonly string[];
   sessionCookieSecure: boolean;
   sessionCookieSameSite: SameSite;
@@ -166,6 +167,7 @@ function parseOptionalUrl(
 
 function requireAuthRuntime(config: {
   mongoUrl: string | null;
+  rateLimitHmacSecret: string | null;
   smtpHost: string | null;
   smtpUser: string | null;
   smtpPassword: string | null;
@@ -184,6 +186,14 @@ function requireAuthRuntime(config: {
   }
   if ((config.smtpUser === null) !== (config.smtpPassword === null)) {
     throw new Error("SMTP_USER and SMTP_PASSWORD must be configured together");
+  }
+  if (
+    config.rateLimitHmacSecret === null ||
+    Buffer.byteLength(config.rateLimitHmacSecret, "utf8") < 32
+  ) {
+    throw new Error(
+      "MONGO_URL auth runtime requires RATE_LIMIT_HMAC_SECRET with at least 32 UTF-8 bytes",
+    );
   }
 }
 
@@ -248,6 +258,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
       0,
       10,
     ),
+    rateLimitHmacSecret: nonEmpty(env.RATE_LIMIT_HMAC_SECRET),
     frontendOrigins: parseOrigins(env.FRONTEND_ORIGINS),
     sessionCookieSecure,
     sessionCookieSameSite,
