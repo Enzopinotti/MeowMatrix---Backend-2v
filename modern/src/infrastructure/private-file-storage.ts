@@ -1,4 +1,5 @@
-import { mkdir, open, readFile, unlink } from "node:fs/promises";
+import { constants } from "node:fs";
+import { access, mkdir, open, readFile, unlink } from "node:fs/promises";
 import path from "node:path";
 import type { PrivateBlobStorage } from "../domain/private-files.js";
 
@@ -24,6 +25,10 @@ export class FileSystemPrivateBlobStorage implements PrivateBlobStorage {
 
   async initialize(): Promise<void> {
     await mkdir(this.root, { recursive: true, mode: 0o700 });
+  }
+
+  async probe(): Promise<void> {
+    await access(this.root, constants.R_OK | constants.W_OK);
   }
 
   async put(storageKey: string, content: Buffer): Promise<void> {
