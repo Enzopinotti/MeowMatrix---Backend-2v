@@ -58,7 +58,10 @@ function harness(claimed: ClaimedOutboxEvent | null = event()) {
   );
   const repository: OutboxDeliveryRepository = { claim, complete, fail };
   const load = vi.fn(
-    async (_purchaserId: string, _orderId: string) => confirmation,
+    async (
+      _purchaserId: string,
+      _orderId: string,
+    ): Promise<OrderConfirmation | null> => confirmation,
   );
   const source: OrderConfirmationSource = { load };
   const send = vi.fn(async (_input: OrderConfirmation): Promise<void> => undefined);
