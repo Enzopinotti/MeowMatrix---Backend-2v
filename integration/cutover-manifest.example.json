@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "release": {
+    "backendSha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "frontendSha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "apiImageDigest": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+    "webImageDigest": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+    "apiVersion": "2026-b7"
+  },
+  "public": {
+    "frontendOrigin": "https://app.example.test",
+    "apiOrigin": "https://api.example.test",
+    "trustProxyHops": 1
+  },
+  "data": {
+    "strategy": "in-place",
+    "writeFreezeRequired": true,
+    "preCutoverBackupEvidence": "replace-with-immutable-backup-evidence"
+  },
+  "evidence": {
+    "qualityRunId": 1,
+    "fullStackRunId": 2,
+    "recoveryRunId": 3,
+    "dataPreflightRunId": 4
+  },
+  "rollback": {
+    "backendSha": "cccccccccccccccccccccccccccccccccccccccc",
+    "frontendSha": "dddddddddddddddddddddddddddddddddddddddd",
+    "apiImageDigest": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+    "webImageDigest": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+    "dataAction": "none",
+    "decisionDeadlineMinutes": 15
+  }
+}
