@@ -1,7 +1,7 @@
 /node_modules
 **/node_modules/
 
-# Local environment files. Keep only the safe template in Git.
+# Local environment files. Keep only safe templates in Git.
 .env
 .env.*
 !.env.example
@@ -9,6 +9,10 @@
 # Maintained build output
 modern/dist/
 modern/coverage/
+
+# Runtime-private state must never become source/static content.
+.runtime/
+modern/.runtime/
 
 # Runtime output / local logs
 logs/

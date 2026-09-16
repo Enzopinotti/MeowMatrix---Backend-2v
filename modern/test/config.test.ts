@@ -20,6 +20,12 @@ describe("loadConfig", () => {
       smtpPassword: null,
       smtpFrom: null,
       passwordResetUrl: null,
+      privateStorageRoot: null,
+      outboxPollMs: 5_000,
+      outboxLeaseMs: 30_000,
+      outboxMaxAttempts: 6,
+      fileCleanupPollMs: 60_000,
+      fileStagingRecoveryMs: 600_000,
     });
   });
 
@@ -77,6 +83,29 @@ describe("loadConfig", () => {
       smtpHost: "smtp.example.com",
       passwordResetUrl: "http://localhost:5173/reset-password",
     });
+  });
+
+  it("parses private storage and bounded worker settings", () => {
+    expect(
+      loadConfig({
+        PRIVATE_STORAGE_ROOT: " /srv/meow/private ",
+        OUTBOX_POLL_MS: "2500",
+        OUTBOX_LEASE_MS: "45000",
+        OUTBOX_MAX_ATTEMPTS: "8",
+        FILE_CLEANUP_POLL_MS: "120000",
+        FILE_STAGING_RECOVERY_MS: "900000",
+      }),
+    ).toMatchObject({
+      privateStorageRoot: "/srv/meow/private",
+      outboxPollMs: 2500,
+      outboxLeaseMs: 45000,
+      outboxMaxAttempts: 8,
+      fileCleanupPollMs: 120000,
+      fileStagingRecoveryMs: 900000,
+    });
+    expect(() => loadConfig({ OUTBOX_MAX_ATTEMPTS: "0" })).toThrow(
+      "OUTBOX_MAX_ATTEMPTS must be an integer between 1 and 50",
+    );
   });
 
   it("requires HTTPS reset links in production", () => {

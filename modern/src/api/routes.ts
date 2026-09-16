@@ -9,11 +9,13 @@ import {
 } from "./contracts.js";
 import { createAuthRouter } from "./auth-routes.js";
 import { createCommerceRouter } from "./commerce-routes.js";
+import { createPrivateFileRouter } from "./file-routes.js";
 import { ApiError } from "./errors.js";
-import { openApiDocumentB4 } from "./openapi-b4.js";
+import { openApiDocumentB5 } from "./openapi-b5.js";
 import type { AuthService } from "../domain/auth.js";
 import type { CatalogService } from "../domain/catalog.js";
 import type { CommerceService } from "../domain/commerce.js";
+import type { PrivateFileService } from "../domain/private-files.js";
 import type {
   BrowserSecurityOptions,
   SessionCookieOptions,
@@ -23,6 +25,7 @@ export type ApiV1Options = BrowserSecurityOptions & {
   catalogService: CatalogService;
   authService: AuthService;
   commerceService: CommerceService;
+  privateFileService: PrivateFileService;
   sessionCookieOptions: SessionCookieOptions;
 };
 
@@ -45,7 +48,7 @@ export function createApiV1Router(options: ApiV1Options) {
       data: {
         name: "Meow Matrix API",
         version: "v1",
-        contract: "2026-b4",
+        contract: "2026-b5",
         implementedResources: [
           "products",
           "categories",
@@ -53,6 +56,7 @@ export function createApiV1Router(options: ApiV1Options) {
           "cart",
           "checkout",
           "orders",
+          "private-files",
         ],
         reservedContracts: ["ticket"],
       },
@@ -60,7 +64,7 @@ export function createApiV1Router(options: ApiV1Options) {
   });
 
   router.get("/openapi.json", (_request, response) => {
-    response.status(200).json(openApiDocumentB4);
+    response.status(200).json(openApiDocumentB5);
   });
 
   router.use(
@@ -76,6 +80,14 @@ export function createApiV1Router(options: ApiV1Options) {
     createCommerceRouter({
       authService: options.authService,
       commerceService: options.commerceService,
+      allowedOrigins: options.allowedOrigins,
+    }),
+  );
+
+  router.use(
+    createPrivateFileRouter({
+      authService: options.authService,
+      privateFileService: options.privateFileService,
       allowedOrigins: options.allowedOrigins,
     }),
   );
