@@ -9,6 +9,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "start": "node dist/server.js",
+    "preflight:production": "node dist/production-preflight.js",
     "test": "vitest run",
     "typecheck": "tsc --noEmit --pretty false",
     "lint": "eslint .",
