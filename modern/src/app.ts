@@ -14,6 +14,10 @@ import {
   unavailablePrivateFileService,
   type PrivateFileService,
 } from "./domain/private-files.js";
+import {
+  createRequestObservabilityMiddleware,
+  type StructuredLogSink,
+} from "./observability/request-observability.js";
 import type { SessionCookieOptions } from "./security/http.js";
 import type { RateLimitStore } from "./security/rate-limit.js";
 
@@ -40,6 +44,9 @@ export type AppOptions = {
   sessionCookieOptions?: SessionCookieOptions;
   rateLimitStore?: RateLimitStore;
   trustProxyHops?: number;
+  requestLogSink?: StructuredLogSink;
+  requestIdFactory?: () => string;
+  requestClock?: () => number;
 };
 
 const defaultSessionCookieOptions: SessionCookieOptions = {
@@ -71,6 +78,13 @@ export function createApp(options: AppOptions = {}) {
 
   app.disable("x-powered-by");
   app.set("trust proxy", trustProxyHops > 0 ? trustProxyHops : false);
+  app.use(
+    createRequestObservabilityMiddleware({
+      ...(options.requestLogSink ? { sink: options.requestLogSink } : {}),
+      ...(options.requestIdFactory ? { requestId: options.requestIdFactory } : {}),
+      ...(options.requestClock ? { now: options.requestClock } : {}),
+    }),
+  );
   app.use(express.json({ limit: "1mb" }));
 
   app.get("/healthz", (_request, response) => {
