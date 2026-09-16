@@ -1,7 +1,23 @@
 /node_modules
+
+# Local environment files. Keep only the safe template in Git.
+.env
+.env.*
+!.env.example
+
+# Runtime output / local logs
+logs/
+*.log
+warning.log
+
+# Local editor / OS / cache artifacts
+.DS_Store
+.vscode/
+.idea/
+coverage/
+.nyc_output/
+
+# Historical class scratch files
 clase5.js
 clase6express.js
 clase6http.js
-.env
-.env.development
-.env.production
