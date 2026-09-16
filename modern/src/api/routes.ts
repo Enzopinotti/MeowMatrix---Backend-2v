@@ -60,16 +60,10 @@ export function createApiV1Router(options: ApiV1Options) {
   router.get(
     "/products/:productId",
     asyncHandler(async (request, response) => {
-      const productId = parseEntityId(
-        request.params.productId,
-        "productId",
-      );
+      const productId = parseEntityId(request.params.productId, "productId");
       const product = await options.catalogService.getProductById(productId);
       if (product === null) {
-        throw ApiError.notFound(
-          "PRODUCT_NOT_FOUND",
-          "Product was not found",
-        );
+        throw ApiError.notFound("PRODUCT_NOT_FOUND", "Product was not found");
       }
       const decoded = decodeProductDto(product);
       const envelope: SuccessEnvelope<typeof decoded> = { data: decoded };
@@ -93,17 +87,10 @@ export function createApiV1Router(options: ApiV1Options) {
   router.get(
     "/categories/:categoryId",
     asyncHandler(async (request, response) => {
-      const categoryId = parseEntityId(
-        request.params.categoryId,
-        "categoryId",
-      );
-      const category =
-        await options.catalogService.getCategoryById(categoryId);
+      const categoryId = parseEntityId(request.params.categoryId, "categoryId");
+      const category = await options.catalogService.getCategoryById(categoryId);
       if (category === null) {
-        throw ApiError.notFound(
-          "CATEGORY_NOT_FOUND",
-          "Category was not found",
-        );
+        throw ApiError.notFound("CATEGORY_NOT_FOUND", "Category was not found");
       }
       const decoded = decodeCategoryDto(category);
       const envelope: SuccessEnvelope<typeof decoded> = { data: decoded };

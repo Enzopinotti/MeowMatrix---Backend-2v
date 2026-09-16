@@ -38,7 +38,11 @@ export const openApiDocument = {
             in: "query",
             schema: { type: "integer", minimum: 0, default: 0 },
           },
-          { name: "q", in: "query", schema: { type: "string", maxLength: 120 } },
+          {
+            name: "q",
+            in: "query",
+            schema: { type: "string", maxLength: 120 },
+          },
           {
             name: "categoryId",
             in: "query",
@@ -262,7 +266,15 @@ export const openApiDocument = {
       Order: {
         type: "object",
         additionalProperties: false,
-        required: ["id", "code", "purchaserId", "status", "lines", "total", "createdAt"],
+        required: [
+          "id",
+          "code",
+          "purchaserId",
+          "status",
+          "lines",
+          "total",
+          "createdAt",
+        ],
         properties: {
           id: { type: "string" },
           code: { type: "string" },

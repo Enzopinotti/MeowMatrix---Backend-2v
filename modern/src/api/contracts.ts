@@ -247,14 +247,14 @@ export function parseProductListQuery(
     128,
   );
   const categoryId =
-    categoryIdRaw === null
-      ? null
-      : parseEntityId(categoryIdRaw, "categoryId");
+    categoryIdRaw === null ? null : parseEntityId(categoryIdRaw, "categoryId");
 
   const sortRaw = parseOptionalQueryString(query.sort, "sort", 32) ?? "newest";
-  if (!(["newest", "price_asc", "price_desc"] as const).includes(
-    sortRaw as "newest" | "price_asc" | "price_desc",
-  )) {
+  if (
+    !(["newest", "price_asc", "price_desc"] as const).includes(
+      sortRaw as "newest" | "price_asc" | "price_desc",
+    )
+  ) {
     throw new ContractValidationError([
       {
         field: "sort",

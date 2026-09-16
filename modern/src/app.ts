@@ -30,9 +30,7 @@ export function createApp(options: AppOptions = {}) {
   app.use("/api/v1", createApiV1Router({ catalogService }));
 
   const notFound: RequestHandler = (_request, response) => {
-    response
-      .status(404)
-      .json(errorEnvelope("NOT_FOUND", "Route not found"));
+    response.status(404).json(errorEnvelope("NOT_FOUND", "Route not found"));
   };
 
   app.use(notFound);
