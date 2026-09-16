@@ -7,6 +7,7 @@ type SameSite = (typeof allowedSameSite)[number];
 export type AppConfig = {
   port: number;
   nodeEnv: NodeEnv;
+  trustProxyHops: number;
   frontendOrigins: readonly string[];
   sessionCookieSecure: boolean;
   sessionCookieSameSite: SameSite;
@@ -186,6 +187,43 @@ function requireAuthRuntime(config: {
   }
 }
 
+function requireProductionRuntime(config: AppConfig) {
+  if (config.nodeEnv !== "production") return;
+
+  if (!config.sessionCookieSecure) {
+    throw new Error("Production requires SESSION_COOKIE_SECURE=true");
+  }
+  if (config.frontendOrigins.length === 0) {
+    throw new Error("Production requires at least one FRONTEND_ORIGINS entry");
+  }
+  if (
+    config.frontendOrigins.some(
+      (origin) => new URL(origin).protocol !== "https:",
+    )
+  ) {
+    throw new Error("Production FRONTEND_ORIGINS must use https");
+  }
+  if (config.trustProxyHops < 1) {
+    throw new Error(
+      "Production requires TRUST_PROXY_HOPS to match the trusted ingress path",
+    );
+  }
+  if (config.mongoUrl === null) {
+    throw new Error("Production requires MONGO_URL");
+  }
+  if (config.privateStorageRoot === null) {
+    throw new Error("Production requires PRIVATE_STORAGE_ROOT");
+  }
+  if (config.passwordResetUrl !== null) {
+    const resetOrigin = new URL(config.passwordResetUrl).origin;
+    if (!config.frontendOrigins.includes(resetOrigin)) {
+      throw new Error(
+        "PASSWORD_RESET_URL origin must be listed in FRONTEND_ORIGINS in production",
+      );
+    }
+  }
+}
+
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
   const nodeEnv = parseNodeEnv(env.NODE_ENV);
   const sessionCookieSecure = parseBoolean(
@@ -203,6 +241,13 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
   const config: AppConfig = {
     port: parsePort(env.PORT),
     nodeEnv,
+    trustProxyHops: parseInteger(
+      env.TRUST_PROXY_HOPS,
+      0,
+      "TRUST_PROXY_HOPS",
+      0,
+      10,
+    ),
     frontendOrigins: parseOrigins(env.FRONTEND_ORIGINS),
     sessionCookieSecure,
     sessionCookieSameSite,
@@ -272,5 +317,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
   };
 
   requireAuthRuntime(config);
+  requireProductionRuntime(config);
   return config;
 }
