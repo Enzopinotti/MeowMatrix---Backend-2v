@@ -1,7 +1,8 @@
-import type { AddressInfo } from "node:net";
 import type { Server } from "node:http";
+import type { AddressInfo } from "node:net";
 import { afterEach, describe, expect, it } from "vitest";
 import { createApp, type AppOptions } from "../src/app.js";
+import type { RuntimeLogRecord } from "../src/runtime/observability.js";
 
 let server: Server | undefined;
 
@@ -21,6 +22,10 @@ async function startApp(options: AppOptions = {}) {
   await new Promise<void>((resolve) => server?.once("listening", resolve));
   const address = server.address() as AddressInfo;
   return `http://127.0.0.1:${address.port}`;
+}
+
+async function flushRequestLogs() {
+  await new Promise<void>((resolve) => setImmediate(resolve));
 }
 
 describe("createApp", () => {
@@ -71,6 +76,75 @@ describe("createApp", () => {
     expect(body).not.toContain("mongoUrl");
     expect(body).not.toContain("smtp");
     expect(body).not.toContain("storageKey");
+  });
+
+  it("adds server-generated request correlation without logging PII-bearing request data", async () => {
+    const records: RuntimeLogRecord[] = [];
+    const origin = await startApp({
+      runtimeLogSink(record) {
+        records.push(record);
+      },
+      trustProxyHops: 1,
+    });
+
+    const response = await fetch(
+      `${origin}/healthz?email=private-user@example.com`,
+      { headers: { "X-Forwarded-For": "203.0.113.9" } },
+    );
+    await response.json();
+    await flushRequestLogs();
+
+    const requestId = response.headers.get("x-request-id");
+    expect(requestId).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+    );
+    expect(records).toContainEqual(
+      expect.objectContaining({
+        level: "info",
+        event: "http.request.completed",
+        requestId,
+        method: "GET",
+        statusCode: 200,
+      }),
+    );
+    const serialized = JSON.stringify(records);
+    expect(serialized).not.toContain("private-user@example.com");
+    expect(serialized).not.toContain("203.0.113.9");
+    expect(serialized).not.toContain("/healthz");
+  });
+
+  it("correlates unhandled failures without serializing the error payload", async () => {
+    const records: RuntimeLogRecord[] = [];
+    const origin = await startApp({
+      runtimeLogSink(record) {
+        records.push(record);
+      },
+      readinessProbe: async () => {
+        throw new Error("sensitive-provider-detail");
+      },
+    });
+
+    const response = await fetch(`${origin}/readyz`);
+    expect(response.status).toBe(500);
+    const requestId = response.headers.get("x-request-id");
+    await response.json();
+    await flushRequestLogs();
+
+    expect(records).toContainEqual({
+      level: "error",
+      event: "http.request.unhandled_error",
+      requestId,
+      errorName: "Error",
+    });
+    expect(records).toContainEqual(
+      expect.objectContaining({
+        level: "error",
+        event: "http.request.completed",
+        requestId,
+        statusCode: 500,
+      }),
+    );
+    expect(JSON.stringify(records)).not.toContain("sensitive-provider-detail");
   });
 
   it("returns a stable JSON 404 contract", async () => {

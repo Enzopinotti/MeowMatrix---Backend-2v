@@ -11,6 +11,7 @@ on:
       - "README.md"
       - ".github/workflows/modern-quality.yml"
       - ".github/workflows/modern-full-stack.yml"
+      - ".github/workflows/modern-recovery.yml"
   push:
     branches:
       - main
@@ -23,6 +24,7 @@ on:
       - "README.md"
       - ".github/workflows/modern-quality.yml"
       - ".github/workflows/modern-full-stack.yml"
+      - ".github/workflows/modern-recovery.yml"
 
 permissions:
   contents: read

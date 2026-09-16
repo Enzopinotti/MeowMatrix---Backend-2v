@@ -1,5 +1,5 @@
 import express, { type RequestHandler } from "express";
-import { apiErrorHandler, errorEnvelope } from "./api/errors.js";
+import { createApiErrorHandler, errorEnvelope } from "./api/errors.js";
 import { createApiV1Router } from "./api/routes.js";
 import { unavailableAuthService, type AuthService } from "./domain/auth.js";
 import {
@@ -14,6 +14,10 @@ import {
   unavailablePrivateFileService,
   type PrivateFileService,
 } from "./domain/private-files.js";
+import {
+  createRequestObservabilityMiddleware,
+  type RuntimeLogSink,
+} from "./runtime/observability.js";
 import type { SessionCookieOptions } from "./security/http.js";
 import type { RateLimitStore } from "./security/rate-limit.js";
 
@@ -40,6 +44,7 @@ export type AppOptions = {
   sessionCookieOptions?: SessionCookieOptions;
   rateLimitStore?: RateLimitStore;
   trustProxyHops?: number;
+  runtimeLogSink?: RuntimeLogSink;
 };
 
 const defaultSessionCookieOptions: SessionCookieOptions = {
@@ -71,6 +76,7 @@ export function createApp(options: AppOptions = {}) {
 
   app.disable("x-powered-by");
   app.set("trust proxy", trustProxyHops > 0 ? trustProxyHops : false);
+  app.use(createRequestObservabilityMiddleware(options.runtimeLogSink));
   app.use(express.json({ limit: "1mb" }));
 
   app.get("/healthz", (_request, response) => {
@@ -114,7 +120,7 @@ export function createApp(options: AppOptions = {}) {
   };
 
   app.use(notFound);
-  app.use(apiErrorHandler);
+  app.use(createApiErrorHandler(options.runtimeLogSink));
 
   return app;
 }

@@ -1,4 +1,4 @@
-name: Meow modern full-stack runtime
+name: Meow modern recovery rehearsal
 
 on:
   pull_request:
@@ -28,9 +28,9 @@ permissions:
   contents: read
 
 jobs:
-  full-stack:
+  recovery:
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
+    timeout-minutes: 35
     env:
       COMPOSE_PROJECT_NAME: meow-b6
       MEOW_API_ORIGIN: http://127.0.0.1:18080
@@ -59,14 +59,23 @@ jobs:
       - name: Start full-stack runtime
         run: docker compose -f integration/compose.b6.yml up -d --wait --wait-timeout 120
 
-      - name: Run transactional and persistence smoke
+      - name: Seed qualified transactional state
         run: bash integration/full-stack-smoke.sh
 
-      - name: Print release candidate evidence
+      - name: Destroy and restore durable state
+        run: bash integration/recovery-rehearsal.sh
+
+      - name: Print recovery and release evidence
         if: always()
         run: |
           if [ -f .runtime/release/candidate.json ]; then
             cat .runtime/release/candidate.json
+          fi
+          if [ -f .runtime/b7-recovery/recovery-manifest.json ]; then
+            cat .runtime/b7-recovery/recovery-manifest.json
+          fi
+          if [ -f .runtime/b7-recovery/backup.sha256 ]; then
+            cat .runtime/b7-recovery/backup.sha256
           fi
 
       - name: Capture runtime diagnostics
