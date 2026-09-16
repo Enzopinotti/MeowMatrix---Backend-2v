@@ -1,5 +1,9 @@
 import type { ErrorRequestHandler } from "express";
 import {
+  consoleStructuredLogSink,
+  requestIdFromResponse,
+} from "../observability/request-observability.js";
+import {
   ContractValidationError,
   type ApiErrorDetail,
   type ErrorEnvelope,
@@ -66,8 +70,14 @@ export const apiErrorHandler: ErrorRequestHandler = (
     return;
   }
 
-  console.error("Unhandled request error", {
-    name: error instanceof Error ? error.name : "UnknownError",
+  consoleStructuredLogSink({
+    timestamp: new Date().toISOString(),
+    level: "error",
+    event: "http_request_unhandled_error",
+    ...(requestIdFromResponse(response)
+      ? { requestId: requestIdFromResponse(response) ?? undefined }
+      : {}),
+    errorName: error instanceof Error ? error.name : "UnknownError",
   });
   response
     .status(500)
