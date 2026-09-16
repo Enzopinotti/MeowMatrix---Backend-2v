@@ -2,12 +2,21 @@ import type { MongoClient } from "mongodb";
 import { createApp } from "./app.js";
 import { loadConfig } from "./config/env.js";
 import { createAuthService, type AuthService } from "./domain/auth.js";
+import type { CatalogService } from "./domain/catalog.js";
+import type { CommerceService } from "./domain/commerce.js";
 import { createPasswordResetMailNotifier } from "./infrastructure/password-reset-mail.js";
 import { connectMongoAuthPersistence } from "./persistence/mongo-auth.js";
+import { MongoCatalogService } from "./persistence/mongo-catalog.js";
+import {
+  ensureCommerceIndexes,
+  MongoCommerceService,
+} from "./persistence/mongo-commerce.js";
 
 const config = loadConfig();
 let mongoClient: MongoClient | null = null;
 let authService: AuthService | undefined;
+let catalogService: CatalogService | undefined;
+let commerceService: CommerceService | undefined;
 
 if (config.mongoUrl !== null) {
   if (
@@ -23,6 +32,7 @@ if (config.mongoUrl !== null) {
     ...(config.mongoDbName ? { dbName: config.mongoDbName } : {}),
   });
   mongoClient = persistence.client;
+  await ensureCommerceIndexes(persistence.db);
 
   const notifier = createPasswordResetMailNotifier({
     host: config.smtpHost,
@@ -42,10 +52,14 @@ if (config.mongoUrl !== null) {
     sessionTtlMs: config.sessionTtlSeconds * 1000,
     resetTtlMs: config.resetTtlSeconds * 1000,
   });
+  catalogService = new MongoCatalogService(persistence.db);
+  commerceService = new MongoCommerceService(persistence.client, persistence.db);
 }
 
 const app = createApp({
   ...(authService ? { authService } : {}),
+  ...(catalogService ? { catalogService } : {}),
+  ...(commerceService ? { commerceService } : {}),
   allowedOrigins: config.frontendOrigins,
   sessionCookieOptions: {
     secure: config.sessionCookieSecure,
@@ -59,6 +73,8 @@ const server = app.listen(config.port, () => {
     port: config.port,
     nodeEnv: config.nodeEnv,
     authPersistence: authService ? "mongo" : "unavailable",
+    catalogPersistence: catalogService ? "mongo" : "unavailable",
+    commercePersistence: commerceService ? "mongo" : "unavailable",
   });
 });
 
