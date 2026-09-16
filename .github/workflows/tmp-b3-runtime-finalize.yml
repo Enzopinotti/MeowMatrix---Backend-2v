@@ -10,7 +10,6 @@ permissions:
 
 jobs:
   finalize:
-    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-24.04
     timeout-minutes: 12
     steps:
@@ -28,62 +27,17 @@ jobs:
         working-directory: modern
         run: npm install --save-exact bcryptjs@3.0.3 mongodb@7.6.0 nodemailer@10.0.10
 
-      - name: Restore and extend B3 contracts
+      - name: Restore B2 Product response schema
         working-directory: modern
-        run: |
-          node --input-type=module <<'NODE'
-          import fs from 'node:fs';
+        run: python3 -c 'from pathlib import Path; p=Path("src/api/openapi.ts"); s=p.read_text(); old="          \"200\": { description: \"Product\" },"; new="          \"200\": {\n            description: \"Product\",\n            content: {\n              \"application/json\": {\n                schema: {\n                  type: \"object\",\n                  required: [\"data\"],\n                  properties: { data: { \$ref: \"#/components/schemas/Product\" } },\n                },\n              },\n            },\n          },"; assert old in s; p.write_text(s.replace(old,new,1))'
 
-          const openApiPath = 'src/api/openapi.ts';
-          let source = fs.readFileSync(openApiPath, 'utf8');
-          const oldProduct = '          "200": { description: "Product" },';
-          const newProduct = `          "200": {
-            description: "Product",
-            content: {
-              "application/json": {
-                schema: {
-                  type: "object",
-                  required: ["data"],
-                  properties: { data: { $ref: "#/components/schemas/Product" } },
-                },
-              },
-            },
-          },`;
-          if (!source.includes(oldProduct)) throw new Error('Product response anchor missing');
-          source = source.replace(oldProduct, newProduct);
+      - name: Align login OpenAPI with legacy-compatible parser
+        working-directory: modern
+        run: python3 -c 'from pathlib import Path; p=Path("src/api/openapi.ts"); s=p.read_text(); a=s.index("      LoginRequest: {"); b=s.index("      PasswordResetRequest: {",a); block=s[a:b]; old="            minLength: 12,\n            maxLength: 128,"; new="            minLength: 1,\n            maxLength: 4096,"; assert old in block; p.write_text(s[:a]+block.replace(old,new,1)+s[b:])'
 
-          const start = source.indexOf('      LoginRequest: {');
-          const end = source.indexOf('      PasswordResetRequest: {', start);
-          if (start < 0 || end < 0) throw new Error('LoginRequest OpenAPI block missing');
-          const before = source.slice(0, start);
-          let login = source.slice(start, end);
-          const after = source.slice(end);
-          login = login.replace('            minLength: 12,\n            maxLength: 128,', '            minLength: 1,\n            maxLength: 4096,');
-          if (!login.includes('minLength: 1') || !login.includes('maxLength: 4096')) {
-            throw new Error('LoginRequest password policy was not patched');
-          }
-          fs.writeFileSync(openApiPath, before + login + after);
-
-          const authPath = 'src/domain/auth.ts';
-          let auth = fs.readFileSync(authPath, 'utf8');
-          const oldPublicUser = `function publicUser(user: AuthUserRecord): UserDto {
-  const { passwordHash: _passwordHash, ...safeUser } = user;
-  return safeUser;
-}`;
-          const newPublicUser = `function publicUser(user: AuthUserRecord): UserDto {
-  return {
-    id: user.id,
-    name: user.name,
-    lastName: user.lastName,
-    email: user.email,
-    role: user.role,
-    avatarUrl: user.avatarUrl,
-  };
-}`;
-          if (!auth.includes(oldPublicUser)) throw new Error('publicUser anchor missing');
-          auth = auth.replace(oldPublicUser, newPublicUser);
-          fs.writeFileSync(authPath, auth);
-          NODE
+      - name: Remove secret-discard lint ambiguity
+        working-directory: modern
+        run: python3 -c 'from pathlib import Path; p=Path("src/domain/auth.ts"); s=p.read_text(); old="function publicUser(user: AuthUserRecord): UserDto {\n  const { passwordHash: _passwordHash, ...safeUser } = user;\n  return safeUser;\n}"; new="function publicUser(user: AuthUserRecord): UserDto {\n  return {\n    id: user.id,\n    name: user.name,\n    lastName: user.lastName,\n    email: user.email,\n    role: user.role,\n    avatarUrl: user.avatarUrl,\n  };\n}"; assert old in s; p.write_text(s.replace(old,new,1))'
 
       - name: Format maintained authority
         working-directory: modern
