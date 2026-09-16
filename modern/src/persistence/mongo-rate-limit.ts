@@ -1,17 +1,26 @@
 import { createHash } from "node:crypto";
-import type { Collection, Db, Document } from "mongodb";
+import type { Collection, Db } from "mongodb";
 import type {
   RateLimitBucket,
   RateLimitStore,
   RateLimitStoreIncrement,
 } from "../security/rate-limit.js";
 
+type RateLimitDocument = {
+  _id: string;
+  scope: string;
+  keyHash: string;
+  count: number;
+  resetAt: Date;
+  updatedAt: Date;
+};
+
 function hashRateLimitKey(value: string): string {
   return createHash("sha256").update(value).digest("hex");
 }
 
 export async function ensureRateLimitIndexes(db: Db): Promise<void> {
-  await db.collection("auth_rate_limits").createIndex(
+  await db.collection<RateLimitDocument>("auth_rate_limits").createIndex(
     { resetAt: 1 },
     {
       name: "auth_rate_limits_expiry",
@@ -21,10 +30,10 @@ export async function ensureRateLimitIndexes(db: Db): Promise<void> {
 }
 
 export class MongoRateLimitStore implements RateLimitStore {
-  private readonly buckets: Collection<Document>;
+  private readonly buckets: Collection<RateLimitDocument>;
 
   constructor(db: Db) {
-    this.buckets = db.collection("auth_rate_limits");
+    this.buckets = db.collection<RateLimitDocument>("auth_rate_limits");
   }
 
   async increment(input: RateLimitStoreIncrement): Promise<RateLimitBucket> {
