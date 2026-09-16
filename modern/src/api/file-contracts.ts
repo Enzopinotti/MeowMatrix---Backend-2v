@@ -27,11 +27,16 @@ export type PrivateFileListDto = {
 
 function validation(field: string, message: string): never {
   const details: ApiErrorDetail[] = [{ field, message }];
-  throw new ContractValidationError("Request validation failed", details);
+  throw new ContractValidationError(details);
 }
 
-export function parsePrivateFilePurpose(value: string | undefined): PrivateFilePurpose {
-  if (!value || !privateFilePurposes.includes(value as PrivateFilePurpose)) {
+export function parsePrivateFilePurpose(
+  value: string | string[] | undefined,
+): PrivateFilePurpose {
+  if (
+    typeof value !== "string" ||
+    !privateFilePurposes.includes(value as PrivateFilePurpose)
+  ) {
     return validation(
       "purpose",
       `Expected one of: ${privateFilePurposes.join(", ")}`,
@@ -40,8 +45,10 @@ export function parsePrivateFilePurpose(value: string | undefined): PrivateFileP
   return value as PrivateFilePurpose;
 }
 
-export function parsePrivateFileId(value: string | undefined): string {
-  if (!value || !/^[a-f0-9]{24}$/i.test(value)) {
+export function parsePrivateFileId(
+  value: string | string[] | undefined,
+): string {
+  if (typeof value !== "string" || !/^[a-f0-9]{24}$/i.test(value)) {
     return validation("fileId", "Expected a Mongo ObjectId");
   }
   return value.toLowerCase();
