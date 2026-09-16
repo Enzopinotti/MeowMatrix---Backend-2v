@@ -19,7 +19,7 @@ const owner: UserDto = {
   name: "Owner",
   lastName: "User",
   email: "owner@example.test",
-  role: "usuario",
+  role: "user",
   avatarUrl: null,
 };
 const other: UserDto = {
@@ -218,7 +218,11 @@ async function upload(
   origin = "http://frontend.test",
 ) {
   const form = new FormData();
-  form.append("file", new Blob([new Uint8Array(bytes)], { type: mediaType }), name);
+  form.append(
+    "file",
+    new Blob([Uint8Array.from(bytes)], { type: mediaType }),
+    name,
+  );
   return fetch(`${base}/api/v1/files/purposes/${purpose}`, {
     method: "POST",
     headers: {
@@ -295,7 +299,11 @@ describe("B5 private files", () => {
     expect(evilOrigin.status).toBe(403);
 
     const form = new FormData();
-    form.append("file", new Blob([new Uint8Array(png)], { type: "image/png" }), "avatar.png");
+    form.append(
+      "file",
+      new Blob([Uint8Array.from(png)], { type: "image/png" }),
+      "avatar.png",
+    );
     const anonymous = await fetch(`${base}/api/v1/files/purposes/avatar`, {
       method: "POST",
       headers: { Origin: "http://frontend.test" },
