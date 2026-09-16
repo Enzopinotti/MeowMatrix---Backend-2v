@@ -15,7 +15,11 @@ type RateLimitDocument = {
   updatedAt: Date;
 };
 
-function hashRateLimitKey(scope: string, value: string, secret: string): string {
+function hashRateLimitKey(
+  scope: string,
+  value: string,
+  secret: string,
+): string {
   return createHmac("sha256", secret)
     .update(scope)
     .update("\0")
