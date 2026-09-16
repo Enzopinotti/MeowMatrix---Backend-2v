@@ -1,3 +1,4 @@
+import type { Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { afterEach, describe, expect, it } from "vitest";
 import { createApp } from "../src/app.js";
@@ -11,6 +12,7 @@ import {
   type ReservePrivateFile,
 } from "../src/domain/private-files.js";
 import type { UserDto } from "../src/api/contracts.js";
+import { ApiError } from "../src/api/errors.js";
 
 const owner: UserDto = {
   id: "aaaaaaaaaaaaaaaaaaaaaaaa",
@@ -45,9 +47,10 @@ class MemoryFiles implements PrivateFileRepository {
         record.purpose === input.purpose &&
         record.slotKey === "current"
       ) {
-        const error = new Error("duplicate current slot");
-        Object.assign(error, { code: 11000 });
-        throw error;
+        throw ApiError.conflict(
+          "FILE_PURPOSE_ALREADY_EXISTS",
+          "An active file already exists for this purpose; delete it before replacing it",
+        );
       }
     }
     const id = this.next.toString(16).padStart(24, "0");
@@ -66,7 +69,9 @@ class MemoryFiles implements PrivateFileRepository {
 
   async activate(id: string): Promise<PrivateFileRecord> {
     const record = this.records.get(id);
-    if (!record || record.status !== "staging") throw new Error("missing staging file");
+    if (!record || record.status !== "staging") {
+      throw new Error("missing staging file");
+    }
     record.status = "active";
     record.activatedAt = Date.now();
     return structuredClone(record);
@@ -141,7 +146,7 @@ function authService(): AuthService {
       if (token === "owner-token") return owner;
       if (token === "other-token") return other;
       if (token === "admin-token") return admin;
-      throw new Error("unexpected session token");
+      throw new ApiError(401, "SESSION_INVALID", "Authentication required");
     },
     async register() {
       throw new Error("not used");
@@ -160,7 +165,7 @@ const png = Buffer.from([
 ]);
 const jpeg = Buffer.from([0xff, 0xd8, 0xff, 0xdb, 0x01, 0x02, 0x03]);
 
-const servers: Array<ReturnType<ReturnType<typeof createApp>["listen"]>> = [];
+const servers: Server[] = [];
 
 afterEach(async () => {
   await Promise.all(
@@ -210,12 +215,16 @@ async function upload(
   mediaType: string,
   name: string,
   token = "owner-token",
+  origin = "http://frontend.test",
 ) {
   const form = new FormData();
-  form.append("file", new Blob([bytes], { type: mediaType }), name);
-  return fetch(`${base}/api/v1/files/${purpose}`, {
+  form.append("file", new Blob([new Uint8Array(bytes)], { type: mediaType }), name);
+  return fetch(`${base}/api/v1/files/purposes/${purpose}`, {
     method: "POST",
-    headers: session(token, true),
+    headers: {
+      Cookie: `meow_session=${token}`,
+      Origin: origin,
+    },
     body: form,
   });
 }
@@ -237,13 +246,25 @@ describe("B5 private files", () => {
     expect(body.data).not.toHaveProperty("status");
   });
 
-  it("rejects spoofed MIME/content and oversized avatar bodies", async () => {
+  it("rejects spoofed MIME/content, bad extensions, and oversized avatar bodies", async () => {
     const { base } = await harness();
     const spoofed = await upload(base, "avatar", jpeg, "image/png", "avatar.png");
     expect(spoofed.status).toBe(415);
     expect(((await spoofed.json()) as { error: { code: string } }).error.code).toBe(
       "FILE_TYPE_MISMATCH",
     );
+
+    const wrongExtension = await upload(
+      base,
+      "avatar",
+      png,
+      "image/png",
+      "avatar.jpg",
+    );
+    expect(wrongExtension.status).toBe(415);
+    expect(
+      ((await wrongExtension.json()) as { error: { code: string } }).error.code,
+    ).toBe("FILE_EXTENSION_MISMATCH");
 
     const oversized = Buffer.alloc(2 * 1024 * 1024 + 1);
     png.copy(oversized, 0);
@@ -257,6 +278,41 @@ describe("B5 private files", () => {
     expect(tooLarge.status).toBe(413);
     expect(((await tooLarge.json()) as { error: { code: string } }).error.code).toBe(
       "FILE_TOO_LARGE",
+    );
+  });
+
+  it("enforces authenticated exact-origin mutation boundaries", async () => {
+    const { base } = await harness();
+    const evilOrigin = await upload(
+      base,
+      "avatar",
+      png,
+      "image/png",
+      "avatar.png",
+      "owner-token",
+      "https://evil.example",
+    );
+    expect(evilOrigin.status).toBe(403);
+
+    const form = new FormData();
+    form.append("file", new Blob([new Uint8Array(png)], { type: "image/png" }), "avatar.png");
+    const anonymous = await fetch(`${base}/api/v1/files/purposes/avatar`, {
+      method: "POST",
+      headers: { Origin: "http://frontend.test" },
+      body: form,
+    });
+    expect(anonymous.status).toBe(401);
+  });
+
+  it("returns 409 rather than overwriting an existing current-purpose file", async () => {
+    const { base } = await harness();
+    expect((await upload(base, "avatar", png, "image/png", "one.png")).status).toBe(
+      201,
+    );
+    const duplicate = await upload(base, "avatar", png, "image/png", "two.png");
+    expect(duplicate.status).toBe(409);
+    expect(((await duplicate.json()) as { error: { code: string } }).error.code).toBe(
+      "FILE_PURPOSE_ALREADY_EXISTS",
     );
   });
 
