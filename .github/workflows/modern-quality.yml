@@ -55,6 +55,19 @@ jobs:
       - name: Run maintained quality contract
         run: npm run check
 
+      - name: Validate fail-closed production configuration
+        env:
+          NODE_ENV: production
+          FRONTEND_ORIGINS: https://app.example.test
+          TRUST_PROXY_HOPS: "1"
+          MONGO_URL: mongodb://mongo:27017/meow?replicaSet=rs0
+          MONGO_DB_NAME: meow
+          SMTP_HOST: smtp.example.test
+          SMTP_FROM: Meow <no-reply@example.test>
+          PASSWORD_RESET_URL: https://app.example.test/reset-password
+          PRIVATE_STORAGE_ROOT: /var/lib/meow/private
+        run: npm run preflight:production
+
       - name: Smoke compiled health endpoint
         shell: bash
         run: |
