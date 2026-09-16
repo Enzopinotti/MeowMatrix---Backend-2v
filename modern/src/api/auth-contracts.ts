@@ -73,15 +73,22 @@ function emailField(input: Record<string, unknown>): string {
   return email;
 }
 
-function passwordField(input: Record<string, unknown>): string {
+function newPasswordField(input: Record<string, unknown>): string {
   return stringField(input, "password", 12, 128);
+}
+
+function loginPasswordField(input: Record<string, unknown>): string {
+  // Login intentionally accepts historical credentials that predate the B3
+  // creation policy. Successful legacy authentication is upgraded to scrypt.
+  // The upper bound exists only to keep request/hash work bounded.
+  return stringField(input, "password", 1, 4096);
 }
 
 export function parseLoginRequest(value: unknown): LoginRequest {
   const input = record(value);
   return {
     email: emailField(input),
-    password: passwordField(input),
+    password: loginPasswordField(input),
   };
 }
 
@@ -91,7 +98,7 @@ export function parseRegisterRequest(value: unknown): RegisterRequest {
     name: stringField(input, "name", 1, 80),
     lastName: stringField(input, "lastName", 1, 80),
     email: emailField(input),
-    password: passwordField(input),
+    password: newPasswordField(input),
   };
 }
 
@@ -112,5 +119,5 @@ export function parsePasswordResetConfirmRequest(
       { field: "token", message: "Expected a valid reset token" },
     ]);
   }
-  return { token, password: passwordField(input) };
+  return { token, password: newPasswordField(input) };
 }
