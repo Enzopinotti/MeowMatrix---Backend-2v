@@ -26,22 +26,22 @@ jobs:
         with:
           node-version-file: .nvmrc
 
-      - name: Generate deterministic lock and qualify foundation
+      - name: Generate deterministic lock, canonicalize and qualify foundation
         working-directory: modern
         run: |
           set -euo pipefail
-          # Retry after aligning TypeScript with the supported typescript-eslint peer range.
           npm install --package-lock-only --ignore-scripts --audit=false --fund=false
           npm ci --ignore-scripts --audit=false --fund=false
+          npm exec prettier -- --write .
           npm run check
 
-      - name: Commit lock and remove one-shot workflow
+      - name: Commit lock, canonical formatting and remove one-shot workflow
         shell: bash
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add modern/package-lock.json
+          git add modern
           git rm .github/workflows/generate-modern-lock-once.yml
-          git commit -m "chore: lock modern backend dependencies"
+          git commit -m "chore: qualify and lock modern backend foundation"
           git push origin HEAD:feat/meow-2026-foundation-b1
