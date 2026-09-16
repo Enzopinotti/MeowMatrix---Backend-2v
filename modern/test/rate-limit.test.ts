@@ -1,8 +1,8 @@
 import type { AddressInfo } from "node:net";
-import type { RequestHandler } from "express";
+import express, { type RequestHandler } from "express";
 import { afterEach, describe, expect, it } from "vitest";
 import { createApp } from "../src/app.js";
-import { ApiError } from "../src/api/errors.js";
+import { ApiError, apiErrorHandler } from "../src/api/errors.js";
 import {
   createRateLimiter,
   type RateLimitStore,
@@ -22,7 +22,7 @@ afterEach(async () => {
   );
 });
 
-async function listen(app: ReturnType<typeof createApp>): Promise<string> {
+async function listen(app: ReturnType<typeof express>): Promise<string> {
   const server = app.listen(0);
   servers.push(server);
   await new Promise<void>((resolve) => server.once("listening", resolve));
@@ -48,14 +48,12 @@ function recordingStore(options: { blockedAfter?: number } = {}) {
   return { calls, store };
 }
 
-async function runMiddleware(
-  middleware: RequestHandler,
-  store: ReturnType<typeof recordingStore>,
-) {
-  const app = createApp({ rateLimitStore: store.store });
+async function runMiddleware(middleware: RequestHandler) {
+  const app = express();
   app.post("/__test-limiter", middleware, (_request, response) => {
     response.status(204).end();
   });
+  app.use(apiErrorHandler);
   const origin = await listen(app);
   return fetch(`${origin}/__test-limiter`, { method: "POST" });
 }
@@ -68,7 +66,7 @@ describe("shared authentication rate limiting", () => {
       { store: store.store, scope: "auth:test", now: () => 1_000 },
     );
 
-    const response = await runMiddleware(limiter, store);
+    const response = await runMiddleware(limiter);
 
     expect(response.status).toBe(204);
     expect(response.headers.get("x-ratelimit-limit")).toBe("5");
@@ -87,7 +85,7 @@ describe("shared authentication rate limiting", () => {
       { store: store.store, scope: "auth:test", now: () => 2_000 },
     );
 
-    const response = await runMiddleware(limiter, store);
+    const response = await runMiddleware(limiter);
     const payload = (await response.json()) as {
       error: { code: string; message: string };
     };
@@ -143,15 +141,8 @@ describe("shared authentication rate limiting", () => {
       { windowMs: 60_000, maxAttempts: 1 },
       { store, scope: "auth:test" },
     );
-    const app = createApp();
-    app.post("/__test-store-failure", limiter, (_request, response) => {
-      response.status(204).end();
-    });
-    const origin = await listen(app);
 
-    const response = await fetch(`${origin}/__test-store-failure`, {
-      method: "POST",
-    });
+    const response = await runMiddleware(limiter);
 
     expect(response.status).toBe(500);
   });
