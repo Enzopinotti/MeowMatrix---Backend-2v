@@ -1,4 +1,5 @@
 import { randomBytes, scrypt, timingSafeEqual } from "node:crypto";
+import bcrypt from "bcryptjs";
 
 const KEY_LENGTH = 64;
 const SCRYPT_N = 16_384;
@@ -6,6 +7,7 @@ const SCRYPT_R = 8;
 const SCRYPT_P = 1;
 const MAX_MEMORY = 64 * 1024 * 1024;
 const VERSION = "v1";
+const LEGACY_BCRYPT = /^\$2[aby]\$/;
 
 function derive(password: string, salt: Buffer): Promise<Buffer> {
   return new Promise((resolve, reject) => {
@@ -46,7 +48,7 @@ export async function hashPassword(password: string): Promise<string> {
   ].join("$");
 }
 
-export async function verifyPassword(
+async function verifyScryptPassword(
   password: string,
   encodedHash: string,
 ): Promise<boolean> {
@@ -73,6 +75,29 @@ export async function verifyPassword(
   }
 }
 
+export function isLegacyBcryptHash(encodedHash: string): boolean {
+  return LEGACY_BCRYPT.test(encodedHash);
+}
+
+export function passwordHashNeedsUpgrade(encodedHash: string): boolean {
+  return isLegacyBcryptHash(encodedHash);
+}
+
+export async function verifyPassword(
+  password: string,
+  encodedHash: string,
+): Promise<boolean> {
+  if (isLegacyBcryptHash(encodedHash)) {
+    try {
+      return await bcrypt.compare(password, encodedHash);
+    } catch {
+      return false;
+    }
+  }
+
+  return verifyScryptPassword(password, encodedHash);
+}
+
 export const passwordHashPolicy = Object.freeze({
   algorithm: "scrypt",
   version: VERSION,
@@ -83,4 +108,5 @@ export const passwordHashPolicy = Object.freeze({
   keyBytes: KEY_LENGTH,
   minimumPasswordLength: 12,
   maximumPasswordLength: 128,
+  legacyAlgorithmsAcceptedForLogin: ["bcrypt"] as const,
 });
