@@ -92,6 +92,18 @@ auth_me="$(curl --fail-with-body --silent --show-error -b "$cookies" "$api_origi
 auth_email="$(printf '%s' "$auth_me" | json_expr 'j.data.email')"
 test "$auth_email" = "$email"
 
+stage "shared auth rate-limit persistence"
+"${compose[@]}" exec -T mongo mongosh --quiet \
+  'mongodb://127.0.0.1:27017/meow_matrix?directConnection=true' \
+  --eval '
+const docs = db.auth_rate_limits.find({scope: {$in: ["auth:register", "auth:login"]}}).toArray();
+if (docs.length < 2) { quit(1); }
+if (docs.some((doc) => typeof doc.keyHash !== "string" || !/^[a-f0-9]{64}$/.test(doc.keyHash))) { quit(2); }
+if (docs.some((doc) => Object.prototype.hasOwnProperty.call(doc, "key"))) { quit(3); }
+const ttl = db.auth_rate_limits.getIndexes().find((index) => index.name === "auth_rate_limits_expiry");
+if (!ttl || ttl.expireAfterSeconds !== 0) { quit(4); }
+' >/dev/null
+
 stage "server-authoritative cart"
 cart="$(curl --fail-with-body --silent --show-error \
   -b "$cookies" \
