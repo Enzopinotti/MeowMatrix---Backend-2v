@@ -38,7 +38,7 @@ describe("createApp", () => {
     expect(await response.json()).toEqual({
       status: "ok",
       service: "meow-api-test",
-      version: "2026-b1",
+      version: "2026-b2",
     });
     expect(response.headers.get("x-powered-by")).toBeNull();
   });
