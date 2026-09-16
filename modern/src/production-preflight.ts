@@ -12,6 +12,7 @@ console.log("Meow production preflight passed", {
   trustProxyHops: config.trustProxyHops,
   sessionCookieSecure: config.sessionCookieSecure,
   sessionCookieSameSite: config.sessionCookieSameSite,
+  sharedRateLimitSecretConfigured: config.rateLimitHmacSecret !== null,
   mongoConfigured: config.mongoUrl !== null,
   privateStorageConfigured: config.privateStorageRoot !== null,
   smtpConfigured: config.smtpHost !== null && config.smtpFrom !== null,
