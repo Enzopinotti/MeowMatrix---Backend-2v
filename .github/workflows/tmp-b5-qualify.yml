@@ -26,7 +26,7 @@ jobs:
       - name: Install locked dependencies
         working-directory: modern
         run: npm ci --ignore-scripts
-      - name: Format and qualify B5 backend
+      - name: Format and qualify corrected B5 backend
         shell: bash
         run: |
           set -euo pipefail
@@ -36,11 +36,8 @@ jobs:
           npm run check
           cd ..
           git rm .github/workflows/tmp-b5-qualify.yml
-          if git diff --quiet; then
-            exit 0
-          fi
           git config user.name "Enzo Pinotti"
           git config user.email "enzopinottii@gmail.com"
-          git add modern/src modern/test modern/package.json modern/package-lock.json .github/workflows/tmp-b5-qualify.yml
+          git add modern/src modern/test modern/package.json modern/package-lock.json
           git commit -m "style(b5): canonicalize qualified backend"
           git push origin HEAD:feat/modern-b5-private-files-delivery
