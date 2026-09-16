@@ -47,6 +47,9 @@ jobs:
       - name: Validate Compose topology
         run: docker compose -f integration/compose.b6.yml config --quiet
 
+      - name: Pull pinned runtime dependency images
+        run: docker compose -f integration/compose.b6.yml pull mongo mailpit
+
       - name: Build pinned full-stack images
         run: docker compose -f integration/compose.b6.yml build --pull
 
