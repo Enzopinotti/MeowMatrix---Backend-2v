@@ -54,7 +54,7 @@ export const openApiDocumentB5 = {
         },
       },
     },
-    "/files/{purpose}": {
+    "/files/purposes/{purpose}": {
       post: {
         summary: "Upload one private file for the current authenticated user",
         description:
@@ -82,6 +82,7 @@ export const openApiDocumentB5 = {
             "multipart/form-data": {
               schema: {
                 type: "object",
+                additionalProperties: false,
                 required: ["file"],
                 properties: {
                   file: { type: "string", format: "binary" },
@@ -91,13 +92,21 @@ export const openApiDocumentB5 = {
           },
         },
         responses: {
-          "201": dataResponse("Private file metadata", "#/components/schemas/PrivateFile"),
+          "201": dataResponse(
+            "Private file metadata",
+            "#/components/schemas/PrivateFile",
+          ),
           "400": { $ref: "#/components/responses/ValidationError" },
           "401": { $ref: "#/components/responses/Unauthorized" },
           "403": { $ref: "#/components/responses/Forbidden" },
           "409": { $ref: "#/components/responses/Conflict" },
-          "413": { description: "File exceeds the configured purpose/request limit" },
-          "415": { description: "File type, extension, declared MIME or signature is not allowed" },
+          "413": {
+            description: "File exceeds the configured purpose/request limit",
+          },
+          "415": {
+            description:
+              "File type, extension, declared MIME or signature is not allowed",
+          },
           "503": { $ref: "#/components/responses/ServiceUnavailable" },
         },
       },
@@ -108,7 +117,10 @@ export const openApiDocumentB5 = {
         security: [{ cookieSession: [] }],
         parameters: [fileIdParameter],
         responses: {
-          "200": dataResponse("Private file metadata", "#/components/schemas/PrivateFile"),
+          "200": dataResponse(
+            "Private file metadata",
+            "#/components/schemas/PrivateFile",
+          ),
           "400": { $ref: "#/components/responses/ValidationError" },
           "401": { $ref: "#/components/responses/Unauthorized" },
           "404": { $ref: "#/components/responses/NotFound" },
@@ -120,7 +132,10 @@ export const openApiDocumentB5 = {
         security: [{ cookieSession: [] }],
         parameters: [fileIdParameter],
         responses: {
-          "204": { description: "Private file moved through the recoverable deletion lifecycle" },
+          "204": {
+            description:
+              "Private file moved through the recoverable deletion lifecycle",
+          },
           "400": { $ref: "#/components/responses/ValidationError" },
           "401": { $ref: "#/components/responses/Unauthorized" },
           "403": { $ref: "#/components/responses/Forbidden" },
@@ -136,16 +151,21 @@ export const openApiDocumentB5 = {
         parameters: [fileIdParameter],
         responses: {
           "200": {
-            description: "Private file content served as an attachment with nosniff and no-store headers",
+            description:
+              "Private file content served as an attachment with nosniff and no-store headers",
             headers: {
               "Content-Disposition": { schema: { type: "string" } },
-              "X-Content-Type-Options": { schema: { type: "string", const: "nosniff" } },
+              "X-Content-Type-Options": {
+                schema: { type: "string", const: "nosniff" },
+              },
             },
             content: {
               "image/jpeg": { schema: { type: "string", format: "binary" } },
               "image/png": { schema: { type: "string", format: "binary" } },
               "image/webp": { schema: { type: "string", format: "binary" } },
-              "application/pdf": { schema: { type: "string", format: "binary" } },
+              "application/pdf": {
+                schema: { type: "string", format: "binary" },
+              },
             },
           },
           "400": { $ref: "#/components/responses/ValidationError" },
@@ -188,7 +208,12 @@ export const openApiDocumentB5 = {
           originalName: { type: "string", minLength: 1, maxLength: 120 },
           mediaType: {
             type: "string",
-            enum: ["image/jpeg", "image/png", "image/webp", "application/pdf"],
+            enum: [
+              "image/jpeg",
+              "image/png",
+              "image/webp",
+              "application/pdf",
+            ],
           },
           bytes: { type: "integer", minimum: 1, maximum: 5_242_880 },
           sha256: { type: "string", pattern: "^[a-f0-9]{64}$" },
