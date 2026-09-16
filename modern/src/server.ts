@@ -60,6 +60,9 @@ if (config.mongoUrl !== null) {
   ) {
     throw new Error("Validated auth runtime mail configuration is missing");
   }
+  if (config.rateLimitHmacSecret === null) {
+    throw new Error("Validated shared rate-limit secret is missing");
+  }
 
   const persistence = await connectMongoAuthPersistence({
     url: config.mongoUrl,
@@ -75,7 +78,10 @@ if (config.mongoUrl !== null) {
       : []),
   ]);
 
-  rateLimitStore = new MongoRateLimitStore(persistence.db);
+  rateLimitStore = new MongoRateLimitStore(
+    persistence.db,
+    config.rateLimitHmacSecret,
+  );
 
   const resetNotifier = createPasswordResetMailNotifier({
     host: config.smtpHost,
