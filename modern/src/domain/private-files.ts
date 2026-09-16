@@ -229,26 +229,25 @@ export function createPrivateFileService(options: {
     async upload(user, purpose, upload) {
       const verified = verifyUpload(purpose, upload);
       const storageKey = randomBytes(32).toString("hex");
-      let record: PrivateFileRecord;
-      try {
-        record = await options.repository.reserve({
-          ownerId: user.id,
-          purpose,
-          ...verified,
-          storageKey,
-          createdAt: Date.now(),
-        });
-      } catch (error) {
-        if (error instanceof ApiError) throw error;
-        throw error;
-      }
+      const record = await options.repository.reserve({
+        ownerId: user.id,
+        purpose,
+        ...verified,
+        storageKey,
+        createdAt: Date.now(),
+      });
 
       try {
         await options.storage.put(storageKey, upload.buffer);
         return privateFileDto(await options.repository.activate(record.id));
       } catch (error) {
-        await options.storage.delete(storageKey).catch(() => undefined);
-        await options.repository.releaseReservation(record.id).catch(() => undefined);
+        try {
+          await options.storage.delete(storageKey);
+          await options.repository.releaseReservation(record.id);
+        } catch {
+          // Keep the reservation in staging so the recovery sweep retains a
+          // durable pointer to any blob that could not be cleaned up now.
+        }
         throw error;
       }
     },
