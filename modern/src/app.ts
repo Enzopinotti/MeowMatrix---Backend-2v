@@ -6,12 +6,17 @@ import {
   unavailableCatalogService,
   type CatalogService,
 } from "./domain/catalog.js";
+import {
+  unavailableCommerceService,
+  type CommerceService,
+} from "./domain/commerce.js";
 import type { SessionCookieOptions } from "./security/http.js";
 
 export type AppOptions = {
   serviceName?: string;
   catalogService?: CatalogService;
   authService?: AuthService;
+  commerceService?: CommerceService;
   allowedOrigins?: readonly string[];
   sessionCookieOptions?: SessionCookieOptions;
 };
@@ -27,6 +32,7 @@ export function createApp(options: AppOptions = {}) {
   const serviceName = options.serviceName ?? "meow-api";
   const catalogService = options.catalogService ?? unavailableCatalogService;
   const authService = options.authService ?? unavailableAuthService;
+  const commerceService = options.commerceService ?? unavailableCommerceService;
 
   app.disable("x-powered-by");
   app.use(express.json({ limit: "1mb" }));
@@ -35,7 +41,7 @@ export function createApp(options: AppOptions = {}) {
     response.status(200).json({
       status: "ok",
       service: serviceName,
-      version: "2026-b3",
+      version: "2026-b4",
     });
   });
 
@@ -44,6 +50,7 @@ export function createApp(options: AppOptions = {}) {
     createApiV1Router({
       catalogService,
       authService,
+      commerceService,
       allowedOrigins: options.allowedOrigins ?? [],
       sessionCookieOptions:
         options.sessionCookieOptions ?? defaultSessionCookieOptions,
