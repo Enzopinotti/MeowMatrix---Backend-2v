@@ -106,8 +106,6 @@ export function createOutboxDeliveryService(options: {
 
       try {
         await options.notifier.send(confirmation);
-        await options.repository.complete(event.id, workerId, Date.now());
-        return "delivered";
       } catch (error) {
         const terminal = event.attempts >= maxAttempts;
         const failedAt = Date.now();
@@ -121,6 +119,13 @@ export function createOutboxDeliveryService(options: {
         });
         return terminal ? "dead-letter" : "retry";
       }
+
+      // Persistence errors are deliberately outside the notifier retry block.
+      // If the lease was lost after SMTP accepted the message, scheduling a
+      // synthetic "SMTP retry" would misclassify the failure and increase the
+      // duplicate-delivery window. The worker must surface/degrade instead.
+      await options.repository.complete(event.id, workerId, Date.now());
+      return "delivered";
     },
   };
 }
