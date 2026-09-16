@@ -1,0 +1,87 @@
+name: Temporary B3 runtime finalizer
+
+on:
+  push:
+    branches:
+      - feat/modern-b3-auth-runtime
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+
+      - name: Set up Node.js
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: modern/package-lock.json
+
+      - name: Install exact B3 runtime dependencies
+        working-directory: modern
+        run: npm install --save-exact bcryptjs@3.0.3 mongodb@7.6.0 nodemailer@10.0.10
+
+      - name: Restore and extend OpenAPI contracts
+        working-directory: modern
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const path = 'src/api/openapi.ts';
+          let source = fs.readFileSync(path, 'utf8');
+          const oldProduct = '          "200": { description: "Product" },';
+          const newProduct = `          "200": {
+            description: "Product",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  required: ["data"],
+                  properties: { data: { $ref: "#/components/schemas/Product" } },
+                },
+              },
+            },
+          },`;
+          if (!source.includes(oldProduct)) throw new Error('Product response anchor missing');
+          source = source.replace(oldProduct, newProduct);
+
+          const start = source.indexOf('      LoginRequest: {');
+          const end = source.indexOf('      PasswordResetRequest: {', start);
+          if (start < 0 || end < 0) throw new Error('LoginRequest OpenAPI block missing');
+          const before = source.slice(0, start);
+          let login = source.slice(start, end);
+          const after = source.slice(end);
+          login = login.replace('            minLength: 12,\n            maxLength: 128,', '            minLength: 1,\n            maxLength: 4096,');
+          if (!login.includes('minLength: 1') || !login.includes('maxLength: 4096')) {
+            throw new Error('LoginRequest password policy was not patched');
+          }
+          fs.writeFileSync(path, before + login + after);
+          NODE
+
+      - name: Format maintained authority
+        working-directory: modern
+        run: npm exec -- prettier --write src test
+
+      - name: Run full modern check
+        working-directory: modern
+        run: npm run check
+
+      - name: Commit deterministic runtime output
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --check
+          git add modern/package.json modern/package-lock.json modern/src modern/test
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: finalize B3 auth runtime"
+          git push origin HEAD:feat/modern-b3-auth-runtime
