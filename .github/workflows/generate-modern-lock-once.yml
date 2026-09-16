@@ -30,6 +30,7 @@ jobs:
         working-directory: modern
         run: |
           set -euo pipefail
+          # Retry after aligning TypeScript with the supported typescript-eslint peer range.
           npm install --package-lock-only --ignore-scripts --audit=false --fund=false
           npm ci --ignore-scripts --audit=false --fund=false
           npm run check
