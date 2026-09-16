@@ -109,12 +109,17 @@ export class MongoCatalogService implements CatalogService {
   }
 
   async listProducts(query: ProductListQuery): Promise<ProductListDto> {
-    const filter: Document = { status: { $ne: false }, isVisible: { $ne: false } };
+    const filter: Document = {
+      status: { $ne: false },
+      isVisible: { $ne: false },
+    };
     if (query.q !== null) {
       filter.$or = [
         { name: { $regex: escapeRegex(query.q), $options: "i" } },
         { code: { $regex: escapeRegex(query.q), $options: "i" } },
-        { tags: { $elemMatch: { $regex: escapeRegex(query.q), $options: "i" } } },
+        {
+          tags: { $elemMatch: { $regex: escapeRegex(query.q), $options: "i" } },
+        },
       ];
     }
     if (query.categoryId !== null && ObjectId.isValid(query.categoryId)) {

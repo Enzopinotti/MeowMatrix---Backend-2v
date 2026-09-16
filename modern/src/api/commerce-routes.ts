@@ -87,7 +87,10 @@ export function createCommerceRouter(options: CommerceRouterOptions) {
     asyncHandler(async (request, response) => {
       const user = await currentUser(request, options.authService);
       const productId = parseCommerceProductId(request.params.productId);
-      const cart = await options.commerceService.removeCartItem(user, productId);
+      const cart = await options.commerceService.removeCartItem(
+        user,
+        productId,
+      );
       const envelope: SuccessEnvelope<typeof cart> = { data: cart };
       response.status(200).json(envelope);
     }),

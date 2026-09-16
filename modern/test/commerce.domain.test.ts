@@ -16,9 +16,7 @@ const user: UserDto = {
   avatarUrl: null,
 };
 
-function product(
-  overrides: Partial<CheckoutProduct> = {},
-): CheckoutProduct {
+function product(overrides: Partial<CheckoutProduct> = {}): CheckoutProduct {
   const base: ProductDto = {
     id: "product-1",
     name: "Keyboard",
@@ -45,9 +43,9 @@ const line = (productId: string, quantity: number) => ({
 
 describe("B4 checkout domain", () => {
   it("fingerprints canonical product/quantity state independent of line order", () => {
-    expect(
-      cartFingerprint([line("b", 2), line("a", 1)]),
-    ).toBe(cartFingerprint([line("a", 1), line("b", 2)]));
+    expect(cartFingerprint([line("b", 2), line("a", 1)])).toBe(
+      cartFingerprint([line("a", 1), line("b", 2)]),
+    );
     expect(cartFingerprint([line("a", 1)])).not.toBe(
       cartFingerprint([line("a", 2)]),
     );

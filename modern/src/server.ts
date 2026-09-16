@@ -53,7 +53,10 @@ if (config.mongoUrl !== null) {
     resetTtlMs: config.resetTtlSeconds * 1000,
   });
   catalogService = new MongoCatalogService(persistence.db);
-  commerceService = new MongoCommerceService(persistence.client, persistence.db);
+  commerceService = new MongoCommerceService(
+    persistence.client,
+    persistence.db,
+  );
 }
 
 const app = createApp({

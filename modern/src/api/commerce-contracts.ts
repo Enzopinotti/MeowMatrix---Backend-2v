@@ -2,9 +2,7 @@ import type { OrderDto, ProductDto } from "./contracts.js";
 import { ContractValidationError, parseEntityId } from "./contracts.js";
 
 export type CartItemAvailability =
-  | "available"
-  | "unavailable"
-  | "insufficient_stock";
+  "available" | "unavailable" | "insufficient_stock";
 
 export type CartItemDto = {
   productId: string;

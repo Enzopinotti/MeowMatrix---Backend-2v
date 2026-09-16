@@ -117,10 +117,12 @@ function transactionUnsupported(error: unknown): boolean {
 }
 
 export async function ensureCommerceIndexes(db: Db): Promise<void> {
-  await db.collection<CartDocument>("commerce_carts").createIndex(
-    { userId: 1 },
-    { unique: true, name: "commerce_cart_user_unique" },
-  );
+  await db
+    .collection<CartDocument>("commerce_carts")
+    .createIndex(
+      { userId: 1 },
+      { unique: true, name: "commerce_cart_user_unique" },
+    );
   await db.collection<OrderDocument>("commerce_orders").createIndexes([
     {
       key: { purchaserId: 1, idempotencyKeyHash: 1 },
@@ -274,7 +276,8 @@ export class MongoCommerceService implements CommerceService {
       items,
       total: Math.round(total * 100) / 100,
       checkoutReady:
-        items.length > 0 && items.every((item) => item.availability === "available"),
+        items.length > 0 &&
+        items.every((item) => item.availability === "available"),
       version: cart.version,
       updatedAt: cart.updatedAt.toISOString(),
     };
@@ -485,7 +488,9 @@ export class MongoCommerceService implements CommerceService {
         }),
       );
       if (result === undefined) {
-        throw new Error("Mongo transaction completed without a checkout result");
+        throw new Error(
+          "Mongo transaction completed without a checkout result",
+        );
       }
       return result;
     } catch (error) {

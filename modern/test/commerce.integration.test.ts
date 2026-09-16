@@ -62,7 +62,9 @@ function authService(): AuthService {
   };
 }
 
-function commerceService(overrides: Partial<CommerceService> = {}): CommerceService {
+function commerceService(
+  overrides: Partial<CommerceService> = {},
+): CommerceService {
   const list: OrderListDto = { items: [order], total: 1, limit: 20, offset: 0 };
   return {
     getCart: vi.fn().mockResolvedValue(emptyCart),
@@ -92,10 +94,12 @@ afterEach(async () => {
   });
 });
 
-async function startApp(input: {
-  auth?: AuthService;
-  commerce?: CommerceService;
-} = {}) {
+async function startApp(
+  input: {
+    auth?: AuthService;
+    commerce?: CommerceService;
+  } = {},
+) {
   server = createApp({
     ...(input.auth ? { authService: input.auth } : {}),
     ...(input.commerce ? { commerceService: input.commerce } : {}),

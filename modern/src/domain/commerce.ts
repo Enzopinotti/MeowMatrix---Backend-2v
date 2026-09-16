@@ -116,7 +116,9 @@ export function buildCheckoutSnapshot(input: {
 
   return {
     lines: orderLines,
-    total: roundMoney(orderLines.reduce((sum, line) => sum + line.lineTotal, 0)),
+    total: roundMoney(
+      orderLines.reduce((sum, line) => sum + line.lineTotal, 0),
+    ),
     fingerprint: cartFingerprint(input.lines),
   };
 }

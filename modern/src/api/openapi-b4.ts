@@ -156,7 +156,10 @@ export const openApiDocumentB4 = {
           },
         ],
         responses: {
-          "200": dataResponse("Order history", "#/components/schemas/OrderList"),
+          "200": dataResponse(
+            "Order history",
+            "#/components/schemas/OrderList",
+          ),
           "400": authenticatedErrors["400"],
           "401": authenticatedErrors["401"],
           "503": authenticatedErrors["503"],
@@ -211,10 +214,7 @@ export const openApiDocumentB4 = {
         properties: {
           productId: { type: "string" },
           product: {
-            anyOf: [
-              { $ref: "#/components/schemas/Product" },
-              { type: "null" },
-            ],
+            anyOf: [{ $ref: "#/components/schemas/Product" }, { type: "null" }],
           },
           quantity: { type: "integer", minimum: 1, maximum: 99 },
           lineTotal: { type: ["number", "null"], minimum: 0 },
