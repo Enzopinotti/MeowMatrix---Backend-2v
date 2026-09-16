@@ -28,13 +28,14 @@ jobs:
         working-directory: modern
         run: npm install --save-exact bcryptjs@3.0.3 mongodb@7.6.0 nodemailer@10.0.10
 
-      - name: Restore and extend OpenAPI contracts
+      - name: Restore and extend B3 contracts
         working-directory: modern
         run: |
           node --input-type=module <<'NODE'
           import fs from 'node:fs';
-          const path = 'src/api/openapi.ts';
-          let source = fs.readFileSync(path, 'utf8');
+
+          const openApiPath = 'src/api/openapi.ts';
+          let source = fs.readFileSync(openApiPath, 'utf8');
           const oldProduct = '          "200": { description: "Product" },';
           const newProduct = `          "200": {
             description: "Product",
@@ -61,7 +62,27 @@ jobs:
           if (!login.includes('minLength: 1') || !login.includes('maxLength: 4096')) {
             throw new Error('LoginRequest password policy was not patched');
           }
-          fs.writeFileSync(path, before + login + after);
+          fs.writeFileSync(openApiPath, before + login + after);
+
+          const authPath = 'src/domain/auth.ts';
+          let auth = fs.readFileSync(authPath, 'utf8');
+          const oldPublicUser = `function publicUser(user: AuthUserRecord): UserDto {
+  const { passwordHash: _passwordHash, ...safeUser } = user;
+  return safeUser;
+}`;
+          const newPublicUser = `function publicUser(user: AuthUserRecord): UserDto {
+  return {
+    id: user.id,
+    name: user.name,
+    lastName: user.lastName,
+    email: user.email,
+    role: user.role,
+    avatarUrl: user.avatarUrl,
+  };
+}`;
+          if (!auth.includes(oldPublicUser)) throw new Error('publicUser anchor missing');
+          auth = auth.replace(oldPublicUser, newPublicUser);
+          fs.writeFileSync(authPath, auth);
           NODE
 
       - name: Format maintained authority
