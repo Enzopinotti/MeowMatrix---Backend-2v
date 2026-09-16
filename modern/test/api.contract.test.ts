@@ -95,12 +95,12 @@ async function startApp(catalogService?: CatalogService) {
 }
 
 describe("API v1 contract", () => {
-  it("publishes contract metadata and all B2 schemas", async () => {
+  it("publishes B3 metadata while preserving all domain schemas", async () => {
     const origin = await startApp(new TestCatalogService());
     const metadataResponse = await fetch(`${origin}/api/v1/`);
     expect(metadataResponse.status).toBe(200);
     expect(await metadataResponse.json()).toMatchObject({
-      data: { version: "v1", contract: "2026-b2" },
+      data: { version: "v1", contract: "2026-b3" },
     });
 
     const openApiResponse = await fetch(`${origin}/api/v1/openapi.json`);
@@ -184,7 +184,7 @@ describe("API v1 contract", () => {
     });
   });
 
-  it("fails truthfully when persistence is not connected", async () => {
+  it("fails truthfully when catalog persistence is not connected", async () => {
     const origin = await startApp();
     const response = await fetch(`${origin}/api/v1/products`);
 
