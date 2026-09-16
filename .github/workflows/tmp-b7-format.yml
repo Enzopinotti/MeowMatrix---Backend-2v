@@ -1,0 +1,39 @@
+name: Temporary B7 formatter evidence
+
+on:
+  pull_request:
+    paths:
+      - "modern/src/persistence/mongo-rate-limit.ts"
+      - "modern/test/config.test.ts"
+      - "modern/test/rate-limit.test.ts"
+      - ".github/workflows/tmp-b7-format.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  format-output:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    defaults:
+      run:
+        working-directory: modern
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: modern/package-lock.json
+      - run: npm ci --ignore-scripts
+      - name: Emit canonical files
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx prettier --write src/persistence/mongo-rate-limit.ts test/config.test.ts test/rate-limit.test.ts
+          for file in src/persistence/mongo-rate-limit.ts test/config.test.ts test/rate-limit.test.ts; do
+            echo "===BEGIN:${file}==="
+            base64 -w0 "$file"
+            echo
+            echo "===END:${file}==="
+          done
