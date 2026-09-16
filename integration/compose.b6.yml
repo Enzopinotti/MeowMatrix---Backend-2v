@@ -1,0 +1,139 @@
+name: meow-b6
+
+services:
+  mongo:
+    image: mongo:8.0.32-noble
+    command: ["mongod", "--replSet", "rs0", "--bind_ip_all"]
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "mongosh",
+          "--quiet",
+          "mongodb://127.0.0.1:27017/admin",
+          "--eval",
+          "quit(db.adminCommand({ ping: 1 }).ok === 1 ? 0 : 1)",
+        ]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+      start_period: 5s
+
+  mongo-init:
+    image: mongo:8.0.32-noble
+    depends_on:
+      mongo:
+        condition: service_healthy
+    restart: "no"
+    volumes:
+      - ./mongo-init.js:/scripts/mongo-init.js:ro
+    command:
+      [
+        "mongosh",
+        "mongodb://mongo:27017/admin",
+        "--quiet",
+        "--file",
+        "/scripts/mongo-init.js",
+      ]
+
+  mailpit:
+    image: axllent/mailpit:v1.31.1
+    restart: unless-stopped
+    environment:
+      MP_MAX_MESSAGES: "100"
+    ports:
+      - "127.0.0.1:${MEOW_MAILPIT_PORT:-18025}:8025"
+
+  api:
+    image: meow-matrix-api:b6
+    build:
+      context: ../modern
+      dockerfile: Dockerfile
+    depends_on:
+      mongo-init:
+        condition: service_completed_successfully
+      mailpit:
+        condition: service_started
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      PORT: "8080"
+      FRONTEND_ORIGINS: "${MEOW_WEB_ORIGIN:-http://127.0.0.1:14173}"
+      SESSION_COOKIE_SECURE: "false"
+      SESSION_COOKIE_SAME_SITE: lax
+      SESSION_TTL_SECONDS: "28800"
+      RESET_TTL_SECONDS: "1800"
+      MONGO_URL: "mongodb://mongo:27017/meow_matrix?replicaSet=rs0"
+      MONGO_DB_NAME: meow_matrix
+      SMTP_HOST: mailpit
+      SMTP_PORT: "1025"
+      SMTP_SECURE: "false"
+      SMTP_FROM: "Meow Matrix <no-reply@meow.local>"
+      PASSWORD_RESET_URL: "${MEOW_WEB_ORIGIN:-http://127.0.0.1:14173}/reset-password"
+      PRIVATE_STORAGE_ROOT: /var/lib/meow/private
+      OUTBOX_POLL_MS: "200"
+      OUTBOX_LEASE_MS: "30000"
+      OUTBOX_MAX_ATTEMPTS: "6"
+      FILE_CLEANUP_POLL_MS: "1000"
+      FILE_STAGING_RECOVERY_MS: "10000"
+    ports:
+      - "127.0.0.1:${MEOW_API_PORT:-18080}:8080"
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=16m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - private-files:/var/lib/meow/private
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:8080/readyz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+      start_period: 5s
+
+  web:
+    image: meow-matrix-web:b6
+    build:
+      context: ../.runtime/frontend-src/modern
+      dockerfile: Dockerfile
+      args:
+        VITE_API_ORIGIN: "${MEOW_API_ORIGIN:-http://127.0.0.1:18080}"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${MEOW_WEB_PORT:-14173}:8080"
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:8080/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 2s
+      timeout: 5s
+      retries: 20
+      start_period: 3s
+
+volumes:
+  mongo-data:
+  private-files:
