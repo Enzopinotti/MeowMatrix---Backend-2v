@@ -1,0 +1,50 @@
+name: Meow backend security hygiene
+
+on:
+  pull_request:
+    paths:
+      - ".env.example"
+      - ".gitignore"
+      - ".dockerignore"
+      - "src/**"
+      - ".github/scripts/check-security-hygiene.mjs"
+      - ".github/workflows/security-hygiene.yml"
+      - "docs/security-remediation-2026.md"
+  push:
+    branches:
+      - main
+    paths:
+      - ".env.example"
+      - ".gitignore"
+      - ".dockerignore"
+      - "src/**"
+      - ".github/scripts/check-security-hygiene.mjs"
+      - ".github/workflows/security-hygiene.yml"
+      - "docs/security-remediation-2026.md"
+
+permissions:
+  contents: read
+
+jobs:
+  security-hygiene:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: 22
+
+      - name: Verify security hygiene
+        run: node .github/scripts/check-security-hygiene.mjs
+
+      - name: Parse changed security-critical JavaScript
+        run: |
+          node --check src/index.js
+          node --check src/config/server.config.js
+          node --check src/config/sms.config.js
+          node --check src/controllers/session.controller.js
+          node --check .github/scripts/check-security-hygiene.mjs
