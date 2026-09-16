@@ -1,25 +1,14 @@
 # B3 — Auth/session/authorization security model
 
-## Decision
+## Estado
 
-The 2026 authority does **not** port the historical Passport + JWT + express-session stack. The historical backend mixed local Passport, GitHub OAuth, Mongo-backed express sessions and a separate JWT cookie. Logout deleted the browser JWT but could not revoke it server-side, and password reset stored the full reset token on the user document.
+B3 reemplaza el stack histórico mezclado de Passport, JWT y `express-session` por una única autoridad de sesión backend-owned. La implementación moderna ya incluye contrato HTTP, hashing, autorización, rate limiting, persistencia Mongo real y entrega SMTP de recovery. Si `MONGO_URL` no está configurado, `/healthz` sigue funcionando y auth responde explícitamente `503 AUTH_UNAVAILABLE`; no existe una base en memoria disfrazada de producción.
 
-B3 standardizes one model:
+El issue histórico de rotación/revocación de secretos permanece separado y abierto: cambiar Git no puede revocar credenciales que hayan existido fuera del repositorio.
 
-- local email/password identity contract;
-- opaque server-owned session identifier;
-- raw session identifier only in an HttpOnly cookie;
-- only SHA-256 session-token digests cross the persistence boundary;
-- password hashes use a versioned Node `scrypt` format;
-- one-time password-reset tokens are stored only by SHA-256 digest;
-- a successful password reset revokes every existing session for the user;
-- response DTOs never contain password hashes, reset tokens or private document references.
+## Contrato HTTP
 
-GitHub OAuth is historical evidence, not part of B3. It can return later only if there is a real product requirement and a complete account-linking policy.
-
-## HTTP contract
-
-Authority lives under `/api/v1/auth`:
+La autoridad vive bajo `/api/v1/auth`:
 
 - `POST /register`
 - `POST /login`
@@ -28,87 +17,110 @@ Authority lives under `/api/v1/auth`:
 - `POST /password-reset/request`
 - `POST /password-reset/confirm`
 
-Login returns the sanitized user + expiry metadata. The raw session token is **not** returned in JSON; it is sent only through `Set-Cookie`.
+Login devuelve únicamente usuario sanitizado y metadata de expiración. El identificador de sesión no aparece en JSON: viaja sólo en la cookie `meow_session` `HttpOnly`.
 
-Logout is a mutating `POST`, not the historical `GET`. It revokes the server-side session digest and expires the cookie.
+Logout es `POST`, revoca el digest server-side y expira la cookie. Registro no permite elegir rol.
 
-## Password policy and hashing
+## Passwords y migración histórica
 
-B3 uses Node 24's built-in `crypto.scrypt` with a source-controlled, versioned encoded format:
+Las contraseñas nuevas y de reset usan un formato versionado `scrypt$v1` con Node 24:
 
-- N = 16384
-- r = 8
-- p = 1
-- random salt = 16 bytes
-- derived key = 64 bytes
-- accepted password length = 12–128 characters
+- N = 16384;
+- r = 8;
+- p = 1;
+- salt aleatorio de 16 bytes;
+- key derivada de 64 bytes;
+- política de creación/reset: 12–128 caracteres.
 
-The password policy intentionally prioritizes length rather than requiring arbitrary uppercase/lowercase/number combinations. A new hash format/version is required before changing cost parameters incompatibly.
+Login tiene deliberadamente un contrato distinto: acepta 1–4096 caracteres para que cuentas históricas no queden bloqueadas antes de verificar el hash. El adapter reconoce hashes bcrypt `$2a$`, `$2b$` y `$2y$`; después de una autenticación bcrypt válida, la misma credencial ya verificada se rehashea inmediatamente a `scrypt$v1` sin imponer retroactivamente la política de contraseña nueva. Nuevas altas y resets siguen exigiendo 12–128.
 
-Historical bcrypt hashes are **not silently interpreted as scrypt**. The future real persistence adapter must include an explicit legacy-login migration policy (for example: verify legacy bcrypt once and rehash to scrypt after successful authentication) if old accounts are carried forward. Until that adapter exists, modern auth fails truthfully with `503 AUTH_UNAVAILABLE` rather than shipping a fake memory database.
+La suite contiene una regresión específica para una contraseña bcrypt histórica corta y verifica que el hash resultante empiece con `scrypt$v1$`.
 
-## Session policy
+## Persistencia Mongo
 
-Default development policy:
+La autoridad moderna reutiliza la colección histórica `users`; no crea una segunda identidad paralela. El adapter traduce los campos legacy (`password`, `rol`, `avatar`) al DTO moderno y conserva compatibilidad durante la migración.
 
-- cookie name: `meow_session`
-- HttpOnly
-- SameSite=Lax
-- 8-hour absolute TTL
-- Path=/
-- Secure=false only outside production by default
+Al iniciar con `MONGO_URL` configurado, se validan/crean:
 
-Production defaults Secure=true. `SameSite=None` is rejected at configuration load time unless Secure=true.
+- índice único case-insensitive de email en `users`;
+- `auth_sessions` con `tokenHash` único, índice por usuario y TTL por `expiresAt`;
+- `auth_password_resets` con `tokenHash` único, un reset activo por usuario y TTL.
 
-`FRONTEND_ORIGINS` is an exact allow-list; wildcard credentialed CORS is not supported. Browser mutation endpoints apply an Origin guard. Requests without an Origin header remain possible for trusted non-browser clients/tests, so Origin checking is documented as a browser CSRF boundary rather than as API authentication.
+La unicidad de email es responsabilidad atómica del repositorio. Un duplicate-key Mongo (`11000`) se convierte en `DuplicateAuthEmailError` y el servicio responde `409 EMAIL_ALREADY_REGISTERED`; no existe el patrón vulnerable `find → create`.
 
-Final deployment topology in B7 decides whether frontend/API can remain same-site with `Lax` or need a controlled cross-site `None; Secure` cookie.
+Si datos históricos impiden crear el índice único —por ejemplo emails duplicados sólo por casing— el arranque debe fallar y exigir limpieza explícita. No se corrigen identidades ambiguas automáticamente.
 
-## CSRF model
+## Sesiones y tokens
 
-B3 combines:
+Los identificadores de sesión y recovery usan 32 bytes aleatorios. Sólo SHA-256 de esos tokens cruza la frontera de persistencia. El token crudo de sesión existe únicamente en la cookie; el token de reset existe sólo para construir el mensaje de recovery.
 
-1. HttpOnly cookie ownership on the backend;
-2. SameSite=Lax by default;
-3. JSON-only mutation payloads;
-4. exact Origin checking on browser mutations;
-5. no wildcard credentialed CORS.
+Defaults:
 
-If a future deployment changes the cookie/topology assumptions, B7 must re-run the threat model. A synchronizer/double-submit CSRF token is not added pre-emptively while exact Origin + SameSite satisfies the current contract.
+- cookie `meow_session`;
+- `HttpOnly`;
+- `SameSite=Lax`;
+- TTL de sesión: 8 horas;
+- TTL de reset: 30 minutos;
+- `Path=/`;
+- `Secure=true` por defecto en producción.
 
-## Reset contract
+`SameSite=None` exige `Secure=true` durante carga de configuración. Un reset exitoso revoca todas las sesiones activas del usuario.
 
-`POST /password-reset/request` returns the same `202 {data:{accepted:true}}` response for known and unknown valid email addresses. This removes the historical response-level account enumeration behavior.
+## Recovery por SMTP
 
-For an existing account the service generates 32 random bytes, sends the raw token only to the notifier boundary, and stores only its SHA-256 digest with a default 30-minute expiry. Replacing a reset token invalidates the previous token for that user. Confirmation consumes the token atomically at the store boundary before changing the password, and successful confirmation revokes every active session.
+Con Mongo habilitado también son obligatorios `SMTP_HOST`, `SMTP_FROM` y `PASSWORD_RESET_URL`; `SMTP_USER` y `SMTP_PASSWORD` deben aparecer juntos si el servidor requiere autenticación. `PASSWORD_RESET_URL` debe ser HTTPS en producción.
 
-The production notifier remains a separate adapter; B3 does not pretend email delivery exists before that adapter is configured.
+La solicitud de reset siempre responde el mismo `202 {data:{accepted:true}}` para emails válidos, existan o no. Esto evita la enumeración de cuentas del backend histórico. El reset se consume atómicamente mediante `findOneAndDelete` con chequeo de expiración.
 
-## Authorization
+No se loguean tokens ni secretos.
 
-Registration cannot choose a role. `user` is the default repository responsibility. Reusable policies define:
+## CORS y CSRF
 
-- explicit role allow-lists (`requireRole`);
-- owner-or-admin resource access (`requireOwnerOrAdmin`).
+`FRONTEND_ORIGINS` es una allow-list exacta; no existe wildcard con credenciales. Mutaciones browser-side verifican `Origin`, las requests usan JSON y la cookie es `HttpOnly` + `SameSite` según la topología configurada.
 
-Future cart/order/profile/admin endpoints must use these policies rather than trusting IDs or roles from request bodies.
+B7 deberá volver a validar esta frontera cuando se fije la topología final. Si frontend/API terminan siendo cross-site, la decisión `SameSite=None; Secure` debe documentarse junto con trusted proxy y enforcement compartido.
 
-## Abuse boundaries
+## Autorización
 
-B3 introduces bounded in-process limits:
+B3 exporta políticas reutilizables:
 
-- login: 10 attempts / 15 minutes / source IP;
-- registration: 5 attempts / hour / source IP;
-- password reset: 5 attempts / hour / source IP.
+- `requireRole(...)`;
+- `requireOwnerOrAdmin(...)`.
 
-These are a safe single-process baseline, **not** a horizontally distributed rate-limit claim. Before multi-replica production, B7 must move the counter to a shared/edge enforcement layer and set trusted-proxy behavior deliberately.
+Los bloques siguientes deben derivar identidad/rol de la sesión backend-owned y nunca aceptar autoridad desde IDs o roles enviados por React.
 
-## Deliberate persistence boundary
+## Rate limiting
 
-The domain exposes explicit repositories/stores for users, opaque sessions and one-time reset tokens, plus a reset notifier port. No in-memory implementation is wired into production authority. Tests inject memory adapters only to qualify the contract.
+El baseline single-process queda acotado y con memoria limitada:
 
-This means the default current runtime answers auth operations with `503 AUTH_UNAVAILABLE`. That is intentional until a real Mongo/Mongoose adapter and notifier are connected and migration semantics for historical bcrypt users are proven.
+- login: 10 intentos / 15 minutos / IP;
+- registro: 8 intentos / hora / IP;
+- password reset: 5 intentos / hora / IP;
+- máximo 10.000 buckets en memoria;
+- sweep periódico de buckets expirados y eviction al alcanzar el límite.
 
-## Security blocker continuity
+Esto evita crecimiento ilimitado dentro de un proceso, pero no pretende coordinación horizontal. Antes de varias réplicas, B7 debe mover enforcement a una capa compartida/edge.
 
-B3 does not close the historical credential issue. Repository hygiene and new auth design cannot rotate or revoke secrets that may have existed outside the repository.
+## Variables de runtime
+
+La autoridad moderna reconoce:
+
+- `MONGO_URL`;
+- `MONGO_DB_NAME` opcional;
+- `FRONTEND_ORIGINS`;
+- `SESSION_COOKIE_SECURE`;
+- `SESSION_COOKIE_SAME_SITE`;
+- `SESSION_TTL_SECONDS`;
+- `RESET_TTL_SECONDS`;
+- `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`;
+- `SMTP_USER` + `SMTP_PASSWORD` opcionales como par;
+- `SMTP_FROM`;
+- `PASSWORD_RESET_URL`.
+
+Ningún secreto debe versionarse.
+
+## Evidencia de calificación
+
+El finalizer B3 ejecutó el mismo `npm run check` de la autoridad moderna después de instalar el lockfile definitivo: format, ESLint, TypeScript, tests y build. La suite terminó con 26/26 tests verdes, incluyendo concurrencia de registro, migración bcrypt→scrypt, digest-only storage, reset one-time, revocación, Origin, rate limiting y contratos HTTP.
+
+Los helpers temporales utilizados para producir lockfile/formato fueron retirados antes del HEAD candidato al merge. El merge sólo se permite cuando los workflows permanentes del PR estén verdes sobre ese HEAD limpio.
