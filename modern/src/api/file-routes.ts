@@ -33,8 +33,6 @@ const upload = multer({
     parts: 1,
     fieldNameSize: 32,
     headerPairs: 50,
-    fieldNestingDepth: 0,
-    fieldArrayIndexLimit: 0,
   },
   fileFilter(_request, file, callback) {
     if (file.fieldname !== "file") {
@@ -42,7 +40,13 @@ const upload = multer({
       return;
     }
     if (!declaredMediaTypes.has(file.mimetype.toLowerCase())) {
-      callback(new ApiError(415, "FILE_TYPE_NOT_ALLOWED", "Declared file type is not allowed"));
+      callback(
+        new ApiError(
+          415,
+          "FILE_TYPE_NOT_ALLOWED",
+          "Declared file type is not allowed",
+        ),
+      );
       return;
     }
     callback(null, true);
@@ -63,13 +67,23 @@ function multipartSingleFile(): RequestHandler {
       }
       if (error instanceof multer.MulterError) {
         if (error.code === "LIMIT_FILE_SIZE") {
-          next(new ApiError(413, "FILE_TOO_LARGE", "Uploaded file exceeds the maximum multipart size"));
+          next(
+            new ApiError(
+              413,
+              "FILE_TOO_LARGE",
+              "Uploaded file exceeds the maximum multipart size",
+            ),
+          );
           return;
         }
-        next(new ApiError(400, "MULTIPART_INVALID", "Multipart upload is invalid"));
+        next(
+          new ApiError(400, "MULTIPART_INVALID", "Multipart upload is invalid"),
+        );
         return;
       }
-      next(new ApiError(400, "MULTIPART_INVALID", "Multipart upload is invalid"));
+      next(
+        new ApiError(400, "MULTIPART_INVALID", "Multipart upload is invalid"),
+      );
     });
   };
 }
@@ -132,14 +146,18 @@ export function createPrivateFileRouter(options: PrivateFileRouterOptions) {
   );
 
   router.post(
-    "/files/:purpose",
+    "/files/purposes/:purpose",
     originGuard,
     multipartSingleFile(),
     asyncHandler(async (request, response) => {
       const user = await currentUser(request, options.authService);
       const purpose = parsePrivateFilePurpose(request.params.purpose);
       if (!request.file) {
-        throw new ApiError(400, "FILE_REQUIRED", "Exactly one multipart file field named 'file' is required");
+        throw new ApiError(
+          400,
+          "FILE_REQUIRED",
+          "Exactly one multipart file field named 'file' is required",
+        );
       }
       const created = await options.privateFileService.upload(user, purpose, {
         originalName: request.file.originalname,
