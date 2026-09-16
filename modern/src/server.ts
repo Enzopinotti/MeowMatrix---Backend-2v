@@ -35,6 +35,7 @@ import {
   createOutboxWorker,
   type OutboxWorker,
 } from "./runtime/outbox-worker.js";
+import { structuredConsoleLog } from "./runtime/observability.js";
 import {
   createPrivateFileCleanupWorker,
   type PrivateFileCleanupWorker,
@@ -125,8 +126,10 @@ if (config.mongoUrl !== null) {
     delivery,
     pollMs: config.outboxPollMs,
     onError(error) {
-      console.error("Meow outbox worker cycle failed", {
-        name: error instanceof Error ? error.name : "UnknownError",
+      structuredConsoleLog({
+        level: "error",
+        event: "outbox.worker.cycle_failed",
+        errorName: error instanceof Error ? error.name : "UnknownError",
       });
     },
   });
@@ -145,8 +148,10 @@ if (config.mongoUrl !== null) {
       files: privateFileService,
       pollMs: config.fileCleanupPollMs,
       onError(error) {
-        console.error("Meow private file cleanup cycle failed", {
-          name: error instanceof Error ? error.name : "UnknownError",
+        structuredConsoleLog({
+          level: "error",
+          event: "private_files.cleanup.cycle_failed",
+          errorName: error instanceof Error ? error.name : "UnknownError",
         });
       },
     });
@@ -215,6 +220,7 @@ const app = createApp({
   ...(privateFileService ? { privateFileService } : {}),
   ...(rateLimitStore ? { rateLimitStore } : {}),
   readinessProbe,
+  runtimeLogSink: structuredConsoleLog,
   allowedOrigins: config.frontendOrigins,
   trustProxyHops: config.trustProxyHops,
   sessionCookieOptions: {
@@ -228,7 +234,9 @@ outboxWorker?.start();
 fileCleanupWorker?.start();
 
 const server = app.listen(config.port, () => {
-  console.log("Meow API listening", {
+  structuredConsoleLog({
+    level: "info",
+    event: "server.started",
     port: config.port,
     nodeEnv: config.nodeEnv,
     trustProxyHops: config.trustProxyHops,
@@ -247,7 +255,11 @@ let shuttingDown = false;
 async function shutdown(signal: string) {
   if (shuttingDown) return;
   shuttingDown = true;
-  console.log("Meow API shutting down", { signal });
+  structuredConsoleLog({
+    level: "info",
+    event: "server.shutdown_started",
+    signal,
+  });
 
   try {
     await new Promise<void>((resolve, reject) => {
@@ -256,9 +268,17 @@ async function shutdown(signal: string) {
     await Promise.all([outboxWorker?.stop(), fileCleanupWorker?.stop()]);
     await mongoClient?.close();
     process.exitCode = 0;
+    structuredConsoleLog({
+      level: "info",
+      event: "server.shutdown_completed",
+      signal,
+    });
   } catch (error) {
-    console.error("Meow API shutdown failed", {
-      name: error instanceof Error ? error.name : "UnknownError",
+    structuredConsoleLog({
+      level: "error",
+      event: "server.shutdown_failed",
+      signal,
+      errorName: error instanceof Error ? error.name : "UnknownError",
     });
     process.exitCode = 1;
   }
