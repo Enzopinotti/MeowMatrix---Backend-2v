@@ -1,15 +1,20 @@
-import express, {
-  type ErrorRequestHandler,
-  type RequestHandler,
-} from "express";
+import express, { type RequestHandler } from "express";
+import { apiErrorHandler, errorEnvelope } from "./api/errors.js";
+import { createApiV1Router } from "./api/routes.js";
+import {
+  unavailableCatalogService,
+  type CatalogService,
+} from "./domain/catalog.js";
 
 export type AppOptions = {
   serviceName?: string;
+  catalogService?: CatalogService;
 };
 
 export function createApp(options: AppOptions = {}) {
   const app = express();
   const serviceName = options.serviceName ?? "meow-api";
+  const catalogService = options.catalogService ?? unavailableCatalogService;
 
   app.disable("x-powered-by");
   app.use(express.json({ limit: "1mb" }));
@@ -18,39 +23,20 @@ export function createApp(options: AppOptions = {}) {
     response.status(200).json({
       status: "ok",
       service: serviceName,
-      version: "2026-b1",
+      version: "2026-b2",
     });
   });
 
+  app.use("/api/v1", createApiV1Router({ catalogService }));
+
   const notFound: RequestHandler = (_request, response) => {
-    response.status(404).json({
-      error: {
-        code: "NOT_FOUND",
-        message: "Route not found",
-      },
-    });
-  };
-
-  const errorHandler: ErrorRequestHandler = (
-    error,
-    _request,
-    response,
-    _next,
-  ) => {
-    console.error("Unhandled request error", {
-      name: error instanceof Error ? error.name : "UnknownError",
-    });
-
-    response.status(500).json({
-      error: {
-        code: "INTERNAL_ERROR",
-        message: "Internal server error",
-      },
-    });
+    response
+      .status(404)
+      .json(errorEnvelope("NOT_FOUND", "Route not found"));
   };
 
   app.use(notFound);
-  app.use(errorHandler);
+  app.use(apiErrorHandler);
 
   return app;
 }
