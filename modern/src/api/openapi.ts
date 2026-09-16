@@ -1,26 +1,181 @@
+const errorResponse = (description: string) => ({
+  description,
+  content: {
+    "application/json": {
+      schema: { $ref: "#/components/schemas/ErrorEnvelope" },
+    },
+  },
+});
+
 export const openApiDocument = {
   openapi: "3.1.0",
   info: {
     title: "Meow Matrix API",
-    version: "1.0.0-b2",
+    version: "1.0.0-b3",
     description:
-      "Authoritative 2026 API contract. Products and categories are the first connected resources; cart, user, ticket and order schemas are reserved for the following authenticated ecommerce blocks.",
+      "Authoritative 2026 API contract. B3 adds backend-owned opaque sessions, sanitized user responses, one-time password reset contracts, exact-origin browser policy and bounded auth abuse controls without exposing bearer tokens to browser JavaScript.",
   },
   servers: [{ url: "/api/v1" }],
   paths: {
     "/": {
       get: {
         summary: "Read API contract metadata",
-        responses: {
-          "200": { description: "API metadata" },
-        },
+        responses: { "200": { description: "API metadata" } },
       },
     },
     "/openapi.json": {
       get: {
         summary: "Read the OpenAPI contract",
+        responses: { "200": { description: "OpenAPI 3.1 document" } },
+      },
+    },
+    "/auth/register": {
+      post: {
+        summary: "Register a local account",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/RegisterRequest" },
+            },
+          },
+        },
         responses: {
-          "200": { description: "OpenAPI 3.1 document" },
+          "201": {
+            description: "Sanitized user created",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  required: ["data"],
+                  properties: { data: { $ref: "#/components/schemas/User" } },
+                },
+              },
+            },
+          },
+          "400": { $ref: "#/components/responses/ValidationError" },
+          "403": { $ref: "#/components/responses/Forbidden" },
+          "409": { $ref: "#/components/responses/Conflict" },
+          "429": { $ref: "#/components/responses/TooManyRequests" },
+          "503": { $ref: "#/components/responses/ServiceUnavailable" },
+        },
+      },
+    },
+    "/auth/login": {
+      post: {
+        summary: "Create an opaque backend-owned session",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/LoginRequest" },
+            },
+          },
+        },
+        responses: {
+          "200": {
+            description:
+              "Authenticated session; raw session identifier is returned only as an HttpOnly cookie",
+            headers: {
+              "Set-Cookie": {
+                schema: { type: "string" },
+                description: "meow_session opaque HttpOnly cookie",
+              },
+            },
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  required: ["data"],
+                  properties: {
+                    data: { $ref: "#/components/schemas/AuthSession" },
+                  },
+                },
+              },
+            },
+          },
+          "400": { $ref: "#/components/responses/ValidationError" },
+          "401": { $ref: "#/components/responses/Unauthorized" },
+          "403": { $ref: "#/components/responses/Forbidden" },
+          "429": { $ref: "#/components/responses/TooManyRequests" },
+          "503": { $ref: "#/components/responses/ServiceUnavailable" },
+        },
+      },
+    },
+    "/auth/me": {
+      get: {
+        summary: "Read the current sanitized user",
+        security: [{ cookieSession: [] }],
+        responses: {
+          "200": {
+            description: "Current user",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  required: ["data"],
+                  properties: { data: { $ref: "#/components/schemas/User" } },
+                },
+              },
+            },
+          },
+          "401": { $ref: "#/components/responses/Unauthorized" },
+          "503": { $ref: "#/components/responses/ServiceUnavailable" },
+        },
+      },
+    },
+    "/auth/logout": {
+      post: {
+        summary: "Revoke the current session and expire its cookie",
+        security: [{ cookieSession: [] }],
+        responses: {
+          "204": { description: "Session revoked" },
+          "403": { $ref: "#/components/responses/Forbidden" },
+          "503": { $ref: "#/components/responses/ServiceUnavailable" },
+        },
+      },
+    },
+    "/auth/password-reset/request": {
+      post: {
+        summary: "Request a password reset without account enumeration",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/PasswordResetRequest" },
+            },
+          },
+        },
+        responses: {
+          "202": {
+            description: "Request accepted whether or not the account exists",
+          },
+          "400": { $ref: "#/components/responses/ValidationError" },
+          "403": { $ref: "#/components/responses/Forbidden" },
+          "429": { $ref: "#/components/responses/TooManyRequests" },
+          "503": { $ref: "#/components/responses/ServiceUnavailable" },
+        },
+      },
+    },
+    "/auth/password-reset/confirm": {
+      post: {
+        summary: "Consume a one-time reset token and invalidate user sessions",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                $ref: "#/components/schemas/PasswordResetConfirmRequest",
+              },
+            },
+          },
+        },
+        responses: {
+          "204": { description: "Password updated and sessions revoked" },
+          "400": { $ref: "#/components/responses/ValidationError" },
+          "403": { $ref: "#/components/responses/Forbidden" },
+          "429": { $ref: "#/components/responses/TooManyRequests" },
+          "503": { $ref: "#/components/responses/ServiceUnavailable" },
         },
       },
     },
@@ -142,7 +297,82 @@ export const openApiDocument = {
     },
   },
   components: {
+    securitySchemes: {
+      cookieSession: {
+        type: "apiKey",
+        in: "cookie",
+        name: "meow_session",
+        description:
+          "Opaque session identifier. Browser JavaScript must not read or persist it.",
+      },
+    },
     schemas: {
+      RegisterRequest: {
+        type: "object",
+        additionalProperties: false,
+        required: ["name", "lastName", "email", "password"],
+        properties: {
+          name: { type: "string", minLength: 1, maxLength: 80 },
+          lastName: { type: "string", minLength: 1, maxLength: 80 },
+          email: { type: "string", format: "email", maxLength: 254 },
+          password: {
+            type: "string",
+            minLength: 12,
+            maxLength: 128,
+            writeOnly: true,
+          },
+        },
+      },
+      LoginRequest: {
+        type: "object",
+        additionalProperties: false,
+        required: ["email", "password"],
+        properties: {
+          email: { type: "string", format: "email", maxLength: 254 },
+          password: {
+            type: "string",
+            minLength: 1,
+            maxLength: 4096,
+            writeOnly: true,
+          },
+        },
+      },
+      PasswordResetRequest: {
+        type: "object",
+        additionalProperties: false,
+        required: ["email"],
+        properties: {
+          email: { type: "string", format: "email", maxLength: 254 },
+        },
+      },
+      PasswordResetConfirmRequest: {
+        type: "object",
+        additionalProperties: false,
+        required: ["token", "password"],
+        properties: {
+          token: {
+            type: "string",
+            minLength: 40,
+            maxLength: 128,
+            writeOnly: true,
+          },
+          password: {
+            type: "string",
+            minLength: 12,
+            maxLength: 128,
+            writeOnly: true,
+          },
+        },
+      },
+      AuthSession: {
+        type: "object",
+        additionalProperties: false,
+        required: ["user", "expiresAt"],
+        properties: {
+          user: { $ref: "#/components/schemas/User" },
+          expiresAt: { type: "string", format: "date-time" },
+        },
+      },
       Category: {
         type: "object",
         additionalProperties: false,
@@ -294,10 +524,7 @@ export const openApiDocument = {
       ApiErrorDetail: {
         type: "object",
         required: ["field", "message"],
-        properties: {
-          field: { type: "string" },
-          message: { type: "string" },
-        },
+        properties: { field: { type: "string" }, message: { type: "string" } },
       },
       ErrorEnvelope: {
         type: "object",
@@ -319,38 +546,19 @@ export const openApiDocument = {
       },
     },
     responses: {
-      ValidationError: {
-        description: "Request failed runtime validation",
-        content: {
-          "application/json": {
-            schema: { $ref: "#/components/schemas/ErrorEnvelope" },
-          },
-        },
-      },
-      NotFound: {
-        description: "Requested resource does not exist",
-        content: {
-          "application/json": {
-            schema: { $ref: "#/components/schemas/ErrorEnvelope" },
-          },
-        },
-      },
-      Conflict: {
-        description: "Request conflicts with current resource state",
-        content: {
-          "application/json": {
-            schema: { $ref: "#/components/schemas/ErrorEnvelope" },
-          },
-        },
-      },
-      ServiceUnavailable: {
-        description: "Required persistence adapter is not connected",
-        content: {
-          "application/json": {
-            schema: { $ref: "#/components/schemas/ErrorEnvelope" },
-          },
-        },
-      },
+      ValidationError: errorResponse("Request failed runtime validation"),
+      Unauthorized: errorResponse("Authentication is missing or invalid"),
+      Forbidden: errorResponse(
+        "Browser origin or authorization policy rejected the request",
+      ),
+      NotFound: errorResponse("Requested resource does not exist"),
+      Conflict: errorResponse("Request conflicts with current resource state"),
+      TooManyRequests: errorResponse(
+        "Authentication abuse boundary was exceeded",
+      ),
+      ServiceUnavailable: errorResponse(
+        "Required persistence adapter is not connected",
+      ),
     },
   },
 } as const;

@@ -7,12 +7,20 @@ import {
   parseProductListQuery,
   type SuccessEnvelope,
 } from "./contracts.js";
+import { createAuthRouter } from "./auth-routes.js";
 import { ApiError } from "./errors.js";
 import { openApiDocument } from "./openapi.js";
+import type { AuthService } from "../domain/auth.js";
 import type { CatalogService } from "../domain/catalog.js";
+import type {
+  BrowserSecurityOptions,
+  SessionCookieOptions,
+} from "../security/http.js";
 
-export type ApiV1Options = {
+export type ApiV1Options = BrowserSecurityOptions & {
   catalogService: CatalogService;
+  authService: AuthService;
+  sessionCookieOptions: SessionCookieOptions;
 };
 
 function asyncHandler(
@@ -34,9 +42,9 @@ export function createApiV1Router(options: ApiV1Options) {
       data: {
         name: "Meow Matrix API",
         version: "v1",
-        contract: "2026-b2",
-        implementedResources: ["products", "categories"],
-        reservedContracts: ["cart", "user", "ticket", "order"],
+        contract: "2026-b3",
+        implementedResources: ["products", "categories", "auth"],
+        reservedContracts: ["cart", "ticket", "order"],
       },
     });
   });
@@ -44,6 +52,15 @@ export function createApiV1Router(options: ApiV1Options) {
   router.get("/openapi.json", (_request, response) => {
     response.status(200).json(openApiDocument);
   });
+
+  router.use(
+    "/auth",
+    createAuthRouter({
+      authService: options.authService,
+      allowedOrigins: options.allowedOrigins,
+      sessionCookieOptions: options.sessionCookieOptions,
+    }),
+  );
 
   router.get(
     "/products",
