@@ -27,14 +27,7 @@ function derive(password: string, salt: Buffer): Promise<Buffer> {
   });
 }
 
-export function assertPasswordPolicy(password: string): void {
-  if (password.length < 12 || password.length > 128) {
-    throw new Error("Password must contain between 12 and 128 characters");
-  }
-}
-
-export async function hashPassword(password: string): Promise<string> {
-  assertPasswordPolicy(password);
+async function encodeScryptPassword(password: string): Promise<string> {
   const salt = randomBytes(16);
   const key = await derive(password, salt);
   return [
@@ -46,6 +39,26 @@ export async function hashPassword(password: string): Promise<string> {
     salt.toString("base64url"),
     key.toString("base64url"),
   ].join("$");
+}
+
+export function assertPasswordPolicy(password: string): void {
+  if (password.length < 12 || password.length > 128) {
+    throw new Error("Password must contain between 12 and 128 characters");
+  }
+}
+
+export async function hashPassword(password: string): Promise<string> {
+  assertPasswordPolicy(password);
+  return encodeScryptPassword(password);
+}
+
+export async function rehashVerifiedLegacyPassword(
+  password: string,
+): Promise<string> {
+  if (password.length < 1 || password.length > 4096) {
+    throw new Error("Verified legacy password is outside the bounded login contract");
+  }
+  return encodeScryptPassword(password);
 }
 
 async function verifyScryptPassword(
