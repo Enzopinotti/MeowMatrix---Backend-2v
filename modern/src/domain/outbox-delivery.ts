@@ -50,8 +50,10 @@ function retryDelayMs(attempts: number): number {
 }
 
 function safeErrorCode(error: unknown): string {
-  const name = error instanceof Error ? error.name : "UnknownError";
-  return name.replace(/[^A-Za-z0-9_.-]/g, "_").slice(0, 80) || "DeliveryError";
+  if (!(error instanceof Error)) return "UnknownError";
+  return /^[A-Za-z][A-Za-z0-9_.-]{0,79}$/.test(error.name)
+    ? error.name
+    : "DeliveryError";
 }
 
 export function createOutboxDeliveryService(options: {
