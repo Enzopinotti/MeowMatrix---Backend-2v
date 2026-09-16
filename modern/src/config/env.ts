@@ -12,6 +12,15 @@ export type AppConfig = {
   sessionCookieSameSite: SameSite;
   sessionTtlSeconds: number;
   resetTtlSeconds: number;
+  mongoUrl: string | null;
+  mongoDbName: string | null;
+  smtpHost: string | null;
+  smtpPort: number;
+  smtpSecure: boolean;
+  smtpUser: string | null;
+  smtpPassword: string | null;
+  smtpFrom: string | null;
+  passwordResetUrl: string | null;
 };
 
 function parsePort(value: string | undefined): number {
@@ -31,11 +40,15 @@ function parseNodeEnv(value: string | undefined): NodeEnv {
   return candidate as NodeEnv;
 }
 
-function parseBoolean(value: string | undefined, fallback: boolean): boolean {
+function parseBoolean(
+  value: string | undefined,
+  fallback: boolean,
+  field: string,
+): boolean {
   if (value === undefined) return fallback;
   if (value === "true") return true;
   if (value === "false") return false;
-  throw new Error("SESSION_COOKIE_SECURE must be true or false");
+  throw new Error(`${field} must be true or false`);
 }
 
 function parseSameSite(value: string | undefined): SameSite {
@@ -98,11 +111,62 @@ function parseOrigins(value: string | undefined): readonly string[] {
   return [...unique];
 }
 
+function nonEmpty(value: string | undefined): string | null {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : null;
+}
+
+function parseOptionalUrl(
+  value: string | undefined,
+  field: string,
+  nodeEnv: NodeEnv,
+): string | null {
+  const candidate = nonEmpty(value);
+  if (candidate === null) return null;
+  let url: URL;
+  try {
+    url = new URL(candidate);
+  } catch {
+    throw new Error(`${field} must be a valid absolute URL`);
+  }
+  if (!(["http:", "https:"] as const).includes(url.protocol as "http:" | "https:")) {
+    throw new Error(`${field} must use http or https`);
+  }
+  if (nodeEnv === "production" && url.protocol !== "https:") {
+    throw new Error(`${field} must use https in production`);
+  }
+  return url.toString();
+}
+
+function requireAuthRuntime(config: {
+  mongoUrl: string | null;
+  smtpHost: string | null;
+  smtpUser: string | null;
+  smtpPassword: string | null;
+  smtpFrom: string | null;
+  passwordResetUrl: string | null;
+}) {
+  if (config.mongoUrl === null) return;
+  if (
+    config.smtpHost === null ||
+    config.smtpFrom === null ||
+    config.passwordResetUrl === null
+  ) {
+    throw new Error(
+      "MONGO_URL auth runtime requires SMTP_HOST, SMTP_FROM and PASSWORD_RESET_URL",
+    );
+  }
+  if ((config.smtpUser === null) !== (config.smtpPassword === null)) {
+    throw new Error("SMTP_USER and SMTP_PASSWORD must be configured together");
+  }
+}
+
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
   const nodeEnv = parseNodeEnv(env.NODE_ENV);
   const sessionCookieSecure = parseBoolean(
     env.SESSION_COOKIE_SECURE,
     nodeEnv === "production",
+    "SESSION_COOKIE_SECURE",
   );
   const sessionCookieSameSite = parseSameSite(env.SESSION_COOKIE_SAME_SITE);
   if (sessionCookieSameSite === "none" && !sessionCookieSecure) {
@@ -111,7 +175,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     );
   }
 
-  return {
+  const config: AppConfig = {
     port: parsePort(env.PORT),
     nodeEnv,
     frontendOrigins: parseOrigins(env.FRONTEND_ORIGINS),
@@ -131,5 +195,21 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
       5 * 60,
       24 * 60 * 60,
     ),
+    mongoUrl: nonEmpty(env.MONGO_URL),
+    mongoDbName: nonEmpty(env.MONGO_DB_NAME),
+    smtpHost: nonEmpty(env.SMTP_HOST),
+    smtpPort: parseDurationSeconds(env.SMTP_PORT, 587, "SMTP_PORT", 1, 65_535),
+    smtpSecure: parseBoolean(env.SMTP_SECURE, false, "SMTP_SECURE"),
+    smtpUser: nonEmpty(env.SMTP_USER),
+    smtpPassword: nonEmpty(env.SMTP_PASSWORD),
+    smtpFrom: nonEmpty(env.SMTP_FROM),
+    passwordResetUrl: parseOptionalUrl(
+      env.PASSWORD_RESET_URL,
+      "PASSWORD_RESET_URL",
+      nodeEnv,
+    ),
   };
+
+  requireAuthRuntime(config);
+  return config;
 }
