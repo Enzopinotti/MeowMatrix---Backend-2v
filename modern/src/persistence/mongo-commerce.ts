@@ -118,15 +118,19 @@ function transactionUnsupported(error: unknown): boolean {
   );
 }
 
-function sessionOptions(session?: ClientSession): { session: ClientSession } | {} {
+function sessionOptions(
+  session?: ClientSession,
+): { session: ClientSession } | {} {
   return session === undefined ? {} : { session };
 }
 
 export async function ensureCommerceIndexes(db: Db): Promise<void> {
-  await db.collection<CartDocument>("commerce_carts").createIndex(
-    { userId: 1 },
-    { unique: true, name: "commerce_cart_user_unique" },
-  );
+  await db
+    .collection<CartDocument>("commerce_carts")
+    .createIndex(
+      { userId: 1 },
+      { unique: true, name: "commerce_cart_user_unique" },
+    );
   await db.collection<OrderDocument>("commerce_orders").createIndexes([
     {
       key: { purchaserId: 1, idempotencyKeyHash: 1 },
@@ -181,10 +185,7 @@ export class MongoCommerceService implements CommerceService {
     } catch (error) {
       if (!duplicateKey(error)) throw error;
     }
-    const cart = await this.carts.findOne(
-      { userId },
-      sessionOptions(session),
-    );
+    const cart = await this.carts.findOne({ userId }, sessionOptions(session));
     if (cart === null) throw new Error("Commerce cart could not be created");
     return cart;
   }
@@ -238,10 +239,7 @@ export class MongoCommerceService implements CommerceService {
       productIds.length === 0
         ? []
         : await this.products
-            .find(
-              { _id: { $in: productIds } },
-              sessionOptions(session),
-            )
+            .find({ _id: { $in: productIds } }, sessionOptions(session))
             .toArray();
     const byId = new Map(
       documents.map((document) => [String(document._id), document]),
@@ -517,7 +515,9 @@ export class MongoCommerceService implements CommerceService {
         ),
       );
       if (result === undefined) {
-        throw new Error("Mongo transaction completed without a checkout result");
+        throw new Error(
+          "Mongo transaction completed without a checkout result",
+        );
       }
       return result;
     } catch (error) {
@@ -570,9 +570,7 @@ export class MongoCommerceService implements CommerceService {
     const _id = asObjectId(orderId);
     if (_id === null) return null;
     const filter: Filter<OrderDocument> =
-      user.role === "admin"
-        ? { _id }
-        : { _id, purchaserId: user.id };
+      user.role === "admin" ? { _id } : { _id, purchaserId: user.id };
     const order = await this.orders.findOne(filter);
     return order === null ? null : mapOrder(order);
   }
