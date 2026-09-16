@@ -4,21 +4,25 @@ on:
   pull_request:
     paths:
       - "modern/**"
+      - "integration/**"
       - "docs/modernization-2026/**"
       - ".nvmrc"
       - ".gitignore"
       - "README.md"
       - ".github/workflows/modern-quality.yml"
+      - ".github/workflows/modern-full-stack.yml"
   push:
     branches:
       - main
     paths:
       - "modern/**"
+      - "integration/**"
       - "docs/modernization-2026/**"
       - ".nvmrc"
       - ".gitignore"
       - "README.md"
       - ".github/workflows/modern-quality.yml"
+      - ".github/workflows/modern-full-stack.yml"
 
 permissions:
   contents: read
