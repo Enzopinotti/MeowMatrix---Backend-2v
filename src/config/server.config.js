@@ -4,26 +4,23 @@ import dotenv from "dotenv";
 const commander = new Command();
 
 commander.option(
-    `--mode <mode>`,
+    "--mode <mode>",
     "Modo del servidor: development o production"
 );
 
 commander.parse();
 
-const mode = commander.opts().mode;
-let envPath
-
-if (mode === undefined) {
-    envPath = ".env.development";
-}else{
-    envPath = `.env.${mode}`;
-}
+const cliMode = commander.opts().mode;
+const envPath = `.env.${cliMode || "development"}`;
 
 dotenv.config({ path: envPath });
 
+const runtimeMode = process.env.MODE || cliMode || "development";
+
 export default {
     port: process.env.PORT,
-    mode: process.env.MODE,
+    mode: runtimeMode,
+    frontendOrigin: process.env.FRONTEND_ORIGIN || "https://meow-matrix-frontend-production.up.railway.app",
     mongoUrl: process.env.MONGO_URL,
     jwtSecret: process.env.JWT_SECRET,
     tokenKey: process.env.TOKEN_KEY,
@@ -33,4 +30,4 @@ export default {
     gitAppId: process.env.GIT_APP_ID,
     hashKey: process.env.HASH_KEY,
     persistence: process.env.PERSISTENCE,
-}
+};
