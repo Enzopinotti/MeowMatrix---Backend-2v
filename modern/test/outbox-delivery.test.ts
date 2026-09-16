@@ -2,18 +2,19 @@ import { describe, expect, it, vi } from "vitest";
 import {
   createOutboxDeliveryService,
   type ClaimedOutboxEvent,
+  type OrderConfirmation,
   type OrderConfirmationSource,
   type OutboxDeliveryRepository,
 } from "../src/domain/outbox-delivery.js";
 
-const confirmation = {
+const confirmation: OrderConfirmation = {
   email: "buyer@example.test",
   name: "Buyer",
   order: {
     id: "aaaaaaaaaaaaaaaaaaaaaaaa",
     code: "MM-2026-0001",
     purchaserId: "bbbbbbbbbbbbbbbbbbbbbbbb",
-    status: "confirmed" as const,
+    status: "confirmed",
     lines: [
       {
         productId: "cccccccccccccccccccccccc",
@@ -40,17 +41,27 @@ function event(overrides: Partial<ClaimedOutboxEvent> = {}): ClaimedOutboxEvent 
 }
 
 function harness(claimed: ClaimedOutboxEvent | null = event()) {
-  const complete = vi.fn(async () => undefined);
-  const fail = vi.fn(async () => undefined);
-  const repository: OutboxDeliveryRepository = {
-    claim: vi.fn(async () => claimed),
-    complete,
-    fail,
-  };
-  const source: OrderConfirmationSource = {
-    load: vi.fn(async () => confirmation),
-  };
-  const send = vi.fn(async () => undefined);
+  const claim = vi.fn(
+    async (_options: Parameters<OutboxDeliveryRepository["claim"]>[0]) => claimed,
+  );
+  const complete = vi.fn(
+    async (
+      _eventId: string,
+      _workerId: string,
+      _now: number,
+    ): Promise<void> => undefined,
+  );
+  const fail = vi.fn(
+    async (
+      _options: Parameters<OutboxDeliveryRepository["fail"]>[0],
+    ): Promise<void> => undefined,
+  );
+  const repository: OutboxDeliveryRepository = { claim, complete, fail };
+  const load = vi.fn(
+    async (_purchaserId: string, _orderId: string) => confirmation,
+  );
+  const source: OrderConfirmationSource = { load };
+  const send = vi.fn(async (_input: OrderConfirmation): Promise<void> => undefined);
   const service = createOutboxDeliveryService({
     repository,
     orderSource: source,
@@ -58,7 +69,7 @@ function harness(claimed: ClaimedOutboxEvent | null = event()) {
     leaseMs: 30_000,
     maxAttempts: 6,
   });
-  return { service, repository, source, send, complete, fail };
+  return { service, repository, source, load, send, complete, fail };
 }
 
 describe("B5 outbox delivery", () => {
@@ -74,17 +85,22 @@ describe("B5 outbox delivery", () => {
     expect(fail).not.toHaveBeenCalled();
   });
 
-  it("schedules bounded retry after notifier failure without persisting raw SMTP errors", async () => {
+  it("schedules bounded retry without persisting arbitrary SMTP text", async () => {
     const { service, send, fail } = harness(event({ attempts: 2 }));
-    send.mockRejectedValueOnce(Object.assign(new Error("secret smtp detail"), { name: "ECONNECTION SMTP password=hidden" }));
+    send.mockRejectedValueOnce(
+      Object.assign(new Error("secret smtp detail password=hidden"), {
+        name: "ECONNECTION SMTP password=hidden",
+      }),
+    );
 
     await expect(service.deliverNext("worker-a", 10_000)).resolves.toBe("retry");
     expect(fail).toHaveBeenCalledTimes(1);
     const call = fail.mock.calls[0]?.[0];
+    expect(call).toBeDefined();
     expect(call?.terminal).toBe(false);
     expect(call?.nextAvailableAt).toBeGreaterThan(call?.now ?? 0);
-    expect(call?.errorCode).toMatch(/^[A-Za-z0-9_.-]{1,80}$/);
-    expect(call?.errorCode).not.toContain("password");
+    expect(call?.errorCode).toBe("DeliveryError");
+    expect(JSON.stringify(call)).not.toContain("password");
     expect(JSON.stringify(call)).not.toContain("secret smtp detail");
   });
 
@@ -99,7 +115,7 @@ describe("B5 outbox delivery", () => {
     );
 
     const missing = harness();
-    vi.mocked(missing.source.load).mockResolvedValueOnce(null);
+    missing.load.mockResolvedValueOnce(null);
     await expect(missing.service.deliverNext("worker-a", 1_000)).resolves.toBe(
       "dead-letter",
     );
@@ -121,8 +137,12 @@ describe("B5 outbox delivery", () => {
 
   it("propagates lease persistence loss instead of falsely reporting delivery", async () => {
     const { service, complete } = harness();
-    complete.mockRejectedValueOnce(new Error("Outbox delivery lease was lost before completion"));
-    await expect(service.deliverNext("worker-a", 1_000)).rejects.toThrow(/lease was lost/i);
+    complete.mockRejectedValueOnce(
+      new Error("Outbox delivery lease was lost before completion"),
+    );
+    await expect(service.deliverNext("worker-a", 1_000)).rejects.toThrow(
+      /lease was lost/i,
+    );
   });
 
   it("is idle without claiming side effects when no event is available", async () => {
