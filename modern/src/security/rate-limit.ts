@@ -34,6 +34,7 @@ function requestKey(request: Parameters<RequestHandler>[0]): string {
 function applyDecision(
   bucket: RateLimitBucket,
   policy: RateLimitPolicy,
+  currentTime: number,
   response: Parameters<RequestHandler>[1],
   next: Parameters<RequestHandler>[2],
 ) {
@@ -46,7 +47,7 @@ function applyDecision(
   if (bucket.count > policy.maxAttempts) {
     response.setHeader(
       "Retry-After",
-      String(Math.max(1, Math.ceil((bucket.resetAt - Date.now()) / 1000))),
+      String(Math.max(1, Math.ceil((bucket.resetAt - currentTime) / 1000))),
     );
     next(
       new ApiError(
@@ -85,31 +86,7 @@ export function createRateLimiter(
           now: currentTime,
         })
         .then((bucket) => {
-          response.setHeader("X-RateLimit-Limit", String(policy.maxAttempts));
-          response.setHeader(
-            "X-RateLimit-Remaining",
-            String(Math.max(0, policy.maxAttempts - bucket.count)),
-          );
-          if (bucket.count > policy.maxAttempts) {
-            response.setHeader(
-              "Retry-After",
-              String(
-                Math.max(
-                  1,
-                  Math.ceil((bucket.resetAt - currentTime) / 1000),
-                ),
-              ),
-            );
-            next(
-              new ApiError(
-                429,
-                "RATE_LIMITED",
-                "Too many authentication attempts; try again later",
-              ),
-            );
-            return;
-          }
-          next();
+          applyDecision(bucket, policy, currentTime, response, next);
         })
         .catch(next);
     };
@@ -154,7 +131,7 @@ export function createRateLimiter(
 
     bucket.count += 1;
     buckets.set(key, bucket);
-    applyDecision(bucket, policy, response, next);
+    applyDecision(bucket, policy, currentTime, response, next);
   };
 }
 
