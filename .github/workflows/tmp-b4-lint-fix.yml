@@ -1,0 +1,50 @@
+name: Temporary B4 lint fix
+
+on:
+  push:
+    branches:
+      - feat/modern-b4-transactional-commerce
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+        with:
+          ref: feat/modern-b4-transactional-commerce
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: modern/package-lock.json
+      - working-directory: modern
+        run: npm ci --ignore-scripts
+      - name: Apply exact type correction and qualify
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('modern/src/persistence/mongo-commerce.ts')
+          text = p.read_text()
+          old = '): { session: ClientSession } | {} {\n  return session === undefined ? {} : { session };\n}'
+          new = '): Readonly<{ session?: ClientSession }> {\n  return session === undefined ? {} : { session };\n}'
+          if old not in text:
+              raise SystemExit('target signature not found')
+          p.write_text(text.replace(old, new))
+          PY
+          cd modern
+          npm exec -- prettier --write src/persistence/mongo-commerce.ts
+          npm run check
+          cd ..
+          rm .github/workflows/tmp-b4-lint-fix.yml
+          git add modern/src/persistence/mongo-commerce.ts .github/workflows/tmp-b4-lint-fix.yml
+          git diff --cached --check
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "fix(b4): use exact Mongo session options type"
+          git push origin HEAD:feat/modern-b4-transactional-commerce
