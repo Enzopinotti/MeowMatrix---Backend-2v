@@ -30,6 +30,7 @@ jobs:
         working-directory: modern
         run: |
           set -euo pipefail
+          # Retry after preserving Express error-handler arity with an explicit underscore-ignore lint rule.
           npm install --package-lock-only --ignore-scripts --audit=false --fund=false
           npm ci --ignore-scripts --audit=false --fund=false
           npm exec prettier -- --write .
