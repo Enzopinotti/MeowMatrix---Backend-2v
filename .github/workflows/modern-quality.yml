@@ -60,6 +60,7 @@ jobs:
           NODE_ENV: production
           FRONTEND_ORIGINS: https://app.example.test
           TRUST_PROXY_HOPS: "1"
+          RATE_LIMIT_HMAC_SECRET: ci-only-rate-limit-hmac-secret-32-bytes
           MONGO_URL: mongodb://mongo:27017/meow?replicaSet=rs0
           MONGO_DB_NAME: meow
           SMTP_HOST: smtp.example.test
