@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { createHmac } from "node:crypto";
 import type { Collection, Db } from "mongodb";
 import type {
   RateLimitBucket,
@@ -15,8 +15,12 @@ type RateLimitDocument = {
   updatedAt: Date;
 };
 
-function hashRateLimitKey(value: string): string {
-  return createHash("sha256").update(value).digest("hex");
+function hashRateLimitKey(scope: string, value: string, secret: string): string {
+  return createHmac("sha256", secret)
+    .update(scope)
+    .update("\0")
+    .update(value)
+    .digest("hex");
 }
 
 export async function ensureRateLimitIndexes(db: Db): Promise<void> {
@@ -31,13 +35,15 @@ export async function ensureRateLimitIndexes(db: Db): Promise<void> {
 
 export class MongoRateLimitStore implements RateLimitStore {
   private readonly buckets: Collection<RateLimitDocument>;
+  private readonly hmacSecret: string;
 
-  constructor(db: Db) {
+  constructor(db: Db, hmacSecret: string) {
     this.buckets = db.collection<RateLimitDocument>("auth_rate_limits");
+    this.hmacSecret = hmacSecret;
   }
 
   async increment(input: RateLimitStoreIncrement): Promise<RateLimitBucket> {
-    const keyHash = hashRateLimitKey(input.key);
+    const keyHash = hashRateLimitKey(input.scope, input.key, this.hmacSecret);
     const id = `${input.scope}:${keyHash}`;
     const now = new Date(input.now);
     const nextResetAt = new Date(input.now + input.policy.windowMs);
