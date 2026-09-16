@@ -28,6 +28,10 @@ import {
   MongoPrivateFileRepository,
 } from "./persistence/mongo-private-files.js";
 import {
+  ensureRateLimitIndexes,
+  MongoRateLimitStore,
+} from "./persistence/mongo-rate-limit.js";
+import {
   createOutboxWorker,
   type OutboxWorker,
 } from "./runtime/outbox-worker.js";
@@ -35,6 +39,7 @@ import {
   createPrivateFileCleanupWorker,
   type PrivateFileCleanupWorker,
 } from "./runtime/private-file-cleanup-worker.js";
+import type { RateLimitStore } from "./security/rate-limit.js";
 
 const config = loadConfig();
 let mongoClient: MongoClient | null = null;
@@ -43,6 +48,7 @@ let catalogService: CatalogService | undefined;
 let commerceService: CommerceService | undefined;
 let privateFileService: PrivateFileService | undefined;
 let privateStorage: FileSystemPrivateBlobStorage | undefined;
+let rateLimitStore: RateLimitStore | undefined;
 let outboxWorker: OutboxWorker | undefined;
 let fileCleanupWorker: PrivateFileCleanupWorker | undefined;
 
@@ -63,10 +69,13 @@ if (config.mongoUrl !== null) {
   await Promise.all([
     ensureCommerceIndexes(persistence.db),
     ensureOutboxDeliveryIndexes(persistence.db),
+    ensureRateLimitIndexes(persistence.db),
     ...(config.privateStorageRoot !== null
       ? [ensurePrivateFileIndexes(persistence.db)]
       : []),
   ]);
+
+  rateLimitStore = new MongoRateLimitStore(persistence.db);
 
   const resetNotifier = createPasswordResetMailNotifier({
     host: config.smtpHost,
@@ -198,8 +207,10 @@ const app = createApp({
   ...(catalogService ? { catalogService } : {}),
   ...(commerceService ? { commerceService } : {}),
   ...(privateFileService ? { privateFileService } : {}),
+  ...(rateLimitStore ? { rateLimitStore } : {}),
   readinessProbe,
   allowedOrigins: config.frontendOrigins,
+  trustProxyHops: config.trustProxyHops,
   sessionCookieOptions: {
     secure: config.sessionCookieSecure,
     sameSite: config.sessionCookieSameSite,
@@ -214,7 +225,9 @@ const server = app.listen(config.port, () => {
   console.log("Meow API listening", {
     port: config.port,
     nodeEnv: config.nodeEnv,
+    trustProxyHops: config.trustProxyHops,
     authPersistence: authService ? "mongo" : "unavailable",
+    authRateLimitPersistence: rateLimitStore ? "mongo" : "memory",
     catalogPersistence: catalogService ? "mongo" : "unavailable",
     commercePersistence: commerceService ? "mongo" : "unavailable",
     privateFilePersistence: privateFileService
