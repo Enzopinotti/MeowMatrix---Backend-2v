@@ -1,9 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { loadConfig } from "../src/config/env.js";
 
-function productionEnv(
-  overrides: NodeJS.ProcessEnv = {},
-): NodeJS.ProcessEnv {
+function productionEnv(overrides: NodeJS.ProcessEnv = {}): NodeJS.ProcessEnv {
   return {
     NODE_ENV: "production",
     FRONTEND_ORIGINS: "https://app.example.com",

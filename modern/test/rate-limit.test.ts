@@ -118,7 +118,9 @@ describe("shared authentication rate limiting", () => {
     expect(trusted.calls[0]?.key).toBe("198.51.100.42");
 
     const direct = recordingStore();
-    const directOrigin = await listen(createApp({ rateLimitStore: direct.store }));
+    const directOrigin = await listen(
+      createApp({ rateLimitStore: direct.store }),
+    );
     await fetch(`${directOrigin}/api/v1/auth/login`, {
       method: "POST",
       headers: {

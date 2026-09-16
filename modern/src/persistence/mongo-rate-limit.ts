@@ -44,11 +44,7 @@ export class MongoRateLimitStore implements RateLimitStore {
             scope: input.scope,
             keyHash,
             count: {
-              $cond: [
-                expired,
-                1,
-                { $add: [{ $ifNull: ["$count", 0] }, 1] },
-              ],
+              $cond: [expired, 1, { $add: [{ $ifNull: ["$count", 0] }, 1] }],
             },
             resetAt: {
               $cond: [expired, nextResetAt, "$resetAt"],
