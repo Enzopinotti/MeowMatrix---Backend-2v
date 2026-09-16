@@ -7,13 +7,24 @@ import type {
 import { normalizeEmail } from "../api/auth-contracts.js";
 import { ApiError } from "../api/errors.js";
 import type { UserDto } from "../api/contracts.js";
-import { hashPassword, verifyPassword } from "../security/password.js";
+import {
+  hashPassword,
+  passwordHashNeedsUpgrade,
+  verifyPassword,
+} from "../security/password.js";
 
 export type AuthUserRecord = UserDto & {
   passwordHash: string;
 };
 
 export type CreateAuthUser = Omit<AuthUserRecord, "id" | "role" | "avatarUrl">;
+
+export class DuplicateAuthEmailError extends Error {
+  constructor() {
+    super("An auth user already exists for this email");
+    this.name = "DuplicateAuthEmailError";
+  }
+}
 
 export interface AuthUserRepository {
   findByEmail(email: string): Promise<AuthUserRecord | null>;
@@ -105,9 +116,7 @@ export function createAuthService(options: AuthServiceOptions): AuthService {
     const session = await options.sessions.get(tokenHash);
     const currentTime = now();
     if (session === null || session.expiresAt <= currentTime) {
-      if (session !== null) {
-        await options.sessions.delete(tokenHash);
-      }
+      if (session !== null) await options.sessions.delete(tokenHash);
       throw new ApiError(401, "SESSION_INVALID", "Authentication required");
     }
 
@@ -122,34 +131,41 @@ export function createAuthService(options: AuthServiceOptions): AuthService {
   return {
     async register(input) {
       const email = normalizeEmail(input.email);
-      if ((await options.users.findByEmail(email)) !== null) {
-        throw ApiError.conflict(
-          "EMAIL_ALREADY_REGISTERED",
-          "An account already exists for this email",
-        );
+      try {
+        const created = await options.users.create({
+          name: input.name.trim(),
+          lastName: input.lastName.trim(),
+          email,
+          passwordHash: await hashPassword(input.password),
+        });
+        return publicUser(created);
+      } catch (error) {
+        if (error instanceof DuplicateAuthEmailError) {
+          throw ApiError.conflict(
+            "EMAIL_ALREADY_REGISTERED",
+            "An account already exists for this email",
+          );
+        }
+        throw error;
       }
-
-      const created = await options.users.create({
-        name: input.name.trim(),
-        lastName: input.lastName.trim(),
-        email,
-        passwordHash: await hashPassword(input.password),
-      });
-      return publicUser(created);
     },
 
     async login(input) {
       const email = normalizeEmail(input.email);
       const user = await options.users.findByEmail(email);
       if (user === null) {
-        // Spend the same expensive password primitive on unknown accounts so the
-        // obvious "no hash work" timing oracle is not present.
-        await hashPassword(input.password);
+        await hashPassword("Unknown-account-timing-only-passphrase");
         throw new ApiError(401, "INVALID_CREDENTIALS", "Invalid credentials");
       }
 
       if (!(await verifyPassword(input.password, user.passwordHash))) {
         throw new ApiError(401, "INVALID_CREDENTIALS", "Invalid credentials");
+      }
+
+      if (passwordHashNeedsUpgrade(user.passwordHash)) {
+        const upgradedHash = await hashPassword(input.password);
+        await options.users.updatePasswordHash(user.id, upgradedHash);
+        user.passwordHash = upgradedHash;
       }
 
       const sessionToken = newToken();
@@ -168,18 +184,14 @@ export function createAuthService(options: AuthServiceOptions): AuthService {
     },
 
     async logout(sessionToken) {
-      if (sessionToken === null) {
-        return;
-      }
+      if (sessionToken === null) return;
       await options.sessions.delete(tokenDigest(sessionToken));
     },
 
     async requestPasswordReset(emailInput) {
       const email = normalizeEmail(emailInput);
       const user = await options.users.findByEmail(email);
-      if (user === null) {
-        return;
-      }
+      if (user === null) return;
 
       const token = newToken();
       const expiresAt = now() + resetTtlMs;
@@ -240,23 +252,18 @@ class UnavailableAuthService implements AuthService {
   async register(_input: RegisterRequest): Promise<UserDto> {
     return this.unavailable();
   }
-
   async login(_input: LoginRequest): Promise<AuthSession> {
     return this.unavailable();
   }
-
   async currentUser(_sessionToken: string): Promise<UserDto> {
     return this.unavailable();
   }
-
   async logout(_sessionToken: string | null): Promise<void> {
     return this.unavailable();
   }
-
   async requestPasswordReset(_email: string): Promise<void> {
     return this.unavailable();
   }
-
   async confirmPasswordReset(
     _input: PasswordResetConfirmRequest,
   ): Promise<void> {
