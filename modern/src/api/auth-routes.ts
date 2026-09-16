@@ -21,11 +21,13 @@ import {
 import {
   authRateLimitPolicies,
   createRateLimiter,
+  type RateLimitStore,
 } from "../security/rate-limit.js";
 
 export type AuthRouterOptions = BrowserSecurityOptions & {
   authService: AuthService;
   sessionCookieOptions: SessionCookieOptions;
+  rateLimitStore?: RateLimitStore;
 };
 
 function asyncHandler(
@@ -42,9 +44,18 @@ function asyncHandler(
 export function createAuthRouter(options: AuthRouterOptions) {
   const router = Router();
   const originGuard = createOriginGuard(options);
-  const loginLimiter = createRateLimiter(authRateLimitPolicies.login);
-  const registerLimiter = createRateLimiter(authRateLimitPolicies.register);
-  const resetLimiter = createRateLimiter(authRateLimitPolicies.passwordReset);
+  const loginLimiter = createRateLimiter(authRateLimitPolicies.login, {
+    ...(options.rateLimitStore ? { store: options.rateLimitStore } : {}),
+    scope: "auth:login",
+  });
+  const registerLimiter = createRateLimiter(authRateLimitPolicies.register, {
+    ...(options.rateLimitStore ? { store: options.rateLimitStore } : {}),
+    scope: "auth:register",
+  });
+  const resetLimiter = createRateLimiter(authRateLimitPolicies.passwordReset, {
+    ...(options.rateLimitStore ? { store: options.rateLimitStore } : {}),
+    scope: "auth:password-reset",
+  });
 
   router.use(createCorsMiddleware(options));
   router.use((_request, response, next) => {
