@@ -5,9 +5,11 @@ import {
   type Collection,
   type Db,
   type Document,
+  type Filter,
   type MongoClient,
 } from "mongodb";
 import type {
+  CartItemAvailability,
   CartItemDto,
   CartViewDto,
   CheckoutResultDto,
@@ -116,13 +118,15 @@ function transactionUnsupported(error: unknown): boolean {
   );
 }
 
+function sessionOptions(session?: ClientSession): { session: ClientSession } | {} {
+  return session === undefined ? {} : { session };
+}
+
 export async function ensureCommerceIndexes(db: Db): Promise<void> {
-  await db
-    .collection<CartDocument>("commerce_carts")
-    .createIndex(
-      { userId: 1 },
-      { unique: true, name: "commerce_cart_user_unique" },
-    );
+  await db.collection<CartDocument>("commerce_carts").createIndex(
+    { userId: 1 },
+    { unique: true, name: "commerce_cart_user_unique" },
+  );
   await db.collection<OrderDocument>("commerce_orders").createIndexes([
     {
       key: { purchaserId: 1, idempotencyKeyHash: 1 },
@@ -172,12 +176,15 @@ export class MongoCommerceService implements CommerceService {
             updatedAt: now,
           },
         },
-        { upsert: true, session },
+        { upsert: true, ...sessionOptions(session) },
       );
     } catch (error) {
       if (!duplicateKey(error)) throw error;
     }
-    const cart = await this.carts.findOne({ userId }, { session });
+    const cart = await this.carts.findOne(
+      { userId },
+      sessionOptions(session),
+    );
     if (cart === null) throw new Error("Commerce cart could not be created");
     return cart;
   }
@@ -188,7 +195,7 @@ export class MongoCommerceService implements CommerceService {
   ): Promise<Document | null> {
     const _id = asObjectId(productId);
     if (_id === null) return null;
-    return this.products.findOne({ _id }, { session });
+    return this.products.findOne({ _id }, sessionOptions(session));
   }
 
   private assertProductCanEnterCart(
@@ -231,7 +238,10 @@ export class MongoCommerceService implements CommerceService {
       productIds.length === 0
         ? []
         : await this.products
-            .find({ _id: { $in: productIds } }, { session })
+            .find(
+              { _id: { $in: productIds } },
+              sessionOptions(session),
+            )
             .toArray();
     const byId = new Map(
       documents.map((document) => [String(document._id), document]),
@@ -255,11 +265,19 @@ export class MongoCommerceService implements CommerceService {
           updatedAt: line.updatedAt.toISOString(),
         };
       }
+
       const product = mapMongoProduct(document);
+      const ownProduct =
+        typeof document.owner === "string" &&
+        document.owner.trim().toLowerCase() === user.email.toLowerCase();
       const lineTotal = Math.round(product.price * line.quantity * 100) / 100;
-      const availability =
-        product.stock >= line.quantity ? "available" : "insufficient_stock";
+      const availability: CartItemAvailability = ownProduct
+        ? "unavailable"
+        : product.stock >= line.quantity
+          ? "available"
+          : "insufficient_stock";
       if (availability === "available") total += lineTotal;
+
       return {
         productId,
         product,
@@ -380,117 +398,126 @@ export class MongoCommerceService implements CommerceService {
 
     try {
       const result = await this.client.withSession(async (session) =>
-        session.withTransaction(async () => {
-          const cart = await this.ensureCart(user.id, session);
-          if (cart.lines.length === 0) {
-            const replay = await this.orders.findOne(
-              { purchaserId: user.id, idempotencyKeyHash: keyHash },
+        session.withTransaction(
+          async () => {
+            const cart = await this.carts.findOne(
+              { userId: user.id },
               { session },
             );
-            if (replay !== null) {
-              return { order: mapOrder(replay), replayed: true };
+            if (cart === null || cart.lines.length === 0) {
+              const replay = await this.orders.findOne(
+                { purchaserId: user.id, idempotencyKeyHash: keyHash },
+                { session },
+              );
+              if (replay !== null) {
+                return { order: mapOrder(replay), replayed: true };
+              }
+              throw ApiError.conflict("CART_EMPTY", "Cart is empty");
             }
-            throw ApiError.conflict("CART_EMPTY", "Cart is empty");
-          }
 
-          const productIds = cart.lines.map((line) => line.productId);
-          const productDocuments = await this.products
-            .find({ _id: { $in: productIds } }, { session })
-            .toArray();
-          const products = new Map<string, CheckoutProduct>();
-          for (const document of productDocuments) {
-            const product = mapMongoProduct(document);
-            products.set(product.id, {
-              ...product,
-              ownerEmail:
-                typeof document.owner === "string" ? document.owner : null,
+            const productIds = cart.lines.map((line) => line.productId);
+            const productDocuments = await this.products
+              .find({ _id: { $in: productIds } }, { session })
+              .toArray();
+            const products = new Map<string, CheckoutProduct>();
+            for (const document of productDocuments) {
+              const product = mapMongoProduct(document);
+              products.set(product.id, {
+                ...product,
+                ownerEmail:
+                  typeof document.owner === "string" ? document.owner : null,
+              });
+            }
+
+            const snapshot = buildCheckoutSnapshot({
+              user,
+              lines: canonicalLines(cart),
+              products,
             });
-          }
+            const now = new Date();
+            const order: OrderDocument = {
+              _id: new ObjectId(),
+              code: `MM-${randomUUID()}`,
+              purchaserId: user.id,
+              status: "confirmed",
+              lines: [...snapshot.lines],
+              total: snapshot.total,
+              idempotencyKeyHash: keyHash,
+              cartFingerprint: snapshot.fingerprint,
+              createdAt: now,
+            };
 
-          const snapshot = buildCheckoutSnapshot({
-            user,
-            lines: canonicalLines(cart),
-            products,
-          });
-          const now = new Date();
-          const order: OrderDocument = {
-            _id: new ObjectId(),
-            code: `MM-${randomUUID()}`,
-            purchaserId: user.id,
-            status: "confirmed",
-            lines: [...snapshot.lines],
-            total: snapshot.total,
-            idempotencyKeyHash: keyHash,
-            cartFingerprint: snapshot.fingerprint,
-            createdAt: now,
-          };
+            await this.orders.insertOne(order, { session });
 
-          await this.orders.insertOne(order, { session });
+            for (const line of cart.lines) {
+              const stockResult = await this.products.updateOne(
+                {
+                  _id: line.productId,
+                  status: { $ne: false },
+                  isVisible: { $ne: false },
+                  stock: { $gte: line.quantity },
+                },
+                {
+                  $inc: { stock: -line.quantity },
+                  $set: { updatedAt: now },
+                },
+                { session },
+              );
+              if (stockResult.modifiedCount !== 1) {
+                throw new ApiError(
+                  409,
+                  "STOCK_CHANGED",
+                  "Stock changed while checkout was being committed",
+                  [
+                    {
+                      field: `product:${line.productId.toHexString()}`,
+                      message: "Stock is no longer sufficient",
+                    },
+                  ],
+                );
+              }
+            }
 
-          for (const line of cart.lines) {
-            const stockResult = await this.products.updateOne(
+            const cartResult = await this.carts.updateOne(
+              { _id: cart._id, version: cart.version },
               {
-                _id: line.productId,
-                status: { $ne: false },
-                isVisible: { $ne: false },
-                stock: { $gte: line.quantity },
-              },
-              {
-                $inc: { stock: -line.quantity },
-                $set: { updatedAt: now },
+                $set: { lines: [], updatedAt: now },
+                $inc: { version: 1 },
               },
               { session },
             );
-            if (stockResult.modifiedCount !== 1) {
+            if (cartResult.modifiedCount !== 1) {
               throw ApiError.conflict(
-                "STOCK_CHANGED",
-                "Stock changed while checkout was being committed",
-                [
-                  {
-                    field: `product:${line.productId.toHexString()}`,
-                    message: "Stock is no longer sufficient",
-                  },
-                ],
+                "CART_CHANGED",
+                "Cart changed while checkout was being committed",
               );
             }
-          }
 
-          const cartResult = await this.carts.updateOne(
-            { _id: cart._id, version: cart.version },
-            {
-              $set: { lines: [], updatedAt: now },
-              $inc: { version: 1 },
-            },
-            { session },
-          );
-          if (cartResult.modifiedCount !== 1) {
-            throw ApiError.conflict(
-              "CART_CHANGED",
-              "Cart changed while checkout was being committed",
+            await this.outbox.insertOne(
+              {
+                _id: new ObjectId(),
+                type: "order.confirmed",
+                aggregateId: order._id.toHexString(),
+                purchaserId: user.id,
+                createdAt: now,
+                availableAt: now,
+                processedAt: null,
+                attempts: 0,
+              },
+              { session },
             );
-          }
 
-          await this.outbox.insertOne(
-            {
-              _id: new ObjectId(),
-              type: "order.confirmed",
-              aggregateId: order._id.toHexString(),
-              purchaserId: user.id,
-              createdAt: now,
-              availableAt: now,
-              processedAt: null,
-              attempts: 0,
-            },
-            { session },
-          );
-
-          return { order: mapOrder(order), replayed: false };
-        }),
+            return { order: mapOrder(order), replayed: false };
+          },
+          {
+            readConcern: { level: "snapshot" },
+            writeConcern: { w: "majority" },
+            readPreference: "primary",
+          },
+        ),
       );
       if (result === undefined) {
-        throw new Error(
-          "Mongo transaction completed without a checkout result",
-        );
+        throw new Error("Mongo transaction completed without a checkout result");
       }
       return result;
     } catch (error) {
@@ -521,7 +548,7 @@ export class MongoCommerceService implements CommerceService {
     user: UserDto,
     query: { limit: number; offset: number },
   ): Promise<OrderListDto> {
-    const filter = { purchaserId: user.id };
+    const filter: Filter<OrderDocument> = { purchaserId: user.id };
     const [documents, total] = await Promise.all([
       this.orders
         .find(filter)
@@ -542,9 +569,11 @@ export class MongoCommerceService implements CommerceService {
   async getOrder(user: UserDto, orderId: string): Promise<OrderDto | null> {
     const _id = asObjectId(orderId);
     if (_id === null) return null;
-    const filter: Document = { _id };
-    if (user.role !== "admin") filter.purchaserId = user.id;
-    const order = await this.orders.findOne(filter as never);
+    const filter: Filter<OrderDocument> =
+      user.role === "admin"
+        ? { _id }
+        : { _id, purchaserId: user.id };
+    const order = await this.orders.findOne(filter);
     return order === null ? null : mapOrder(order);
   }
 }
