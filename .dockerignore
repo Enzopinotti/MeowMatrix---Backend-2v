@@ -1,1 +1,13 @@
 node_modules
+npm-debug.log*
+.git
+.github
+coverage
+.nyc_output
+logs
+*.log
+warning.log
+.env
+.env.*
+!.env.example
+src/public/documents
