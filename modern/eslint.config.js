@@ -9,6 +9,12 @@ export default tseslint.config(
     files: ["src/**/*.ts", "test/**/*.ts"],
     rules: {
       "@typescript-eslint/consistent-type-imports": "error",
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          argsIgnorePattern: "^_",
+        },
+      ],
     },
   },
 );
