@@ -1,4 +1,4 @@
-name: Temporary B7 formatter evidence
+name: Temporary B7 formatter apply
 
 on:
   pull_request:
@@ -9,10 +9,10 @@ on:
       - ".github/workflows/tmp-b7-format.yml"
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  format-output:
+  format-apply:
     runs-on: ubuntu-24.04
     timeout-minutes: 8
     defaults:
@@ -20,20 +20,25 @@ jobs:
         working-directory: modern
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version-file: .nvmrc
           cache: npm
           cache-dependency-path: modern/package-lock.json
       - run: npm ci --ignore-scripts
-      - name: Emit canonical files
+      - name: Apply and commit canonical files
         shell: bash
         run: |
           set -euo pipefail
           npx prettier --write src/persistence/mongo-rate-limit.ts test/config.test.ts test/rate-limit.test.ts
-          for file in src/persistence/mongo-rate-limit.ts test/config.test.ts test/rate-limit.test.ts; do
-            echo "===BEGIN:${file}==="
-            base64 -w0 "$file"
-            echo
-            echo "===END:${file}==="
-          done
+          if git diff --quiet -- src/persistence/mongo-rate-limit.ts test/config.test.ts test/rate-limit.test.ts; then
+            echo "Formatter output is already canonical."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/persistence/mongo-rate-limit.ts test/config.test.ts test/rate-limit.test.ts
+          git commit -m "style(b7): apply canonical formatter output"
+          git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
