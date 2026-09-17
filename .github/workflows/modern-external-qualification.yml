@@ -1,6 +1,11 @@
 name: Meow external release qualification
 
 on:
+  pull_request:
+    paths:
+      - "integration/public-smoke.sh"
+      - "docs/modernization-2026/b7-external-qualification.md"
+      - ".github/workflows/modern-external-qualification.yml"
   workflow_dispatch:
     inputs:
       backend_sha:
@@ -28,7 +33,48 @@ permissions:
   contents: read
 
 jobs:
+  contract:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+
+    steps:
+      - name: Check out proposed contract
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+
+      - name: Validate public-smoke shell syntax
+        run: bash -n integration/public-smoke.sh
+
+      - name: Reject non-HTTPS external targets before network access
+        shell: bash
+        run: |
+          set -euo pipefail
+          if MEOW_PUBLIC_WEB_ORIGIN=http://127.0.0.1:14173 \
+             MEOW_PUBLIC_API_ORIGIN=http://127.0.0.1:18080 \
+             MEOW_PUBLIC_API_VERSION=contract-test \
+             bash integration/public-smoke.sh > /tmp/public-http.out 2> /tmp/public-http.err; then
+            echo "External smoke unexpectedly accepted HTTP" >&2
+            exit 1
+          fi
+          grep -Fq 'must use HTTPS' /tmp/public-http.err
+
+      - name: Reject non-public HTTPS targets before network access
+        shell: bash
+        run: |
+          set -euo pipefail
+          if MEOW_PUBLIC_WEB_ORIGIN=https://127.0.0.1 \
+             MEOW_PUBLIC_API_ORIGIN=https://127.0.0.1 \
+             MEOW_PUBLIC_API_VERSION=contract-test \
+             bash integration/public-smoke.sh > /tmp/public-private.out 2> /tmp/public-private.err; then
+            echo "External smoke unexpectedly accepted a private target" >&2
+            exit 1
+          fi
+          grep -Fq 'cannot target a non-public IP address' /tmp/public-private.err
+
   qualify:
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-24.04
     timeout-minutes: 10
 
