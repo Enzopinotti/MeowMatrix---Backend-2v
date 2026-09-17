@@ -65,6 +65,9 @@ jobs:
       - name: Destroy and restore durable state
         run: bash integration/recovery-rehearsal.sh
 
+      - name: Verify restored target data preflight
+        run: docker compose -f integration/compose.b6.yml exec -T -e DATA_PREFLIGHT_MODE=target api node dist/data-preflight.js
+
       - name: Print recovery and release evidence
         if: always()
         run: |

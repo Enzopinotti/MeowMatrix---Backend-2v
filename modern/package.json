@@ -10,6 +10,8 @@
     "build": "tsc -p tsconfig.build.json",
     "start": "node dist/server.js",
     "preflight:production": "node dist/production-preflight.js",
+    "preflight:data": "node dist/data-preflight.js",
+    "preflight:cutover": "node dist/cutover-preflight.js",
     "test": "vitest run",
     "typecheck": "tsc --noEmit --pretty false",
     "lint": "eslint .",
