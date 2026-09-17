@@ -125,7 +125,7 @@ jobs:
         run: bash integration/public-smoke.sh
 
       - name: Record failed qualification evidence
-        if: steps.public_smoke.outcome != 'success'
+        if: always() && (steps.public_smoke.outcome != 'success' || hashFiles('.runtime/external-qualification/evidence.json') == '')
         env:
           MEOW_PUBLIC_WEB_ORIGIN: ${{ inputs.web_origin }}
           MEOW_PUBLIC_API_ORIGIN: ${{ inputs.api_origin }}
@@ -184,6 +184,7 @@ jobs:
           name: meow-external-qualification-${{ github.run_id }}
           path: .runtime/external-qualification/evidence.json
           if-no-files-found: error
+          include-hidden-files: true
           retention-days: 90
           compression-level: 9
 
@@ -200,7 +201,17 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Enforce qualification result
-        if: steps.public_smoke.outcome != 'success'
+        if: always()
+        env:
+          PUBLIC_SMOKE_OUTCOME: ${{ steps.public_smoke.outcome }}
+        shell: bash
         run: |
-          echo 'Public HTTPS qualification failed; evidence was retained as an artifact.' >&2
-          exit 1
+          set -euo pipefail
+          evidence=.runtime/external-qualification/evidence.json
+          test -s "$evidence"
+          node -e '
+          const fs=require("node:fs");
+          const j=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));
+          if(j.result!=="success")process.exit(1);
+          ' "$evidence"
+          test "$PUBLIC_SMOKE_OUTCOME" = "success"
