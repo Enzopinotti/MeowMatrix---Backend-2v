@@ -1,5 +1,5 @@
 export type CutoverManifest = {
-  schemaVersion: 2;
+  schemaVersion: 3;
   release: {
     backendSha: string;
     frontendSha: string;
@@ -25,6 +25,8 @@ export type CutoverManifest = {
     bundleRunId: number;
     bundleManifestSha256: string;
     bundleArchiveSha256: string;
+    registryPromotionRunId: number;
+    registryPromotionEvidenceSha256: string;
   };
   rollback: {
     backendSha: string;
@@ -136,8 +138,8 @@ function oneOf<T extends string>(
 
 export function parseCutoverManifest(input: unknown): CutoverManifest {
   const root = record(input, "manifest");
-  if (root.schemaVersion !== 2) {
-    throw new Error("schemaVersion must equal 2");
+  if (root.schemaVersion !== 3) {
+    throw new Error("schemaVersion must equal 3");
   }
 
   const release = record(root.release, "release");
@@ -147,7 +149,7 @@ export function parseCutoverManifest(input: unknown): CutoverManifest {
   const rollback = record(root.rollback, "rollback");
 
   const manifest: CutoverManifest = {
-    schemaVersion: 2,
+    schemaVersion: 3,
     release: {
       backendSha: gitSha(release.backendSha, "release.backendSha"),
       frontendSha: gitSha(release.frontendSha, "release.frontendSha"),
@@ -212,6 +214,14 @@ export function parseCutoverManifest(input: unknown): CutoverManifest {
       bundleArchiveSha256: sha256Hex(
         evidence.bundleArchiveSha256,
         "evidence.bundleArchiveSha256",
+      ),
+      registryPromotionRunId: positiveInteger(
+        evidence.registryPromotionRunId,
+        "evidence.registryPromotionRunId",
+      ),
+      registryPromotionEvidenceSha256: sha256Hex(
+        evidence.registryPromotionEvidenceSha256,
+        "evidence.registryPromotionEvidenceSha256",
       ),
     },
     rollback: {

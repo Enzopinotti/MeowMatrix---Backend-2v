@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "release": {
     "backendSha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
     "frontendSha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
@@ -24,7 +24,9 @@
     "dataPreflightRunId": 4,
     "bundleRunId": 5,
     "bundleManifestSha256": "5555555555555555555555555555555555555555555555555555555555555555",
-    "bundleArchiveSha256": "6666666666666666666666666666666666666666666666666666666666666666"
+    "bundleArchiveSha256": "6666666666666666666666666666666666666666666666666666666666666666",
+    "registryPromotionRunId": 6,
+    "registryPromotionEvidenceSha256": "7777777777777777777777777777777777777777777777777777777777777777"
   },
   "rollback": {
     "backendSha": "cccccccccccccccccccccccccccccccccccccccc",

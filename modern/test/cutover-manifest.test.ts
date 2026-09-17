@@ -11,10 +11,11 @@ const DIGEST_C = `sha256:${"3".repeat(64)}`;
 const DIGEST_D = `sha256:${"4".repeat(64)}`;
 const BUNDLE_MANIFEST_SHA = "5".repeat(64);
 const BUNDLE_ARCHIVE_SHA = "6".repeat(64);
+const REGISTRY_PROMOTION_EVIDENCE_SHA = "7".repeat(64);
 
 function validManifest() {
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
     release: {
       backendSha: SHA_A,
       frontendSha: SHA_B,
@@ -40,6 +41,8 @@ function validManifest() {
       bundleRunId: 5,
       bundleManifestSha256: BUNDLE_MANIFEST_SHA,
       bundleArchiveSha256: BUNDLE_ARCHIVE_SHA,
+      registryPromotionRunId: 6,
+      registryPromotionEvidenceSha256: REGISTRY_PROMOTION_EVIDENCE_SHA,
     },
     rollback: {
       backendSha: SHA_C,
@@ -53,14 +56,16 @@ function validManifest() {
 }
 
 describe("cutover manifest", () => {
-  it("accepts a fully pinned HTTPS release, bundle evidence and rollback contract", () => {
+  it("accepts a fully pinned HTTPS release, bundle/promotion evidence and rollback contract", () => {
     expect(parseCutoverManifest(validManifest())).toMatchObject({
-      schemaVersion: 2,
+      schemaVersion: 3,
       release: { backendSha: SHA_A, apiImageDigest: DIGEST_A },
       evidence: {
         bundleRunId: 5,
         bundleManifestSha256: BUNDLE_MANIFEST_SHA,
         bundleArchiveSha256: BUNDLE_ARCHIVE_SHA,
+        registryPromotionRunId: 6,
+        registryPromotionEvidenceSha256: REGISTRY_PROMOTION_EVIDENCE_SHA,
       },
       public: {
         frontendOrigin: "https://app.example.test",
@@ -71,13 +76,13 @@ describe("cutover manifest", () => {
     });
   });
 
-  it("requires schema version 2 so older manifests cannot omit bundle evidence", () => {
+  it("requires schema version 3 so manifests cannot omit registry promotion evidence", () => {
     expect(() =>
-      parseCutoverManifest({ ...validManifest(), schemaVersion: 1 }),
-    ).toThrow("schemaVersion must equal 2");
+      parseCutoverManifest({ ...validManifest(), schemaVersion: 2 }),
+    ).toThrow("schemaVersion must equal 3");
   });
 
-  it("rejects missing or malformed immutable bundle evidence", () => {
+  it("rejects missing or malformed immutable bundle and promotion evidence", () => {
     expect(() =>
       parseCutoverManifest({
         ...validManifest(),
@@ -96,6 +101,18 @@ describe("cutover manifest", () => {
         evidence: { ...validManifest().evidence, bundleRunId: 0 },
       }),
     ).toThrow("evidence.bundleRunId must be a positive integer");
+
+    expect(() =>
+      parseCutoverManifest({
+        ...validManifest(),
+        evidence: {
+          ...validManifest().evidence,
+          registryPromotionEvidenceSha256: "bad",
+        },
+      }),
+    ).toThrow(
+      "evidence.registryPromotionEvidenceSha256 must be a lowercase SHA-256 hex digest",
+    );
   });
 
   it("rejects non-HTTPS or path-bearing public origins", () => {

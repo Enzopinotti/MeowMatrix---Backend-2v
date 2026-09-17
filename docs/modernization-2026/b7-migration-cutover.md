@@ -7,11 +7,12 @@ B7 turns the provider-neutral parts of deployment/cutover into executable contra
 The maintained provider-neutral controls now include:
 
 1. a read-only Mongo data preflight for migration source/target review;
-2. a machine-validated cutover manifest that binds the candidate, release-bundle evidence, production image digests and rollback target;
+2. a machine-validated cutover manifest that binds the candidate, release-bundle evidence, registry-promotion evidence, production image digests and rollback target;
 3. a public runtime smoke that can be pointed at the eventual real HTTPS authorities;
-4. an immutable application release bundle that packages the already-qualified API/web images without rebuilding source.
+4. an immutable application release bundle that packages the already-qualified API/web images without rebuilding source;
+5. a no-rebuild registry-promotion contract that proves bundle image IDs can be pushed, resolved to immutable registry digests, pulled back by digest and re-smoked without identity drift.
 
-The permanent quality, full-stack and recovery workflows exercise these contracts so they cannot silently rot as documentation-only scripts. Bundle-specific details live in `b7-release-bundle.md`.
+The permanent quality, full-stack and recovery workflows exercise these contracts so they cannot silently rot as documentation-only scripts. Bundle details live in `b7-release-bundle.md`; registry promotion details live in `b7-registry-promotion.md`.
 
 ## Data preflight
 
@@ -28,7 +29,7 @@ The command is read-only. It does not create indexes, rewrite documents, normali
 
 ### Source mode
 
-Source mode is intended to reject a migration before copy/cutover when the historical authority is not structurally consumable. It checks the required historical collections and validates user/product shapes plus normalized-email collisions. Categories are inspected when present.
+Source mode rejects a migration before copy/cutover when the historical authority is not structurally consumable. It checks the required historical collections and validates user/product shapes plus normalized-email collisions. Categories are inspected when present.
 
 The CLI records Mongo topology/session capability for evidence, but source mode deliberately does not require a replica set or logical sessions: a historical standalone source may still be read and migrated. Transaction/session capability becomes a fail-closed requirement only in target mode.
 
@@ -55,11 +56,19 @@ The retained bundle contains API + web only. Mongo and Mailpit remain external q
 
 `integration/verify-release-bundle.sh` proves the archive round-trips without rebuild by deleting the local API/web tags, loading the archive, requiring exact local image-ID equality and starting both images again under the hardened non-root/read-only runtime contract.
 
-A local Docker image ID is not a registry manifest digest. The future provider-specific promotion must consume the retained bundle bytes, push the application images without rebuilding, and record the resulting registry digests separately.
+A local Docker image ID is not a registry manifest digest. Registry promotion consumes these retained bundle bytes and records registry digests separately.
+
+## Registry promotion
+
+`integration/promote-release-bundle.sh` is the provider-neutral bridge from retained bundle to registry digest.
+
+Permanent full-stack CI exercises it against an isolated, pinned Distribution registry. The rehearsal loads API/web from the retained tar, pushes them without build, captures the immutable registry digest, deletes local tags, pulls both images back by digest, requires exact image-ID equality and runs the hardened API/web smoke again.
+
+The manual `.github/workflows/modern-external-registry-promotion.yml` uses the same script for the eventual real registry. It downloads an existing retained `main` bundle by run ID, validates caller-supplied bundle hashes, verifies the backend SHA is a merged `main` authority, authenticates with repository/environment secrets and uploads sanitized `meow-registry-promotion-v1` evidence. It never deploys the images and never rebuilds source.
 
 ## Cutover manifest
 
-`integration/cutover-manifest.example.json` is a schema example, not production evidence. The current manifest contract is **schema version 2**. A real cutover must create a separate manifest populated with real immutable values and validate it using:
+`integration/cutover-manifest.example.json` is a schema example, not production evidence. The current manifest contract is **schema version 3**. A real cutover must create a separate manifest populated with real immutable values and validate it using:
 
 ```bash
 CUTOVER_MANIFEST_PATH=/path/to/cutover.json npm run preflight:cutover
@@ -75,13 +84,14 @@ The validator requires:
 - data strategy (`in-place` or `copy`), write-freeze decision and immutable pre-cutover backup evidence reference;
 - quality, full-stack, recovery and data-preflight run IDs;
 - immutable release-bundle evidence: bundle-producing run ID, bundle-manifest SHA-256 and bundle-archive SHA-256;
+- immutable registry-promotion evidence: promotion run ID and promotion-evidence SHA-256;
 - a rollback candidate different from the release candidate;
 - immutable rollback image digests and an explicit data rollback action;
 - a bounded rollback decision deadline.
 
-The bundle SHA-256 values identify the retained **pre-registry** artifact. `apiImageDigest` and `webImageDigest` identify what the selected registry serves after no-rebuild promotion. They intentionally represent different layers of the release chain.
+The bundle SHA-256 values identify the retained **pre-registry** artifact. `registryPromotionRunId` and `registryPromotionEvidenceSha256` identify the no-rebuild promotion that produced the registry digests. `apiImageDigest` and `webImageDigest` identify what the selected registry serves. These are separate layers of one release chain and must not be substituted for each other.
 
-The manifest intentionally does not fetch GitHub, a registry or a cloud provider. Verification that each supplied SHA/digest/run/evidence reference really exists is part of release promotion and provider-specific cutover authorization.
+The manifest intentionally does not fetch GitHub, a registry or a cloud provider. Provider-specific cutover authorization must verify that the supplied run/evidence references exist and that the release image digests exactly match the same promotion evidence.
 
 ## Public smoke
 
@@ -96,14 +106,7 @@ bash integration/public-smoke.sh
 
 HTTP is rejected by default. `MEOW_PUBLIC_API_VERSION` is mandatory so the smoke is bound to the promoted API contract instead of a hardcoded repository version. `MEOW_PUBLIC_ALLOW_HTTP=true` exists only so permanent CI can exercise the same script against the isolated local topology.
 
-The smoke checks:
-
-- frontend health and SPA fallback;
-- browser security header baseline;
-- API health/version and server-generated UUID request correlation;
-- API readiness with every dependency check healthy;
-- credentialed CORS for the declared frontend authority;
-- rejection of an untrusted browser preflight origin.
+The smoke checks frontend health/SPA fallback, security headers, API health/version/request correlation, readiness, credentialed CORS for the intended frontend and rejection of an untrusted browser origin.
 
 It deliberately avoids registration/login/order mutations against production. Provider-specific cutover may add a dedicated synthetic account or deeper browser transaction smoke only after its lifecycle and cleanup are explicitly defined.
 
@@ -111,9 +114,7 @@ It deliberately avoids registration/login/order mutations against production. Pr
 
 `.github/workflows/modern-external-qualification.yml` packages the public smoke as a manual release gate once real production HTTPS authorities exist. It verifies that both supplied repository SHAs are merged authorities, that the frontend SHA is the exact frontend pinned by the backend candidate, runs the HTTPS smoke, and publishes sanitized success/failure evidence.
 
-The workflow does **not** deploy or mutate production. Its PR-only contract job tests the external fail-closed boundary, while permanent full-stack CI tests the successful evidence path against the isolated local topology. Operational details and evidence semantics live in `b7-external-qualification.md`.
-
-A real production release should reference the external qualification run alongside the cutover manifest and provider-specific migration/backup evidence. The existence of the workflow itself is not equivalent to a successful production qualification.
+The workflow does **not** deploy or mutate production. Its PR-only contract job tests the external fail-closed boundary, while permanent full-stack CI tests the successful evidence path against the isolated local topology. Operational details live in `b7-external-qualification.md`.
 
 ## Cutover sequence
 
@@ -121,19 +122,20 @@ The intended sequence is:
 
 1. qualify the exact backend/frontend candidate through permanent quality/full-stack/recovery gates;
 2. package the already-qualified API/web images into the retained immutable release bundle and record the bundle run/hash evidence;
-3. select the real registry, load that retained bundle and promote API/web **without rebuilding**, recording the resulting registry digests;
-4. run source data preflight before migration/write freeze;
-5. capture provider-specific backup/PITR evidence for Mongo and private storage;
-6. migrate or bind the final data authorities;
-7. run target data preflight against the production target before public promotion;
-8. populate and validate the real schema-v2 cutover manifest, including release-bundle evidence, registry digests and rollback artifacts;
-9. deploy by immutable registry digest;
-10. establish canonical DNS/TLS and production cookies/CORS/proxy configuration;
-11. dispatch `Meow external release qualification` against the real HTTPS authorities using the exact merged backend/frontend SHAs and expected API version;
-12. require that external qualification to be green before release acceptance;
-13. monitor the bounded rollback window and either accept the release or execute the manifest rollback plan.
+3. select the real registry and dispatch the external registry-promotion workflow against that exact retained bundle;
+4. record the promotion run/evidence hash plus the API/web registry digests returned by that same promotion;
+5. run source data preflight before migration/write freeze;
+6. capture provider-specific backup/PITR evidence for Mongo and private storage;
+7. migrate or bind the final data authorities;
+8. run target data preflight against the production target before public promotion;
+9. populate and validate the real schema-v3 cutover manifest, including bundle evidence, promotion evidence, registry digests and rollback artifacts;
+10. deploy API/web by the immutable registry digests from the promotion evidence;
+11. establish canonical DNS/TLS and production cookies/CORS/proxy configuration;
+12. dispatch `Meow external release qualification` against the real HTTPS authorities using the exact merged backend/frontend SHAs and expected API version;
+13. require that external qualification to be green before release acceptance;
+14. monitor the bounded rollback window and either accept the release or execute the manifest rollback plan.
 
-No DNS switch should be used as the first time the target database, backup, release bundle, rollback candidate or public runtime contract is tested.
+No DNS switch should be used as the first time the target database, backup, release bundle, registry promotion, rollback candidate or public runtime contract is tested.
 
 ## Rollback boundary
 
@@ -149,10 +151,11 @@ B7 still remains active for the parts that cannot be proven from the repository 
 - real production Mongo topology and migration execution;
 - real durable private-object/storage authority and its backup policy;
 - real SMTP authority and deliverability/operational monitoring;
-- selecting a registry and promoting the retained application bundle without rebuild;
-- recording/validating the real registry digests used for deployment;
+- selecting/configuring the production registry and credentials;
+- dispatching the real external registry promotion and recording its immutable digests/evidence;
 - production backup frequency/PITR and declared RPO/RTO;
 - external uptime/error/alert routing;
+- deploying the promoted images by digest;
 - dispatch and green evidence from the real public HTTPS qualification gate;
 - optional controlled synthetic browser transactions, if their lifecycle is explicitly defined;
 - cutover approval, observation window and rollback rehearsal against the selected provider.
