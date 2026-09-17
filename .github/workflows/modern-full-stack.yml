@@ -69,6 +69,7 @@ jobs:
         env:
           MEOW_PUBLIC_WEB_ORIGIN: http://127.0.0.1:14173
           MEOW_PUBLIC_API_ORIGIN: http://127.0.0.1:18080
+          MEOW_PUBLIC_API_VERSION: "2026-b7"
           MEOW_PUBLIC_ALLOW_HTTP: "true"
         run: bash integration/public-smoke.sh
 
