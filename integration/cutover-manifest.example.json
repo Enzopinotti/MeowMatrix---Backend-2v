@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "release": {
     "backendSha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
     "frontendSha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
@@ -21,7 +21,10 @@
     "qualityRunId": 1,
     "fullStackRunId": 2,
     "recoveryRunId": 3,
-    "dataPreflightRunId": 4
+    "dataPreflightRunId": 4,
+    "bundleRunId": 5,
+    "bundleManifestSha256": "5555555555555555555555555555555555555555555555555555555555555555",
+    "bundleArchiveSha256": "6666666666666666666666666666666666666666666666666666666666666666"
   },
   "rollback": {
     "backendSha": "cccccccccccccccccccccccccccccccccccccccc",

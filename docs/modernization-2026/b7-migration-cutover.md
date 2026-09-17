@@ -1,16 +1,17 @@
 # B7 migration and cutover contract
 
-This carrier turns the remaining provider-neutral parts of B7 into executable contracts. It does **not** claim that a public production deployment exists yet and it does not invent DNS, TLS, Mongo, private-storage, SMTP, registry, monitoring, backup/PITR or provider credentials.
+B7 turns the provider-neutral parts of deployment/cutover into executable contracts. It does **not** claim that a public production deployment exists yet and it does not invent DNS, TLS, Mongo, private-storage, SMTP, registry, monitoring, backup/PITR or provider credentials.
 
 ## Scope
 
-The carrier adds three independent controls:
+The maintained provider-neutral controls now include:
 
 1. a read-only Mongo data preflight for migration source/target review;
-2. a machine-validated cutover manifest that binds the candidate, evidence and rollback target;
-3. a public runtime smoke that can be pointed at the eventual real HTTPS authorities.
+2. a machine-validated cutover manifest that binds the candidate, release-bundle evidence, production image digests and rollback target;
+3. a public runtime smoke that can be pointed at the eventual real HTTPS authorities;
+4. an immutable application release bundle that packages the already-qualified API/web images without rebuilding source.
 
-The permanent quality, full-stack and recovery workflows exercise these contracts so they cannot silently rot as documentation-only scripts.
+The permanent quality, full-stack and recovery workflows exercise these contracts so they cannot silently rot as documentation-only scripts. Bundle-specific details live in `b7-release-bundle.md`.
 
 ## Data preflight
 
@@ -46,9 +47,19 @@ The command exits non-zero when a required collection/index is absent or an inte
 
 A green target preflight does **not** prove that private blob objects exist in the final provider. Blob authority must be validated by the provider-specific storage migration and public/deployment rehearsal. The permanent destructive recovery gate already validates Mongo metadata and private blob bytes together inside the reproducible topology.
 
+## Immutable application release bundle
+
+After the exact API/web images pass the permanent full-stack checks, `integration/package-release-bundle.sh` saves those **same images** into an application-only Docker archive. There is no second application build between qualification and packaging.
+
+The retained bundle contains API + web only. Mongo and Mailpit remain external qualification dependencies and are not promoted as Meow application artifacts.
+
+`integration/verify-release-bundle.sh` proves the archive round-trips without rebuild by deleting the local API/web tags, loading the archive, requiring exact local image-ID equality and starting both images again under the hardened non-root/read-only runtime contract.
+
+A local Docker image ID is not a registry manifest digest. The future provider-specific promotion must consume the retained bundle bytes, push the application images without rebuilding, and record the resulting registry digests separately.
+
 ## Cutover manifest
 
-`integration/cutover-manifest.example.json` is a schema example, not production evidence. A real cutover must create a separate manifest populated with real immutable values and validate it using:
+`integration/cutover-manifest.example.json` is a schema example, not production evidence. The current manifest contract is **schema version 2**. A real cutover must create a separate manifest populated with real immutable values and validate it using:
 
 ```bash
 CUTOVER_MANIFEST_PATH=/path/to/cutover.json npm run preflight:cutover
@@ -57,15 +68,18 @@ CUTOVER_MANIFEST_PATH=/path/to/cutover.json npm run preflight:cutover
 The validator requires:
 
 - full 40-character backend and frontend Git SHAs;
-- immutable `sha256:` API/web image digests;
+- immutable `sha256:` API/web **registry** image digests;
 - API contract version;
 - exact HTTPS frontend and API origins;
 - explicit trusted-proxy hop count;
 - data strategy (`in-place` or `copy`), write-freeze decision and immutable pre-cutover backup evidence reference;
 - quality, full-stack, recovery and data-preflight run IDs;
+- immutable release-bundle evidence: bundle-producing run ID, bundle-manifest SHA-256 and bundle-archive SHA-256;
 - a rollback candidate different from the release candidate;
 - immutable rollback image digests and an explicit data rollback action;
 - a bounded rollback decision deadline.
+
+The bundle SHA-256 values identify the retained **pre-registry** artifact. `apiImageDigest` and `webImageDigest` identify what the selected registry serves after no-rebuild promotion. They intentionally represent different layers of the release chain.
 
 The manifest intentionally does not fetch GitHub, a registry or a cloud provider. Verification that each supplied SHA/digest/run/evidence reference really exists is part of release promotion and provider-specific cutover authorization.
 
@@ -106,19 +120,20 @@ A real production release should reference the external qualification run alongs
 The intended sequence is:
 
 1. qualify the exact backend/frontend candidate through permanent quality/full-stack/recovery gates;
-2. build/promote immutable registry artifacts and record their digests;
-3. run source data preflight before migration/write freeze;
-4. capture provider-specific backup/PITR evidence for Mongo and private storage;
-5. migrate or bind the final data authorities;
-6. run target data preflight against the production target before public promotion;
-7. populate and validate the real cutover manifest, including rollback artifacts;
-8. deploy by immutable digest;
-9. establish canonical DNS/TLS and production cookies/CORS/proxy configuration;
-10. dispatch `Meow external release qualification` against the real HTTPS authorities using the exact merged backend/frontend SHAs and expected API version;
-11. require that external qualification to be green before release acceptance;
-12. monitor the bounded rollback window and either accept the release or execute the manifest rollback plan.
+2. package the already-qualified API/web images into the retained immutable release bundle and record the bundle run/hash evidence;
+3. select the real registry, load that retained bundle and promote API/web **without rebuilding**, recording the resulting registry digests;
+4. run source data preflight before migration/write freeze;
+5. capture provider-specific backup/PITR evidence for Mongo and private storage;
+6. migrate or bind the final data authorities;
+7. run target data preflight against the production target before public promotion;
+8. populate and validate the real schema-v2 cutover manifest, including release-bundle evidence, registry digests and rollback artifacts;
+9. deploy by immutable registry digest;
+10. establish canonical DNS/TLS and production cookies/CORS/proxy configuration;
+11. dispatch `Meow external release qualification` against the real HTTPS authorities using the exact merged backend/frontend SHAs and expected API version;
+12. require that external qualification to be green before release acceptance;
+13. monitor the bounded rollback window and either accept the release or execute the manifest rollback plan.
 
-No DNS switch should be used as the first time the target database, backup, rollback candidate or public runtime contract is tested.
+No DNS switch should be used as the first time the target database, backup, release bundle, rollback candidate or public runtime contract is tested.
 
 ## Rollback boundary
 
@@ -134,7 +149,8 @@ B7 still remains active for the parts that cannot be proven from the repository 
 - real production Mongo topology and migration execution;
 - real durable private-object/storage authority and its backup policy;
 - real SMTP authority and deliverability/operational monitoring;
-- registry/release promotion using immutable digests;
+- selecting a registry and promoting the retained application bundle without rebuild;
+- recording/validating the real registry digests used for deployment;
 - production backup frequency/PITR and declared RPO/RTO;
 - external uptime/error/alert routing;
 - dispatch and green evidence from the real public HTTPS qualification gate;

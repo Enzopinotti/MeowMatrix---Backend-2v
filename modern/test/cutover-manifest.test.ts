@@ -9,10 +9,12 @@ const DIGEST_A = `sha256:${"1".repeat(64)}`;
 const DIGEST_B = `sha256:${"2".repeat(64)}`;
 const DIGEST_C = `sha256:${"3".repeat(64)}`;
 const DIGEST_D = `sha256:${"4".repeat(64)}`;
+const BUNDLE_MANIFEST_SHA = "5".repeat(64);
+const BUNDLE_ARCHIVE_SHA = "6".repeat(64);
 
 function validManifest() {
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     release: {
       backendSha: SHA_A,
       frontendSha: SHA_B,
@@ -35,6 +37,9 @@ function validManifest() {
       fullStackRunId: 2,
       recoveryRunId: 3,
       dataPreflightRunId: 4,
+      bundleRunId: 5,
+      bundleManifestSha256: BUNDLE_MANIFEST_SHA,
+      bundleArchiveSha256: BUNDLE_ARCHIVE_SHA,
     },
     rollback: {
       backendSha: SHA_C,
@@ -48,10 +53,15 @@ function validManifest() {
 }
 
 describe("cutover manifest", () => {
-  it("accepts a fully pinned HTTPS release and rollback contract", () => {
+  it("accepts a fully pinned HTTPS release, bundle evidence and rollback contract", () => {
     expect(parseCutoverManifest(validManifest())).toMatchObject({
-      schemaVersion: 1,
+      schemaVersion: 2,
       release: { backendSha: SHA_A, apiImageDigest: DIGEST_A },
+      evidence: {
+        bundleRunId: 5,
+        bundleManifestSha256: BUNDLE_MANIFEST_SHA,
+        bundleArchiveSha256: BUNDLE_ARCHIVE_SHA,
+      },
       public: {
         frontendOrigin: "https://app.example.test",
         apiOrigin: "https://api.example.test",
@@ -59,6 +69,33 @@ describe("cutover manifest", () => {
       },
       rollback: { backendSha: SHA_C, decisionDeadlineMinutes: 15 },
     });
+  });
+
+  it("requires schema version 2 so older manifests cannot omit bundle evidence", () => {
+    expect(() =>
+      parseCutoverManifest({ ...validManifest(), schemaVersion: 1 }),
+    ).toThrow("schemaVersion must equal 2");
+  });
+
+  it("rejects missing or malformed immutable bundle evidence", () => {
+    expect(() =>
+      parseCutoverManifest({
+        ...validManifest(),
+        evidence: {
+          ...validManifest().evidence,
+          bundleManifestSha256: "sha256:not-a-file-hash",
+        },
+      }),
+    ).toThrow(
+      "evidence.bundleManifestSha256 must be a lowercase SHA-256 hex digest",
+    );
+
+    expect(() =>
+      parseCutoverManifest({
+        ...validManifest(),
+        evidence: { ...validManifest().evidence, bundleRunId: 0 },
+      }),
+    ).toThrow("evidence.bundleRunId must be a positive integer");
   });
 
   it("rejects non-HTTPS or path-bearing public origins", () => {
