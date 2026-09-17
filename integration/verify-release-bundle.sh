@@ -108,7 +108,7 @@ for attempt in $(seq 1 30); do
 done
 
 curl -fsS http://127.0.0.1:14174/files >/tmp/meow-bundle-files.html
-grep -Fq '<!doctype html>' /tmp/meow-bundle-files.html
+grep -Eqi '<!doctype html>' /tmp/meow-bundle-files.html
 
 printf 'release bundle verified: api=%s web=%s archive=%s\n' \
   "$actual_api_id" "$actual_web_id" "$actual_archive_sha"
