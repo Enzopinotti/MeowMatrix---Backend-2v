@@ -47,6 +47,8 @@ FRONTEND_SHA="$frontend_sha" \
 COMPOSE_SHA256="$compose_sha256" \
 API_IMAGE_ID="$api_image_id" \
 WEB_IMAGE_ID="$web_image_id" \
+API_TAG="$api_tag" \
+WEB_TAG="$web_tag" \
 ARCHIVE_SHA256="$archive_sha256" \
 ARCHIVE_BYTES="$archive_bytes" \
 GENERATED_AT="$generated_at" \
@@ -64,8 +66,8 @@ const manifest = {
   apiVersion: process.env.API_VERSION,
   composeSha256: process.env.COMPOSE_SHA256,
   images: {
-    api: { tag: "meow-matrix-api:b6", imageId: process.env.API_IMAGE_ID },
-    web: { tag: "meow-matrix-web:b6", imageId: process.env.WEB_IMAGE_ID }
+    api: { tag: process.env.API_TAG, imageId: process.env.API_IMAGE_ID },
+    web: { tag: process.env.WEB_TAG, imageId: process.env.WEB_IMAGE_ID }
   },
   qualificationDependencies: {
     mongoImageId: candidate.images.mongo,
