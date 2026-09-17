@@ -93,6 +93,14 @@ The smoke checks:
 
 It deliberately avoids registration/login/order mutations against production. Provider-specific cutover may add a dedicated synthetic account or deeper browser transaction smoke only after its lifecycle and cleanup are explicitly defined.
 
+## External qualification gate
+
+`.github/workflows/modern-external-qualification.yml` packages the public smoke as a manual release gate once real production HTTPS authorities exist. It verifies that both supplied repository SHAs are merged authorities, that the frontend SHA is the exact frontend pinned by the backend candidate, runs the HTTPS smoke, and publishes sanitized success/failure evidence.
+
+The workflow does **not** deploy or mutate production. Its PR-only contract job tests the external fail-closed boundary, while permanent full-stack CI tests the successful evidence path against the isolated local topology. Operational details and evidence semantics live in `b7-external-qualification.md`.
+
+A real production release should reference the external qualification run alongside the cutover manifest and provider-specific migration/backup evidence. The existence of the workflow itself is not equivalent to a successful production qualification.
+
 ## Cutover sequence
 
 The intended sequence is:
@@ -106,8 +114,9 @@ The intended sequence is:
 7. populate and validate the real cutover manifest, including rollback artifacts;
 8. deploy by immutable digest;
 9. establish canonical DNS/TLS and production cookies/CORS/proxy configuration;
-10. run the public smoke against the real HTTPS origins;
-11. monitor the bounded rollback window and either accept the release or execute the manifest rollback plan.
+10. dispatch `Meow external release qualification` against the real HTTPS authorities using the exact merged backend/frontend SHAs and expected API version;
+11. require that external qualification to be green before release acceptance;
+12. monitor the bounded rollback window and either accept the release or execute the manifest rollback plan.
 
 No DNS switch should be used as the first time the target database, backup, rollback candidate or public runtime contract is tested.
 
@@ -119,7 +128,7 @@ Any migration that permits writes during copy/cutover needs a provider-specific 
 
 ## Remaining B7 provider-specific work
 
-After this carrier, B7 still remains active for the parts that cannot be proven from the repository alone:
+B7 still remains active for the parts that cannot be proven from the repository alone:
 
 - canonical production hostnames, DNS and TLS termination;
 - real production Mongo topology and migration execution;
@@ -128,7 +137,8 @@ After this carrier, B7 still remains active for the parts that cannot be proven 
 - registry/release promotion using immutable digests;
 - production backup frequency/PITR and declared RPO/RTO;
 - external uptime/error/alert routing;
-- real public HTTPS smoke and, if chosen, controlled synthetic browser transactions;
+- dispatch and green evidence from the real public HTTPS qualification gate;
+- optional controlled synthetic browser transactions, if their lifecycle is explicitly defined;
 - cutover approval, observation window and rollback rehearsal against the selected provider.
 
 The historical external-secret rotation/revocation blocker remains separate. Repository changes cannot prove that previously exposed third-party credentials were rotated outside GitHub.

@@ -1,0 +1,217 @@
+name: Meow external release qualification
+
+on:
+  pull_request:
+    paths:
+      - "integration/public-smoke.sh"
+      - "docs/modernization-2026/b7-external-qualification.md"
+      - ".github/workflows/modern-external-qualification.yml"
+  workflow_dispatch:
+    inputs:
+      backend_sha:
+        description: Exact merged backend commit SHA to qualify
+        required: true
+        type: string
+      frontend_sha:
+        description: Exact merged frontend commit SHA pinned by the backend candidate
+        required: true
+        type: string
+      web_origin:
+        description: Public HTTPS frontend origin, for example https://app.example.com
+        required: true
+        type: string
+      api_origin:
+        description: Public HTTPS API origin, for example https://api.example.com
+        required: true
+        type: string
+      api_version:
+        description: Expected API contract version exposed by /healthz
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+
+    steps:
+      - name: Check out proposed contract
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+
+      - name: Validate public-smoke shell syntax
+        run: bash -n integration/public-smoke.sh
+
+      - name: Reject non-HTTPS external targets before network access
+        shell: bash
+        run: |
+          set -euo pipefail
+          if MEOW_PUBLIC_WEB_ORIGIN=http://127.0.0.1:14173 \
+             MEOW_PUBLIC_API_ORIGIN=http://127.0.0.1:18080 \
+             MEOW_PUBLIC_API_VERSION=contract-test \
+             bash integration/public-smoke.sh > /tmp/public-http.out 2> /tmp/public-http.err; then
+            echo "External smoke unexpectedly accepted HTTP" >&2
+            exit 1
+          fi
+          grep -Fq 'must use HTTPS' /tmp/public-http.err
+
+      - name: Reject non-public HTTPS targets before network access
+        shell: bash
+        run: |
+          set -euo pipefail
+          if MEOW_PUBLIC_WEB_ORIGIN=https://127.0.0.1 \
+             MEOW_PUBLIC_API_ORIGIN=https://127.0.0.1 \
+             MEOW_PUBLIC_API_VERSION=contract-test \
+             bash integration/public-smoke.sh > /tmp/public-private.out 2> /tmp/public-private.err; then
+            echo "External smoke unexpectedly accepted a private target" >&2
+            exit 1
+          fi
+          grep -Fq 'cannot target a non-public IP address' /tmp/public-private.err
+
+  qualify:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out exact backend candidate
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          ref: ${{ inputs.backend_sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verify merged backend/frontend authorities
+        env:
+          BACKEND_SHA: ${{ inputs.backend_sha }}
+          FRONTEND_SHA: ${{ inputs.frontend_sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$BACKEND_SHA" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$FRONTEND_SHA" =~ ^[0-9a-f]{40}$ ]]
+
+          actual_backend="$(git rev-parse HEAD)"
+          test "$actual_backend" = "$BACKEND_SHA"
+          git fetch --no-tags origin main:refs/remotes/origin/main
+          git merge-base --is-ancestor "$BACKEND_SHA" refs/remotes/origin/main
+
+          pinned_frontend="$(tr -d '[:space:]' < integration/frontend-ref.txt)"
+          test "$pinned_frontend" = "$FRONTEND_SHA"
+
+          frontend_repo="$(mktemp -d)"
+          git clone --quiet --filter=blob:none --no-checkout \
+            https://github.com/Enzopinotti/Meow-Matrix---Frontend.git \
+            "$frontend_repo"
+          git -C "$frontend_repo" cat-file -e "$FRONTEND_SHA^{commit}"
+          git -C "$frontend_repo" merge-base --is-ancestor \
+            "$FRONTEND_SHA" refs/remotes/origin/main
+
+      - name: Run public HTTPS qualification
+        id: public_smoke
+        continue-on-error: true
+        env:
+          MEOW_PUBLIC_WEB_ORIGIN: ${{ inputs.web_origin }}
+          MEOW_PUBLIC_API_ORIGIN: ${{ inputs.api_origin }}
+          MEOW_PUBLIC_API_VERSION: ${{ inputs.api_version }}
+          MEOW_PUBLIC_EVIDENCE_PATH: .runtime/external-qualification/evidence.json
+          MEOW_EVIDENCE_BACKEND_SHA: ${{ inputs.backend_sha }}
+          MEOW_EVIDENCE_FRONTEND_SHA: ${{ inputs.frontend_sha }}
+        run: bash integration/public-smoke.sh
+
+      - name: Record failed qualification evidence
+        if: always() && (steps.public_smoke.outcome != 'success' || hashFiles('.runtime/external-qualification/evidence.json') == '')
+        env:
+          MEOW_PUBLIC_WEB_ORIGIN: ${{ inputs.web_origin }}
+          MEOW_PUBLIC_API_ORIGIN: ${{ inputs.api_origin }}
+          MEOW_PUBLIC_API_VERSION: ${{ inputs.api_version }}
+          MEOW_EVIDENCE_BACKEND_SHA: ${{ inputs.backend_sha }}
+          MEOW_EVIDENCE_FRONTEND_SHA: ${{ inputs.frontend_sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .runtime/external-qualification
+          node -e '
+          const fs=require("node:fs");
+          const evidence={
+            schemaVersion:"meow-external-qualification-v1",
+            result:"failure",
+            observedAt:new Date().toISOString(),
+            backendSha:process.env.MEOW_EVIDENCE_BACKEND_SHA,
+            frontendSha:process.env.MEOW_EVIDENCE_FRONTEND_SHA,
+            webOrigin:process.env.MEOW_PUBLIC_WEB_ORIGIN,
+            apiOrigin:process.env.MEOW_PUBLIC_API_ORIGIN,
+            apiVersion:process.env.MEOW_PUBLIC_API_VERSION,
+            requestId:null,
+            github:{
+              repository:process.env.GITHUB_REPOSITORY,
+              runId:process.env.GITHUB_RUN_ID,
+              runAttempt:process.env.GITHUB_RUN_ATTEMPT,
+              workflowRef:process.env.GITHUB_WORKFLOW_REF
+            }
+          };
+          fs.writeFileSync(".runtime/external-qualification/evidence.json",JSON.stringify(evidence,null,2)+"\n",{mode:0o600});
+          '
+
+      - name: Validate qualification evidence
+        if: always() && hashFiles('.runtime/external-qualification/evidence.json') != ''
+        env:
+          BACKEND_SHA: ${{ inputs.backend_sha }}
+          FRONTEND_SHA: ${{ inputs.frontend_sha }}
+          WEB_ORIGIN: ${{ inputs.web_origin }}
+          API_ORIGIN: ${{ inputs.api_origin }}
+          API_VERSION: ${{ inputs.api_version }}
+        run: |
+          node -e '
+          const fs=require("node:fs");
+          const j=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));
+          if(j.schemaVersion!=="meow-external-qualification-v1")process.exit(1);
+          if(!["success","failure"].includes(j.result))process.exit(2);
+          if(j.backendSha!==process.env.BACKEND_SHA||j.frontendSha!==process.env.FRONTEND_SHA)process.exit(3);
+          if(j.webOrigin!==process.env.WEB_ORIGIN||j.apiOrigin!==process.env.API_ORIGIN||j.apiVersion!==process.env.API_VERSION)process.exit(4);
+          if(!j.github||j.github.runId!==process.env.GITHUB_RUN_ID)process.exit(5);
+          ' .runtime/external-qualification/evidence.json
+
+      - name: Publish qualification evidence artifact
+        if: always() && hashFiles('.runtime/external-qualification/evidence.json') != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: meow-external-qualification-${{ github.run_id }}
+          path: .runtime/external-qualification/evidence.json
+          if-no-files-found: error
+          include-hidden-files: true
+          retention-days: 90
+          compression-level: 9
+
+      - name: Write qualification summary
+        if: always() && hashFiles('.runtime/external-qualification/evidence.json') != ''
+        shell: bash
+        run: |
+          {
+            echo '## Meow external qualification'
+            echo
+            echo '```json'
+            cat .runtime/external-qualification/evidence.json
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Enforce qualification result
+        if: always()
+        env:
+          PUBLIC_SMOKE_OUTCOME: ${{ steps.public_smoke.outcome }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          evidence=.runtime/external-qualification/evidence.json
+          test -s "$evidence"
+          node -e '
+          const fs=require("node:fs");
+          const j=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));
+          if(j.result!=="success")process.exit(1);
+          ' "$evidence"
+          test "$PUBLIC_SMOKE_OUTCOME" = "success"
