@@ -49,13 +49,6 @@ jobs:
           '''node -e '\nconst fs=require("node:fs");const j=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));\nif(j.version!==process.argv[2])process.exit(1);\n' "$tmp/api-health.body" "$api_version"''')
           smoke.write_text(text)
 
-          workflow = Path('.github/workflows/modern-full-stack.yml')
-          text = workflow.read_text()
-          text = text.replace(
-          '''          MEOW_PUBLIC_API_ORIGIN: http://127.0.0.1:18080\n          MEOW_PUBLIC_ALLOW_HTTP: "true"''',
-          '''          MEOW_PUBLIC_API_ORIGIN: http://127.0.0.1:18080\n          MEOW_PUBLIC_API_VERSION: "2026-b7"\n          MEOW_PUBLIC_ALLOW_HTTP: "true"''')
-          workflow.write_text(text)
-
           docs = Path('docs/modernization-2026/b7-migration-cutover.md')
           text = docs.read_text()
           text = text.replace(
@@ -84,7 +77,7 @@ jobs:
           set -euo pipefail
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add modern/src/data-preflight.ts modern/src/cutover-manifest.ts modern/test/cutover-manifest.test.ts integration/public-smoke.sh .github/workflows/modern-full-stack.yml docs/modernization-2026/b7-migration-cutover.md
+          git add modern/src/data-preflight.ts modern/src/cutover-manifest.ts modern/test/cutover-manifest.test.ts integration/public-smoke.sh docs/modernization-2026/b7-migration-cutover.md
           git diff --cached --check
           if git diff --cached --quiet; then
             echo "No finalizer changes required"
