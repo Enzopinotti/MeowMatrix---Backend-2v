@@ -1,0 +1,59 @@
+name: Meow registry promotion contract
+
+on:
+  pull_request:
+    paths:
+      - "integration/promote-release-bundle.sh"
+      - "docs/modernization-2026/b7-registry-promotion*.md"
+      - ".github/workflows/modern-registry-promotion.yml"
+      - ".github/workflows/modern-external-registry-promotion.yml"
+      - ".github/workflows/modern-full-stack.yml"
+      - "modern/src/cutover-manifest.ts"
+      - "modern/test/cutover-manifest.test.ts"
+      - "integration/cutover-manifest.example.json"
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Check out proposed contract
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+
+      - name: Validate registry promotion shell syntax
+        run: bash -n integration/promote-release-bundle.sh
+
+      - name: Assert promotion remains bundle-owned and digest-verified
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq 'docker load --input "$archive"' integration/promote-release-bundle.sh
+          grep -Fq 'docker push "$ref"' integration/promote-release-bundle.sh
+          grep -Fq 'docker pull "$api_pull_ref"' integration/promote-release-bundle.sh
+          grep -Fq 'docker pull "$web_pull_ref"' integration/promote-release-bundle.sh
+          grep -Fq 'rebuilt: false' integration/promote-release-bundle.sh
+          grep -Fq 'exactImageIdsPreserved: true' integration/promote-release-bundle.sh
+
+      - name: Assert full-stack rehearsal stays pinned and local
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq 'registry:3.1.1@sha256:1be55279f18a2fe1a74edf2664cac61c1bea305b7b4642dab412e7affdcb3e33' .github/workflows/modern-full-stack.yml
+          grep -Fq 'MEOW_REGISTRY_HOST: 127.0.0.1:15000' .github/workflows/modern-full-stack.yml
+          grep -Fq 'integration/promote-release-bundle.sh' .github/workflows/modern-full-stack.yml
+
+      - name: Assert external promotion never rebuilds source
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq 'actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c' .github/workflows/modern-external-registry-promotion.yml
+          grep -Fq 'integration/promote-release-bundle.sh' .github/workflows/modern-external-registry-promotion.yml
+          if grep -Eq 'docker (build|compose .*build)' .github/workflows/modern-external-registry-promotion.yml; then
+            echo 'External promotion must consume the retained bundle without rebuilding source' >&2
+            exit 1
+          fi
