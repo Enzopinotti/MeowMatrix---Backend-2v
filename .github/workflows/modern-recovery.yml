@@ -8,9 +8,7 @@ on:
       - "docs/modernization-2026/**"
       - ".nvmrc"
       - ".gitignore"
-      - ".github/workflows/modern-quality.yml"
-      - ".github/workflows/modern-full-stack.yml"
-      - ".github/workflows/modern-recovery.yml"
+      - ".github/workflows/modern-*.yml"
   push:
     branches:
       - main
@@ -20,9 +18,7 @@ on:
       - "docs/modernization-2026/**"
       - ".nvmrc"
       - ".gitignore"
-      - ".github/workflows/modern-quality.yml"
-      - ".github/workflows/modern-full-stack.yml"
-      - ".github/workflows/modern-recovery.yml"
+      - ".github/workflows/modern-*.yml"
 
 permissions:
   contents: read
