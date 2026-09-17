@@ -41,7 +41,11 @@ function record(value: unknown, field: string): Record<string, unknown> {
 }
 
 function exactString(value: unknown, field: string): string {
-  if (typeof value !== "string" || value.trim() !== value || value.length === 0) {
+  if (
+    typeof value !== "string" ||
+    value.trim() !== value ||
+    value.length === 0
+  ) {
     throw new Error(`${field} must be a non-empty exact string`);
   }
   return value;
@@ -101,7 +105,9 @@ function httpsOrigin(value: unknown, field: string): string {
     url.hash ||
     url.origin !== candidate
   ) {
-    throw new Error(`${field} must be an exact HTTPS origin without path or credentials`);
+    throw new Error(
+      `${field} must be an exact HTTPS origin without path or credentials`,
+    );
   }
   return candidate;
 }

@@ -4,6 +4,12 @@ set -euo pipefail
 web_origin="${MEOW_PUBLIC_WEB_ORIGIN:-}"
 api_origin="${MEOW_PUBLIC_API_ORIGIN:-}"
 allow_http="${MEOW_PUBLIC_ALLOW_HTTP:-false}"
+api_version="${MEOW_PUBLIC_API_VERSION:-}"
+
+if [ -z "$api_version" ]; then
+  echo "MEOW_PUBLIC_API_VERSION is required" >&2
+  exit 2
+fi
 
 require_origin() {
   local value="$1"
@@ -50,7 +56,10 @@ curl --fail --silent --show-error \
   "$api_origin/healthz" \
   -o "$tmp/api-health.body"
 grep -Fq '"status":"ok"' "$tmp/api-health.body"
-grep -Fq '"version":"2026-b7"' "$tmp/api-health.body"
+node -e '
+const fs=require("node:fs");const j=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));
+if(j.version!==process.argv[2])process.exit(1);
+' "$tmp/api-health.body" "$api_version"
 request_id="$(awk 'BEGIN{IGNORECASE=1} /^x-request-id:/ {gsub("\r", "", $2); print $2}' "$tmp/api-health.headers" | tail -n1)"
 [[ "$request_id" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$ ]]
 

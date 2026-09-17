@@ -5,9 +5,9 @@ type PreflightMode = "source" | "target";
 type DataPreflightReport = {
   mode: PreflightMode;
   topology: {
-    transactionCapable: true;
-    kind: "replicaSet" | "mongos";
-    sessions: true;
+    transactionCapable: boolean;
+    kind: "replicaSet" | "mongos" | "standalone";
+    sessions: boolean;
   };
   counts: Record<string, number>;
   integrity: {
@@ -231,7 +231,9 @@ async function missingIndexes(
       continue;
     }
     const names = new Set(
-      (await db.collection(collectionName).indexes()).map((index) => index.name),
+      (await db.collection(collectionName).indexes()).map(
+        (index) => index.name,
+      ),
     );
     for (const indexName of expectedNames) {
       if (!names.has(indexName)) missing.push(`${collectionName}:${indexName}`);
@@ -256,13 +258,16 @@ async function run(): Promise<DataPreflightReport> {
         : hello.msg === "isdbgrid"
           ? "mongos"
           : null;
-    if (transactionKind === null) {
+    const hasSessions = typeof hello.logicalSessionTimeoutMinutes === "number";
+    if (mode === "target" && transactionKind === null) {
       throw new Error(
-        "Mongo topology is not transaction-capable; replica set or mongos is required",
+        "Mongo target topology is not transaction-capable; replica set or mongos is required",
       );
     }
-    if (typeof hello.logicalSessionTimeoutMinutes !== "number") {
-      throw new Error("Mongo topology does not advertise logical sessions");
+    if (mode === "target" && !hasSessions) {
+      throw new Error(
+        "Mongo target topology does not advertise logical sessions",
+      );
     }
 
     const collectionNames = new Set(
@@ -365,9 +370,9 @@ async function run(): Promise<DataPreflightReport> {
     const report: DataPreflightReport = {
       mode,
       topology: {
-        transactionCapable: true,
-        kind: transactionKind,
-        sessions: true,
+        transactionCapable: transactionKind !== null && hasSessions,
+        kind: transactionKind ?? "standalone",
+        sessions: hasSessions,
       },
       counts,
       integrity: {

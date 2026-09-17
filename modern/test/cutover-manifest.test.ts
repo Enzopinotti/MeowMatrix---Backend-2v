@@ -96,7 +96,9 @@ describe("cutover manifest", () => {
         ...validManifest(),
         release: { ...validManifest().release, apiImageDigest: "latest" },
       }),
-    ).toThrow("release.apiImageDigest must be an immutable sha256 image digest");
+    ).toThrow(
+      "release.apiImageDigest must be an immutable sha256 image digest",
+    );
   });
 
   it("rejects a rollback target identical to the release candidate", () => {

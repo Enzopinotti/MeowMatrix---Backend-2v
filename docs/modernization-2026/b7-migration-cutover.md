@@ -29,7 +29,7 @@ The command is read-only. It does not create indexes, rewrite documents, normali
 
 Source mode is intended to reject a migration before copy/cutover when the historical authority is not structurally consumable. It checks the required historical collections and validates user/product shapes plus normalized-email collisions. Categories are inspected when present.
 
-The current CLI also records Mongo topology/session capability. A source failing the required connectivity/topology contract must be handled explicitly in the provider-specific migration plan rather than silently copied through an unqualified path.
+The CLI records Mongo topology/session capability for evidence, but source mode deliberately does not require a replica set or logical sessions: a historical standalone source may still be read and migrated. Transaction/session capability becomes a fail-closed requirement only in target mode.
 
 ### Target mode
 
@@ -76,10 +76,11 @@ The public smoke is parameterized rather than tied to an invented domain:
 ```bash
 MEOW_PUBLIC_WEB_ORIGIN=https://app.example.com \
 MEOW_PUBLIC_API_ORIGIN=https://api.example.com \
+MEOW_PUBLIC_API_VERSION=2026-b7 \
 bash integration/public-smoke.sh
 ```
 
-HTTP is rejected by default. `MEOW_PUBLIC_ALLOW_HTTP=true` exists only so permanent CI can exercise the same script against the isolated local topology.
+HTTP is rejected by default. `MEOW_PUBLIC_API_VERSION` is mandatory so the smoke is bound to the promoted API contract instead of a hardcoded repository version. `MEOW_PUBLIC_ALLOW_HTTP=true` exists only so permanent CI can exercise the same script against the isolated local topology.
 
 The smoke checks:
 
