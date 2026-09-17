@@ -1,5 +1,5 @@
 export type CutoverManifest = {
-  schemaVersion: 1;
+  schemaVersion: 2;
   release: {
     backendSha: string;
     frontendSha: string;
@@ -22,6 +22,9 @@ export type CutoverManifest = {
     fullStackRunId: number;
     recoveryRunId: number;
     dataPreflightRunId: number;
+    bundleRunId: number;
+    bundleManifestSha256: string;
+    bundleArchiveSha256: string;
   };
   rollback: {
     backendSha: string;
@@ -63,6 +66,14 @@ function imageDigest(value: unknown, field: string): string {
   const candidate = exactString(value, field);
   if (!/^sha256:[a-f0-9]{64}$/.test(candidate)) {
     throw new Error(`${field} must be an immutable sha256 image digest`);
+  }
+  return candidate;
+}
+
+function sha256Hex(value: unknown, field: string): string {
+  const candidate = exactString(value, field);
+  if (!/^[a-f0-9]{64}$/.test(candidate)) {
+    throw new Error(`${field} must be a lowercase SHA-256 hex digest`);
   }
   return candidate;
 }
@@ -125,8 +136,8 @@ function oneOf<T extends string>(
 
 export function parseCutoverManifest(input: unknown): CutoverManifest {
   const root = record(input, "manifest");
-  if (root.schemaVersion !== 1) {
-    throw new Error("schemaVersion must equal 1");
+  if (root.schemaVersion !== 2) {
+    throw new Error("schemaVersion must equal 2");
   }
 
   const release = record(root.release, "release");
@@ -136,7 +147,7 @@ export function parseCutoverManifest(input: unknown): CutoverManifest {
   const rollback = record(root.rollback, "rollback");
 
   const manifest: CutoverManifest = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     release: {
       backendSha: gitSha(release.backendSha, "release.backendSha"),
       frontendSha: gitSha(release.frontendSha, "release.frontendSha"),
@@ -189,6 +200,15 @@ export function parseCutoverManifest(input: unknown): CutoverManifest {
       dataPreflightRunId: positiveInteger(
         evidence.dataPreflightRunId,
         "evidence.dataPreflightRunId",
+      ),
+      bundleRunId: positiveInteger(evidence.bundleRunId, "evidence.bundleRunId"),
+      bundleManifestSha256: sha256Hex(
+        evidence.bundleManifestSha256,
+        "evidence.bundleManifestSha256",
+      ),
+      bundleArchiveSha256: sha256Hex(
+        evidence.bundleArchiveSha256,
+        "evidence.bundleArchiveSha256",
       ),
     },
     rollback: {
