@@ -8,9 +8,7 @@ on:
       - "docs/modernization-2026/**"
       - ".nvmrc"
       - ".gitignore"
-      - ".github/workflows/modern-quality.yml"
-      - ".github/workflows/modern-full-stack.yml"
-      - ".github/workflows/modern-recovery.yml"
+      - ".github/workflows/modern-*.yml"
   push:
     branches:
       - main
@@ -20,9 +18,7 @@ on:
       - "docs/modernization-2026/**"
       - ".nvmrc"
       - ".gitignore"
-      - ".github/workflows/modern-quality.yml"
-      - ".github/workflows/modern-full-stack.yml"
-      - ".github/workflows/modern-recovery.yml"
+      - ".github/workflows/modern-*.yml"
 
 permissions:
   contents: read
@@ -65,19 +61,36 @@ jobs:
       - name: Run target data preflight
         run: docker compose -f integration/compose.b6.yml exec -T -e DATA_PREFLIGHT_MODE=target api node dist/data-preflight.js
 
-      - name: Exercise public smoke contract against local topology
+      - name: Exercise public smoke and evidence contract locally
         env:
           MEOW_PUBLIC_WEB_ORIGIN: http://127.0.0.1:14173
           MEOW_PUBLIC_API_ORIGIN: http://127.0.0.1:18080
           MEOW_PUBLIC_API_VERSION: "2026-b7"
           MEOW_PUBLIC_ALLOW_HTTP: "true"
-        run: bash integration/public-smoke.sh
+          MEOW_PUBLIC_EVIDENCE_PATH: .runtime/external-qualification/local-evidence.json
+        shell: bash
+        run: |
+          set -euo pipefail
+          export MEOW_EVIDENCE_BACKEND_SHA="$(git rev-parse HEAD)"
+          export MEOW_EVIDENCE_FRONTEND_SHA="$(tr -d '[:space:]' < integration/frontend-ref.txt)"
+          bash integration/public-smoke.sh
+          node -e '
+          const fs=require("node:fs");
+          const j=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));
+          if(j.schemaVersion!=="meow-external-qualification-v1"||j.result!=="success")process.exit(1);
+          if(j.backendSha!==process.argv[2]||j.frontendSha!==process.argv[3])process.exit(2);
+          if(j.apiVersion!=="2026-b7")process.exit(3);
+          if(!/^[0-9a-f-]{36}$/.test(j.requestId??""))process.exit(4);
+          ' .runtime/external-qualification/local-evidence.json "$MEOW_EVIDENCE_BACKEND_SHA" "$MEOW_EVIDENCE_FRONTEND_SHA"
 
       - name: Print release candidate evidence
         if: always()
         run: |
           if [ -f .runtime/release/candidate.json ]; then
             cat .runtime/release/candidate.json
+          fi
+          if [ -f .runtime/external-qualification/local-evidence.json ]; then
+            cat .runtime/external-qualification/local-evidence.json
           fi
 
       - name: Capture runtime diagnostics
