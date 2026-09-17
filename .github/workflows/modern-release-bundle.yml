@@ -1,0 +1,48 @@
+name: Meow immutable release bundle contract
+
+on:
+  pull_request:
+    paths:
+      - "integration/package-release-bundle.sh"
+      - "integration/verify-release-bundle.sh"
+      - "docs/modernization-2026/b7-release-bundle*.md"
+      - ".github/workflows/modern-release-bundle.yml"
+      - ".github/workflows/modern-full-stack.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+
+    steps:
+      - name: Check out proposed contract
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+
+      - name: Validate release bundle shell syntax
+        run: |
+          bash -n integration/package-release-bundle.sh
+          bash -n integration/verify-release-bundle.sh
+
+      - name: Assert bundle packaging stays application-only
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq 'docker save --output "$archive" "$api_tag" "$web_tag"' integration/package-release-bundle.sh
+          if grep -Eq 'docker save.*(mongo|mailpit)' integration/package-release-bundle.sh; then
+            echo 'Release bundle must not package Mongo or Mailpit as application artifacts' >&2
+            exit 1
+          fi
+
+      - name: Assert destructive reload proof remains enabled in full-stack CI
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq 'integration/package-release-bundle.sh' .github/workflows/modern-full-stack.yml
+          grep -Fq 'MEOW_RELEASE_VERIFY_REMOVE_EXISTING: "true"' .github/workflows/modern-full-stack.yml
+          grep -Fq 'integration/verify-release-bundle.sh' .github/workflows/modern-full-stack.yml
+          grep -Fq 'meow-release-bundle-${{ github.sha }}' .github/workflows/modern-full-stack.yml
