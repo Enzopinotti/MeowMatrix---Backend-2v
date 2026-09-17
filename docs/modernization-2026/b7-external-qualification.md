@@ -25,6 +25,8 @@ The workflow refuses to use an arbitrary feature branch as a release candidate:
 
 That makes the external smoke evidence attributable to merged repository authorities rather than to ad-hoc source.
 
+The candidate must also implement the current `meow-external-qualification-v1` evidence contract. A historical merged SHA whose `public-smoke.sh` predates evidence output is rejected even if its runtime checks happen to pass; a qualification without retained evidence cannot be used as release authority.
+
 ## Public-network boundary
 
 `integration/public-smoke.sh` defaults to external mode. In that mode:
@@ -68,7 +70,7 @@ A successful run writes `meow-external-qualification-v1` JSON evidence containin
 
 Response bodies, cookies, tokens, user information and secrets are not retained in the artifact.
 
-On smoke failure, the workflow still records a sanitized `failure` evidence file and uploads it before the final enforcement step turns the run red. The artifact is retained for 90 days by the workflow. That retention is operational CI evidence, **not** a production backup or long-term compliance archive.
+On smoke failure or missing success evidence, the workflow records a sanitized `failure` evidence file and uploads it before the final enforcement step turns the run red. The artifact is retained for 90 days by the workflow. That retention is operational CI evidence, **not** a production backup or long-term compliance archive.
 
 ## Contract self-test
 
