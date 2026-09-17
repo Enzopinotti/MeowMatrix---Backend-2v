@@ -10,6 +10,12 @@ if [ -z "$api_version" ]; then
   echo "MEOW_PUBLIC_API_VERSION is required" >&2
   exit 2
 fi
+api_version="${MEOW_PUBLIC_API_VERSION:-}"
+
+if [ -z "$api_version" ]; then
+  echo "MEOW_PUBLIC_API_VERSION is required" >&2
+  exit 2
+fi
 
 require_origin() {
   local value="$1"
