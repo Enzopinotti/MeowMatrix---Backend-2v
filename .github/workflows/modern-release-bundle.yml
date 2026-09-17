@@ -45,4 +45,5 @@ jobs:
           grep -Fq 'integration/package-release-bundle.sh' .github/workflows/modern-full-stack.yml
           grep -Fq 'MEOW_RELEASE_VERIFY_REMOVE_EXISTING: "true"' .github/workflows/modern-full-stack.yml
           grep -Fq 'integration/verify-release-bundle.sh' .github/workflows/modern-full-stack.yml
-          grep -Fq 'meow-release-bundle-${{ github.sha }}' .github/workflows/modern-full-stack.yml
+          grep -Fq 'name: meow-release-bundle-' .github/workflows/modern-full-stack.yml
+          grep -Fq 'github.sha' .github/workflows/modern-full-stack.yml
